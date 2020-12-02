@@ -23,3 +23,5 @@ msbuild.wrn
 tools/
 
 .ionide
+
+.DS_Store
