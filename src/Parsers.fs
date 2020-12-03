@@ -1,44 +1,9 @@
-module Protogen.Input
+module Protogen.Parsers
 
 open FParsec
+open Types
 
-type ComplexName = ComplexName of string list
-
-type Type =
-    | Bool
-    | String
-    | Int
-    | Long
-    | Decimal of scale: int
-    | Float
-    | Double
-    | Bytes
-    | Timespamp
-    | Duration
-    | Guid
-    | Optional of value: Type
-    | Array of value: Type
-    | Map of value: Type
-    | Complex of name: ComplexName
-
-type EnumInfo = { Name: string; Symbols: string list }
-type FieldInfo = { Name: string;  Type: Type }
-type RecordInfo = { Name: string;  Fields: FieldInfo list }
-type UnionCaseFieldInfo = { Name: string option;  Type: Type }
-type UnionCaseInfo = {Name: string; Fields: UnionCaseFieldInfo list}
-type UnionInfo = {Name: string;  Cases: UnionCaseInfo list}
-
-type ModuleItem =
-    | Enum of EnumInfo
-    | Record of RecordInfo
-    | Union of UnionInfo
-
-type Module = {
-    Name: ComplexName
-    Items: ModuleItem list
-}
-
-module private Parser =
+module private Impl =
 
     let ws<'u> : Parser<_,'u> = skipMany (skipAnyOf " \t")
     let ws1<'u> : Parser<_,'u> = skipMany1 (skipAnyOf " \t")
@@ -103,13 +68,21 @@ module private Parser =
         pipe2
             (opt ((between ws ws identifier) .>>? pchar ':'))
             (between ws ws fullType')
-            (fun name type' -> {Name = name; Type = type'} : UnionCaseFieldInfo)
+            (fun name type' -> {|Name = name; Type = type'|})
 
     let unionCase' =
         pipe2
             identifier
             (opt (ws1 .>>? (keyword "of") >>. sepBy unionCaseField' (pchar '*')))
-            (fun name fields -> {Name = name; Fields = fields |> Option.defaultValue []} : UnionCaseInfo)
+            (fun name fields -> {
+                Name = name
+                Fields =
+                    fields
+                    |> Option.defaultValue []
+                    |> List.mapi (fun idx r -> {
+                        Name = r.Name |> Option.defaultWith (fun () -> $"Item{idx+1}")
+                        Type = r.Type })
+                    })
 
     let union' =
         keyword "union" >>.
@@ -125,10 +98,10 @@ module private Parser =
                 (many (choice [enum'; record'; union']))
                 (fun name items -> {Name = name; Items = items})
 
-    let file =
+    let pgenFile =
         spaces >>. many (module' .>> spaces) .>> eof
 
-let parse input =
-    match run Parser.file input with
+let parsePgen input =
+    match run Impl.pgenFile input with
     | Success (model,_,_) -> Result.Ok model
     | Failure (err,_,_) -> Result.Error err

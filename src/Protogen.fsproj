@@ -4,7 +4,8 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ProtoInput.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Parsers.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

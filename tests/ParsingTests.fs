@@ -2,10 +2,11 @@ module ParsingTests
 
 open System
 open Xunit
-open Protogen
+open Protogen.Types
+open Protogen.Parsers
 
 let private assertParse input expected =
-    match parse input with
+    match parsePgen input with
     | Ok res -> Assert.Equal<Module list>(expected, res)
     | Error err -> failwith err
 
@@ -96,7 +97,6 @@ record Crossroad = {
                     { Name = "Props"; Type = Map String }
                 ]}]}]
 
-
 [<Fact>]
 let ``Test single line record`` () =
     let input = """
@@ -113,7 +113,6 @@ record Crossroad = { Id: int; Street1: string; Street2: string }
                     { Name = "Street1"; Type = String }
                     { Name = "Street2"; Type = String }
                 ]}]}]
-
 
 [<Fact>]
 let ``Test union`` () =
