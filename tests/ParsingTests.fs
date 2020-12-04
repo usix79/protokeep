@@ -17,7 +17,7 @@ let ``Test empty input`` () =
 [<Fact>]
 let ``Test single empty module`` () =
     let input = "module Domain.Foundation"
-    assertParse input [{Name = ComplexName ["Domain"; "Foundation"]; Items = []}]
+    assertParse input [{Name = ComplexName ["Foundation"; "Domain"]; Items = []}]
 
 [<Fact>]
 let ``Test many empty modules`` () =
@@ -27,7 +27,7 @@ module Domain.Foundation
 """
     let expected = [
             {Name = ComplexName ["Domain"]; Items = []}
-            {Name = ComplexName ["Domain"; "Foundation"]; Items = []}]
+            {Name = ComplexName ["Foundation"; "Domain"]; Items = []}]
 
     assertParse input expected
 
@@ -90,7 +90,7 @@ record Crossroad = {
                     { Name = "Ratio"; Type = Decimal 2 }
                     { Name = "LastChecked"; Type = Timespamp }
                     { Name = "ServiceInterval"; Type = Duration }
-                    { Name = "CurrentLight"; Type = Complex (ComplexName ["Domain"; "TrafficLight"]) }
+                    { Name = "CurrentLight"; Type = Complex (ComplexName ["TrafficLight"; "Domain"]) }
                     { Name = "Nickname"; Type = Optional String }
                     { Name = "Img"; Type = Bytes }
                     { Name = "Notes"; Type = Array String }
@@ -174,7 +174,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
     assertParse input [
         {   Name = ComplexName ["Domain"]
             Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}] }
-        {   Name = ComplexName ["Domain"; "Foundation"]
+        {   Name = ComplexName ["Foundation"; "Domain"]
             Items = [
                 Enum {
                     Name = "AltTrafficLight";

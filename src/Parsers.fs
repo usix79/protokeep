@@ -16,8 +16,8 @@ module private Impl =
 
         many1Satisfy2L isIdentifierFirstChar isIdentifierChar "identifier"
 
-    let fullName : Parser<ComplexName, _> =
-        sepBy1 identifier (pchar '.') |>> ComplexName
+    let complexName : Parser<ComplexName, _> =
+        sepBy1 identifier (pchar '.') |>> (List.rev >> ComplexName)
 
     let enum' =
         keyword "enum" >>.
@@ -39,7 +39,7 @@ module private Impl =
             skipString "duration" |>> (fun () -> Duration)
             skipString "guid" |>> (fun () -> Guid)
             skipString "decimal" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')' |>> Decimal
-            fullName |>> Complex]
+            complexName |>> Complex]
 
     let fullType' =
         type' >>= (fun t ->
@@ -70,19 +70,19 @@ module private Impl =
             (between ws ws fullType')
             (fun name type' -> {|Name = name; Type = type'|})
 
-    let unionCase' =
+    let unionCase' : Parser<UnionCaseInfo,_> =
         pipe2
             identifier
             (opt (ws1 .>>? (keyword "of") >>. sepBy unionCaseField' (pchar '*')))
             (fun name fields -> {
-                Name = name
-                Fields =
-                    fields
-                    |> Option.defaultValue []
-                    |> List.mapi (fun idx r -> {
-                        Name = r.Name |> Option.defaultWith (fun () -> $"Item{idx+1}")
-                        Type = r.Type })
-                    })
+                    Name = name
+                    Fields =
+                        fields
+                        |> Option.defaultValue []
+                        |> List.mapi (fun idx r -> {
+                                    Name = r.Name |> Option.defaultWith (fun () -> $"Item{idx+1}")
+                                    Type = r.Type })
+                        })
 
     let union' =
         keyword "union" >>.
@@ -94,7 +94,7 @@ module private Impl =
     let module' =
         keyword "module" >>.
             pipe2
-                (fullName .>> ts)
+                (complexName .>> ts)
                 (many (choice [enum'; record'; union']))
                 (fun name items -> {Name = name; Items = items})
 
