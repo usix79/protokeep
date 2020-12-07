@@ -70,7 +70,7 @@ module private Impl =
             (between ws ws fullType')
             (fun name type' -> {|Name = name; Type = type'|})
 
-    let unionCase' : Parser<UnionCaseInfo,_> =
+    let unionCase' : Parser<RecordInfo,_> =
         pipe2
             identifier
             (opt (ws1 .>>? (keyword "of") >>. sepBy unionCaseField' (pchar '*')))

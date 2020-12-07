@@ -5,7 +5,6 @@ open Xunit
 open Xunit.Sdk
 open Protogen.Types
 
-
 let assertEqual expected actual =
     if expected <> actual then
         NotEqualException (sprintf "%A" expected, sprintf "%A" actual) |> raise
@@ -110,14 +109,270 @@ let ``Single Enum`` () =
 
     assertEqual expected (Evolution.lock input lock)
 
-// [<Fact>]
-// let ``Unknown type of record's field`` () =
-//     let input = [{
-//         Name = ComplexName ["Domain"]
-//         Items = [
-//             Record {Name = "Simple"; Fields = [{Name= "Id"; Type = Complex (ComplexName ["XXX"])}]}
-//         ]}]
-//     let lock = []
-//     let expected = Error [ Evolution.UnknownFieldType (ComplexName ["Simple"; "Domain"], "Id", ComplexName ["XXX"])]
+[<Fact>]
+let ``Unknown type of record's field`` () =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Simple"; Fields = [{Name= "Id"; Type = Complex (ComplexName ["XXX"])}]}
+        ]}]
+    let lock = []
+    let expected = Error [ Evolution.UnknownFieldType (ComplexName ["Simple"; "Domain"], "Id", ComplexName ["XXX"])]
 
-//     assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Evolution.lock input lock)
+
+[<Fact>]
+let ``Simple Record`` () =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Crossroad"; Fields = [
+                {Name= "Id"; Type = Int}
+                {Name= "Street1"; Type = String}
+                {Name= "Street2"; Type = String}
+                ]}
+        ]}]
+    let lock = []
+    let expected = Ok [
+        MessageLock {
+            Name= ComplexName ["Crossroad"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                Field {Name = "Street1"; Type = String; Num = 2}
+                Field {Name = "Street2"; Type = String; Num = 3}
+            ]}
+        ]
+
+    assertEqual expected (Evolution.lock input lock)
+
+
+[<Fact>]
+let ``Union`` () =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Log"; Fields = [
+                {Name= "Id"; Type = Int}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]}
+                ]}
+            Union {Name = "ServiceCheck"; Cases = [
+                {Name = "Random"; Fields = []}
+                {Name = "Planned"; Fields = [
+                    {Name = "What"; Type = String}
+                    {Name = "Where"; Type = String}
+                    {Name = "When"; Type = Timespamp}
+                    ]}
+            ]}
+        ]}]
+    let lock = []
+    let expected = Ok [
+        MessageLock {
+            Name = ComplexName ["Log"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
+                    {CaseName = "Random"; Num = 2}
+                    {CaseName = "Planned"; Num = 3}
+                ])
+            ]}
+        MessageLock {
+            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
+            LockItems = [] }
+        MessageLock {
+            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
+            LockItems = [
+                Field { Name = "What"; Type = String; Num = 1 };
+                Field { Name = "Where"; Type = String;  Num = 2 };
+                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+        ]
+
+    assertEqual expected (Evolution.lock input lock)
+
+[<Fact>]
+let ``Missed Field Record`` () =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Crossroad"; Fields = [
+                {Name= "Id"; Type = Int}
+                {Name= "Street1"; Type = String}
+                ]}
+        ]}]
+    let lock = [
+        MessageLock {
+            Name= ComplexName ["Crossroad"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                Field {Name = "Street1"; Type = String; Num = 2}
+                Field {Name = "Street2"; Type = String; Num = 3}
+            ]}
+        ]
+
+    let expected = Error [ Evolution.MissedFieldInRecord (ComplexName ["Crossroad"; "Domain"], "Street2") ]
+
+    assertEqual expected (Evolution.lock input lock)
+
+
+[<Fact>]
+let ``Acceptable Evolutionof a Field's Type`` () =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Crossroad"; Fields = [
+                {Name= "Id"; Type = Long}
+                {Name= "Street1"; Type = String}
+                {Name= "Street2"; Type = String}
+                ]}
+        ]}]
+    let lock = [
+        MessageLock {
+            Name= ComplexName ["Crossroad"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                Field {Name = "Street1"; Type = String; Num = 2}
+                Field {Name = "Street2"; Type = String; Num = 3}
+            ]}
+        ]
+
+    let expected = Ok [
+        MessageLock {
+            Name= ComplexName ["Crossroad"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Long; Num = 1}
+                Field {Name = "Street1"; Type = String; Num = 2}
+                Field {Name = "Street2"; Type = String; Num = 3}
+            ]}
+        ]
+    assertEqual expected (Evolution.lock input lock)
+
+[<Fact>]
+let UnacceptableEvolutionOfAFieldType () =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Crossroad"; Fields = [
+                {Name= "Id"; Type = Guid}
+                {Name= "Street1"; Type = String}
+                {Name= "Street2"; Type = String}
+                ]}
+        ]}]
+    let lock = [
+        MessageLock {
+            Name= ComplexName ["Crossroad"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                Field {Name = "Street1"; Type = String; Num = 2}
+                Field {Name = "Street2"; Type = String; Num = 3}
+            ]}
+        ]
+
+    let expected = Error [ Evolution.UnacceptableEvolutionOfFieldType(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
+
+    assertEqual expected (Evolution.lock input lock)
+
+
+[<Fact>]
+let MissedFieldInUnion() =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Log"; Fields = [
+                {Name= "Id"; Type = Int}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]}
+                ]}
+            ModuleItem.Union {Name = "ServiceCheck"; Cases = [
+                {Name = "Random"; Fields = []}
+            ]}
+        ]}]
+    let lock = [
+        MessageLock {
+            Name = ComplexName ["Log"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
+                    {CaseName = "Random"; Num = 2}
+                    {CaseName = "Planned"; Num = 3}
+                ])
+            ]}
+        MessageLock {
+            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
+            LockItems = [] }
+        MessageLock {
+            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
+            LockItems = [
+                Field { Name = "What"; Type = String; Num = 1 };
+                Field { Name = "Where"; Type = String;  Num = 2 };
+                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+        ]
+
+    let expected = Error [ Evolution.MissedCaseInRecord (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
+
+    assertEqual expected (Evolution.lock input lock)
+
+[<Fact>]
+let AddFieldInUnion() =
+    let input = [{
+        Name = ComplexName ["Domain"]
+        Items = [
+            Record {Name = "Log"; Fields = [
+                {Name= "Id"; Type = Int}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]}
+                ]}
+            ModuleItem.Union {Name = "ServiceCheck"; Cases = [
+                {Name = "Random"; Fields = []}
+                {Name = "Planned"; Fields = [
+                    { Name = "What"; Type = String};
+                    { Name = "Where"; Type = String};
+                    { Name = "When"; Type = Timespamp}
+                ]}
+                {Name = "NewCase"; Fields = []}
+            ]}
+        ]}]
+    let lock = [
+        MessageLock {
+            Name = ComplexName ["Log"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
+                    {CaseName = "Random"; Num = 2}
+                    {CaseName = "Planned"; Num = 3}
+                ])
+            ]}
+        MessageLock {
+            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
+            LockItems = [] }
+        MessageLock {
+            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
+            LockItems = [
+                Field { Name = "What"; Type = String; Num = 1 }
+                Field { Name = "Where"; Type = String;  Num = 2 }
+                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+        ]
+
+    let expected = Ok [
+        MessageLock {
+            Name = ComplexName ["Log"; "Domain"]
+            LockItems = [
+                Field {Name = "Id"; Type = Int; Num = 1}
+                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
+                    {CaseName = "Random"; Num = 2}
+                    {CaseName = "Planned"; Num = 3}
+                    {CaseName = "NewCase"; Num = 4}
+                ])
+            ]}
+        MessageLock {
+            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
+            LockItems = [] }
+        MessageLock {
+            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
+            LockItems = [
+                Field { Name = "What"; Type = String; Num = 1 }
+                Field { Name = "Where"; Type = String;  Num = 2 }
+                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+        MessageLock {
+            Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]
+            LockItems = [] }
+        ]
+
+
+    assertEqual expected (Evolution.lock input lock)
