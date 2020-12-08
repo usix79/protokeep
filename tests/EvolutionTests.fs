@@ -266,7 +266,7 @@ let UnacceptableEvolutionOfAFieldType () =
             ]}
         ]
 
-    let expected = Error [ Evolution.UnacceptableEvolutionOfFieldType(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
+    let expected = Error [ Evolution.UnacceptableEvolution(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
 
     assertEqual expected (Evolution.lock input lock)
 
@@ -305,7 +305,7 @@ let MissedFieldInUnion() =
                 Field { Name = "When"; Type = Timespamp; Num = 3 }] }
         ]
 
-    let expected = Error [ Evolution.MissedCaseInRecord (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
+    let expected = Error [ Evolution.MissedCaseInUnion (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
 
     assertEqual expected (Evolution.lock input lock)
 

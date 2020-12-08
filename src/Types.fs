@@ -38,14 +38,13 @@ type Module = {
 type EnumValueLock = { Name: string; Num: int }
 type EnumLock = { Name: ComplexName; Values: EnumValueLock list }
 type MessageFieldLock = { Name: string;  Type: Type; Num: int }
-type MessageOneOfCaseLock = { CaseName: string; Num: int }
+type OneOfFieldLock = { CaseName: string;  Num: int }
 type MessageLockItem =
     | Field of MessageFieldLock
-    | OneOf of name:string*unionName:ComplexName*fields:MessageOneOfCaseLock list
+    | OneOf of name:string*unionName:ComplexName*fields:OneOfFieldLock list
 type MessageLock = { Name: ComplexName; LockItems: MessageLockItem list }
 
 type LockItem =
-    | Empty
     | EnumLock of EnumLock
     | MessageLock of MessageLock
 
@@ -65,22 +64,42 @@ module rec Evolution =
         | DuplicateFieldInLockedMessage of enumName:ComplexName*fieldName:string
         | MissedFieldInRecord of recordName:ComplexName*fieldName:string
         | DuplicateFieldInRecord of recordName:ComplexName*fieldName:string
-        | UnacceptableEvolutionOfFieldType of recordName:ComplexName*fieldName:string*oldType:Type*newType:Type
-        | MissedCaseInRecord of recordName:ComplexName*unionName:ComplexName*fieldName:string
+        | UnionNameIsChanged of recordName:ComplexName*fieldName:string*oldName:ComplexName*newName:ComplexName
+        | UnionChangedToRecord of recordName:ComplexName*fieldName:string*unionName:string
+        | UnacceptableEvolution of recordName:ComplexName*fieldName:string*oldType:Type*newType:Type
+        | MissedCaseInUnion of recordName:ComplexName*unionName:ComplexName*fieldName:string
 
     type LockCache = Map<ComplexName,LockItem>
     type TypesCache = Map<ComplexName,ModuleItem>
 
+    let mergeName (ComplexName ns) name = ComplexName (name::ns)
+
+    let moduleItemName ns = function
+        | Enum x -> mergeName ns x.Name
+        | Record x -> mergeName ns x.Name
+        | Union x -> mergeName ns x.Name
+
+    let lockItemName = function
+        | EnumLock lock -> lock.Name
+        | MessageLock lock -> lock.Name
+
+    let messageLockItemName = function
+        | Field x -> x.Name
+        | OneOf (name, _, _) -> name
+
+    let lockItemMaxNum = function
+        | Field x -> x.Num
+        | OneOf (_, _, cases) -> (cases |> List.maxBy (fun c -> c.Num)).Num
+
     let lock (modules: Module list) (currentLock: LockItem list) : Result<LockItem list, Error list> =
 
         currentLock
-        |> lockItemsToKeyValuePairs
-        |> tryMap
+        |> tryMap lockItemName id
         |> Result.mapError(List.map DuplicateLockedTypeNames)
         |> Result.bind(fun lockCache ->
             modules
-            |> List.collect (fun x -> moduleItemsToKeyValuePairs x.Name x.Items)
-            |> tryMap
+            |> List.collect (fun x -> x.Items |> List.map (fun i -> (moduleItemName x.Name i), i))
+            |> tryMap fst snd
             |> Result.mapError(List.map DuplicateTypeNames)
             |> Result.bind(fun typesCache ->
                 let lockModule (module':Module) : Result<LockItem list, Error list> =
@@ -97,37 +116,6 @@ module rec Evolution =
                 |> traverse lockModule
                 |> Result.map List.concat ))
 
-    let mergeName (ComplexName ns) name = ComplexName (name::ns)
-
-    let lockItemsToKeyValuePairs items =
-        [ for item in items do
-            match item with
-            | EnumLock lock -> lock.Name, item
-            | MessageLock lock -> lock.Name, item
-            | Empty -> () ]
-
-    let moduleItemsToKeyValuePairs ns items =
-        [ for item in items do
-            match item with
-            | Enum x -> mergeName ns x.Name, item
-            | Record x -> mergeName ns x.Name, item
-            | Union x ->
-                let unionName = mergeName ns x.Name
-                unionName, item
-                for case in x.Cases do
-                    mergeName unionName case.Name, Record case
-        ]
-
-    let valueLocksToKeyValuePairs (items: EnumValueLock list) =
-        items |> List.map (fun x -> x.Name, x)
-
-    let messageLockItemsToKeyValuePairs (items: MessageLockItem list) =
-        items
-        |> List.map (fun i ->
-            match i with
-            | Field x -> x.Name, i
-            | OneOf (name, _, _) -> name, i)
-
     let lockEnum (lockCache:LockCache) ns info =
 
         let fullName = mergeName ns info.Name
@@ -137,8 +125,8 @@ module rec Evolution =
         | Some _ -> [DifferenTypeIsLockedWithThatName fullName] |> Error
         | None -> Ok [] // new enum
         |> Result.bind(fun valuesLock ->
-            valueLocksToKeyValuePairs valuesLock
-            |> tryMap
+            valuesLock
+            |> tryMap (fun x -> x.Name) id
             |> Result.mapError (List.map (fun symbol -> DuplicateSymbolsInLockedEnum (fullName,symbol)))
             |> Result.bind (fun symbolsMap ->
                 let maxNum = valuesLock |> List.fold (fun m x -> max m x.Num) 0
@@ -152,32 +140,13 @@ module rec Evolution =
                         (maxNum + 1)
                     |> fst
 
-                valueLocksToKeyValuePairs newValuesLock
-                |> tryMap
-                |> Result.mapError (List.map (fun symbol -> DuplicateSymbolsInEnum (fullName,symbol)))
-                |> Result.bind (fun newSymbolsMap ->
-
-                    let missedSymbols =
-                        valuesLock
-                        |> List.choose (fun x ->
-                            match newSymbolsMap.TryFind x.Name with
-                            | Some _ -> None
-                            | None -> Some x.Name)
-
-                    if missedSymbols.IsEmpty then
-                        EnumLock {Name = fullName; Values = newValuesLock} |> Ok
-                    else
-                        missedSymbols
-                        |> List.map (fun symbol -> MissedSymbolInEnum (fullName, symbol))
-                        |> Error)))
-
-    let lockItemName = function
-        | Field x -> x.Name
-        | OneOf (name, _, _) -> name
-
-    let lockItemMaxNum = function
-        | Field x -> x.Num
-        | OneOf (_, _, cases) -> (cases |> List.maxBy (fun c -> c.Num)).Num
+                newValuesLock
+                |> checkMissedItems
+                    (fun x -> x.Name)
+                    (fun symbol -> DuplicateSymbolsInEnum (fullName,symbol))
+                    (fun symbol -> MissedSymbolInEnum (fullName, symbol))
+                    valuesLock
+                |> Result.map (fun values -> EnumLock {Name = fullName; Values = values})))
 
     let tryFindType (typesCache:TypesCache) (ComplexName(ns)) (ComplexName(typeName)) =
         let rec f ns =
@@ -203,11 +172,12 @@ module rec Evolution =
         | Map (Complex typeName)
         | Complex typeName ->
             match tryFindType typesCache ns typeName with
-            | Some (Union info) -> None
-            | _ -> Some typeName
+            | Some _ -> None
+            | None -> Some typeName
         | _ -> None
 
     let allowedEvolution from to' =
+        // TODO: allow more evolutions
         match from,to' with
         | Bool, Int -> true
         | Bool, Long -> true
@@ -227,8 +197,8 @@ module rec Evolution =
         | Some _ -> [DifferenTypeIsLockedWithThatName fullName] |> Error
         | None -> Ok [] // new record
         |> Result.bind(fun messageLockItems ->
-            messageLockItemsToKeyValuePairs messageLockItems
-            |> tryMap
+            messageLockItems
+            |> tryMap messageLockItemName id
             |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInLockedMessage (fullName,fieldName)))
             |> Result.bind (fun fieldsMap ->
                 let maxNum = messageLockItems |> List.fold (fun m -> lockItemMaxNum >>  max m) 0
@@ -238,51 +208,9 @@ module rec Evolution =
                     match field.Type with
                     | IsUnknownType typesCache ns typeName -> Error [UnknownFieldType (fullName,field.Name,typeName)], nextNum
                     | IsUnion typesCache ns (unionName, info) ->
-                        let res =
-                            match fieldsMap.TryFind field.Name with
-                            | Some (OneOf (_, lockedUnionName, lockedCases)) when lockedUnionName = unionName -> Ok lockedCases
-                            | Some (OneOf (_, lockedUnionName, _)) ->
-                                Error [UnacceptableEvolutionOfFieldType(fullName, field.Name, Complex lockedUnionName, Complex unionName)]
-                            | Some (Field lock) ->
-                                Error [UnacceptableEvolutionOfFieldType(fullName, field.Name, lock.Type, field.Type)]
-                            | None -> Ok []
-                            |> Result.bind(fun lockedCases ->
-                                lockedCases
-                                |> List.map (fun c -> c.CaseName, c)
-                                |> tryMap
-                                |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInLockedMessage (fullName,fieldName)))
-                                |> Result.bind (fun lockedCasesMap ->
-                                    let newLockedCases =
-                                        info.Cases
-                                        |> List.mapFold (fun nextNum case ->
-                                            match lockedCasesMap.TryFind(case.Name) with
-                                            | Some lockedCase -> (lockedCase, nextNum)
-                                            | None -> ({CaseName = case.Name; Num = nextNum}, (nextNum + 1)))
-                                            nextNum
-
-                                    fst newLockedCases
-                                    |> List.map (fun c -> c.CaseName, c)
-                                    |> tryMap
-                                    |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInRecord (fullName,fieldName)))
-                                    |> Result.bind (fun newLockedCasesMap ->
-                                        let missedCases =
-                                            lockedCases
-                                            |> List.choose (fun x ->
-                                                match newLockedCasesMap.TryFind x.CaseName with
-                                                | Some _ -> None
-                                                | None -> Some x.CaseName)
-
-                                        if missedCases.IsEmpty then Ok newLockedCases
-                                        else
-                                            missedCases
-                                            |> List.map (fun fieldName -> MissedCaseInRecord (fullName, unionName, fieldName))
-                                            |> Error
-                                    )))
-
-                        match res with
+                        match lockUnion fullName fieldsMap field.Name unionName info nextNum with
                         | Ok (locks,nextNum) -> Ok (OneOf (field.Name, unionName, locks)), nextNum
                         | Error err -> Error err, nextNum
-
                     | _ -> // regular field
                         match fieldsMap.TryFind field.Name with
                         | None -> // new field
@@ -292,30 +220,43 @@ module rec Evolution =
                             | Field lock when allowedEvolution lock.Type field.Type ->
                                 Ok (Field {Name = field.Name; Type = field.Type; Num = lock.Num}), nextNum
                             | Field lock ->
-                                Error [UnacceptableEvolutionOfFieldType(fullName, field.Name, lock.Type, field.Type)], nextNum
-                            | OneOf (_, unionName, _) ->
-                                Error [UnacceptableEvolutionOfFieldType(fullName, field.Name, Complex unionName, field.Type)], nextNum)
+                                Error [UnacceptableEvolution(fullName, field.Name, lock.Type, field.Type)], nextNum
+                            | OneOf (_, lockedUnionName, _) ->
+                                Error [UnacceptableEvolution(fullName, field.Name, Complex lockedUnionName, field.Type)], nextNum)
                     (maxNum + 1)
                 |> fst
                 |> traverse id
-                |> Result.bind(fun newLockItems ->
+                |> Result.bind(
+                    checkMissedItems
+                        messageLockItemName
+                        (fun fieldName -> DuplicateFieldInRecord (fullName,fieldName))
+                        (fun fieldName -> MissedFieldInRecord (fullName, fieldName))
+                        messageLockItems)
+                |> Result.map (fun items -> MessageLock {Name = fullName; LockItems = items})))
 
-                    messageLockItemsToKeyValuePairs newLockItems
-                    |> tryMap
-                    |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInRecord (fullName,fieldName)))
-                    |> Result.bind (fun newLockItemsMap ->
+    let lockUnion recordName fieldsMap fieldName unionName info nextNum =
+        match fieldsMap.TryFind fieldName with
+        | Some (OneOf (_, lockedUnionName, lockedCases)) when lockedUnionName = unionName -> Ok lockedCases
+        | Some (OneOf (_, lockedUnionName, _)) -> Error [UnionNameIsChanged(recordName, fieldName, lockedUnionName, unionName)]
+        | Some (Field lock) -> Error [UnacceptableEvolution(recordName, fieldName, lock.Type, Complex unionName)]
+        | None -> Ok []
+        |> Result.bind(fun lockedCases ->
+            lockedCases
+            |> tryMap (fun c -> c.CaseName) id
+            |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInLockedMessage (recordName,fieldName)))
+            |> Result.bind (fun lockedCasesMap ->
+                let newLockedCases =
+                    info.Cases
+                    |> List.mapFold (fun nextNum case ->
+                        match lockedCasesMap.TryFind(case.Name) with
+                        | Some lockedCase -> (lockedCase, nextNum)
+                        | None -> ({CaseName = case.Name; Num = nextNum}, (nextNum + 1)))
+                        nextNum
 
-                        let missedFields =
-                            messageLockItems
-                            |> List.choose (fun x ->
-                                let fieldName = lockItemName x
-                                match newLockItemsMap.TryFind fieldName with
-                                | Some _ -> None
-                                | None -> Some fieldName)
-
-                        if missedFields.IsEmpty then
-                            MessageLock {Name = fullName; LockItems = newLockItems} |> Ok
-                        else
-                            missedFields
-                            |> List.map (fun fieldName -> MissedFieldInRecord (fullName, fieldName))
-                            |> Error))))
+                fst newLockedCases
+                |> checkMissedItems
+                    (fun c -> c.CaseName)
+                    (fun fieldName -> DuplicateFieldInRecord (recordName,fieldName))
+                    (fun fieldName -> MissedCaseInUnion (recordName, unionName, fieldName))
+                    lockedCases
+                |> Result.map (fun cases -> cases, (snd newLockedCases))))
