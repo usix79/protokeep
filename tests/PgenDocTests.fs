@@ -1,22 +1,23 @@
-module ParsingTests
+module PgenDocTests
 
 open System
 open Xunit
+open Protogen.Types
 open Protogen
 
-let private assertParse input expected =
-    match parse input with
+let private assertOfString input expected =
+    match Parsers.parsePgenDoc input with
     | Ok res -> Assert.Equal<Module list>(expected, res)
     | Error err -> failwith err
 
 [<Fact>]
 let ``Test empty input`` () =
-    assertParse "" []
+    assertOfString "" []
 
 [<Fact>]
 let ``Test single empty module`` () =
     let input = "module Domain.Foundation"
-    assertParse input [{Name = ComplexName ["Domain"; "Foundation"]; Items = []}]
+    assertOfString input [{Name = ComplexName ["Foundation"; "Domain"]; Items = []}]
 
 [<Fact>]
 let ``Test many empty modules`` () =
@@ -26,9 +27,9 @@ module Domain.Foundation
 """
     let expected = [
             {Name = ComplexName ["Domain"]; Items = []}
-            {Name = ComplexName ["Domain"; "Foundation"]; Items = []}]
+            {Name = ComplexName ["Foundation"; "Domain"]; Items = []}]
 
-    assertParse input expected
+    assertOfString input expected
 
 [<Fact>]
 let ``Test enum`` () =
@@ -39,7 +40,7 @@ enum TrafficLight =
     | Yellow
     | Green
 """
-    assertParse input [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
+    assertOfString input [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
 
 [<Fact>]
 let ``Test single line enum`` () =
@@ -47,7 +48,7 @@ let ``Test single line enum`` () =
 module Domain
 enum TrafficLight = Red | Yellow | Green
 """
-    assertParse input [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
+    assertOfString input [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
 
 [<Fact>]
 let ``Test record`` () =
@@ -72,7 +73,7 @@ record Crossroad = {
     Props: string map
 }
 """
-    assertParse input [{
+    assertOfString input [{
         Name = ComplexName ["Domain"]
         Items = [
             Record {
@@ -89,13 +90,12 @@ record Crossroad = {
                     { Name = "Ratio"; Type = Decimal 2 }
                     { Name = "LastChecked"; Type = Timespamp }
                     { Name = "ServiceInterval"; Type = Duration }
-                    { Name = "CurrentLight"; Type = Complex (ComplexName ["Domain"; "TrafficLight"]) }
+                    { Name = "CurrentLight"; Type = Complex (ComplexName ["TrafficLight"; "Domain"]) }
                     { Name = "Nickname"; Type = Optional String }
                     { Name = "Img"; Type = Bytes }
                     { Name = "Notes"; Type = Array String }
                     { Name = "Props"; Type = Map String }
                 ]}]}]
-
 
 [<Fact>]
 let ``Test single line record`` () =
@@ -103,7 +103,7 @@ let ``Test single line record`` () =
 module Domain
 record Crossroad = { Id: int; Street1: string; Street2: string }
 """
-    assertParse input [{
+    assertOfString input [{
         Name = ComplexName ["Domain"]
         Items = [
             Record {
@@ -113,7 +113,6 @@ record Crossroad = { Id: int; Street1: string; Street2: string }
                     { Name = "Street1"; Type = String }
                     { Name = "Street2"; Type = String }
                 ]}]}]
-
 
 [<Fact>]
 let ``Test union`` () =
@@ -125,7 +124,7 @@ union ServiceCheck =
     | Campaign of name:string*step:int
     | RCA of Incident
 """
-    assertParse input [{
+    assertOfString input [{
         Name = ComplexName ["Domain"]
         Items = [
             Union {
@@ -146,7 +145,7 @@ let ``Test single line union`` () =
 module Domain
 union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
 """
-    assertParse input [{
+    assertOfString input [{
         Name = ComplexName ["Domain"]
         Items = [
             Union {
@@ -172,10 +171,10 @@ enum AltTrafficLight = Red | Yellow | Blue
 record Crossroad = { Id: int; Street1: string; Street2: string }
 union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
 """
-    assertParse input [
+    assertOfString input [
         {   Name = ComplexName ["Domain"]
             Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}] }
-        {   Name = ComplexName ["Domain"; "Foundation"]
+        {   Name = ComplexName ["Foundation"; "Domain"]
             Items = [
                 Enum {
                     Name = "AltTrafficLight";

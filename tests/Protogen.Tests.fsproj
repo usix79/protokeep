@@ -9,7 +9,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EvolutionTests.fs" />
-    <Compile Include="ParsingTests.fs" />
+    <Compile Include="LockDocTests.fs" />
+    <Compile Include="PgenDocTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />

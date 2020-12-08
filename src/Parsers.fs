@@ -1,3 +1,4 @@
+[<RequireQualifiedAccess>]
 module Protogen.Parsers
 
 open FParsec
@@ -98,10 +99,60 @@ module private Impl =
                 (many (choice [enum'; record'; union']))
                 (fun name items -> {Name = name; Items = items})
 
-    let pgenFile =
+    let pgenDocument =
         spaces >>. many (module' .>> spaces) .>> eof
 
-let parsePgen input =
-    match run Impl.pgenFile input with
+    let enumLock =
+        keyword "enum" >>.
+            pipe2
+                (complexName .>> ts)
+                (many1 (
+                    (ws >>. pstring "value" >>. ws1 >>.
+                        pipe2
+                            identifier
+                            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
+                            (fun value' num -> {Name = value'; Num = num}))))
+                (fun name values -> EnumLock {Name = name; Values = values})
+
+    let messageField =
+        pstring "field" >>. ws1 >>.
+        pipe3
+            (identifier .>> ws1)
+            (fullType')
+            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
+            (fun name type' num -> Field {Name = name; Type = type'; Num = num})
+
+    let messageOneOfCase =
+        pstring "case" >>. ws1 >>.
+        pipe2
+            (identifier .>> ws1)
+            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
+            (fun name num -> {CaseName = name; Num = num})
+
+    let messageOneOf =
+        pstring "oneof" >>. ws1 >>.
+        pipe3
+            (identifier .>> ws1)
+            (complexName .>> ts)
+            (many1 (ws >>. messageOneOfCase))
+            (fun name unionName cases -> OneOf (name, unionName, cases))
+
+    let messageLock =
+        keyword "message" >>.
+            pipe2
+                (complexName .>> ts)
+                (many (ws >>. choice [messageField; messageOneOf]))
+                (fun name items -> MessageLock {Name = name; LockItems = items})
+
+    let lockDocument =
+        spaces >>. many (choice [enumLock; messageLock] .>> spaces) .>> eof
+
+let parsePgenDoc input =
+    match run Impl.pgenDocument input with
+    | Success (model,_,_) -> Result.Ok model
+    | Failure (err,_,_) -> Result.Error err
+
+let parseLockDoc input =
+    match run Impl.lockDocument input with
     | Success (model,_,_) -> Result.Ok model
     | Failure (err,_,_) -> Result.Error err
