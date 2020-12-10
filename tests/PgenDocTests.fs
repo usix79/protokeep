@@ -164,12 +164,21 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
 let ``Complex Test`` () =
     let input = """
 module Domain
+
 enum TrafficLight = Red | Yellow | Green
 
 module Domain.Foundation
+
 enum AltTrafficLight = Red | Yellow | Blue
-record Crossroad = { Id: int; Street1: string; Street2: string }
+
+record Crossroad = {
+    Id: int
+    Street1: string
+    Street2: string
+}
+
 union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
+
 """
     assertOfString input [
         {   Name = ComplexName ["Domain"]

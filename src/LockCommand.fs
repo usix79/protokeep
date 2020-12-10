@@ -1,8 +1,30 @@
 [<RequireQualifiedAccess>]
-module Protogen.LockFile
+module rec Protogen.LockCommand
 
+open System
+open System.IO
 open System.Text
 open Types
+
+let Handler modules locks = function
+    | lockFileName::args ->
+        Evolution.lock modules locks
+        |> Result.mapError (sprintf "%A")
+        |> Result.bind(fun newlocks ->
+            if newlocks <> locks then
+                Console.WriteLine($"Updating {lockFileName}")
+                File.WriteAllText(lockFileName, (gen newlocks))
+            else
+                Console.WriteLine($"Lock is not changed for {lockFileName}")
+            Ok ())
+    | [] -> Error "first argument should contain name of the lockfile"
+
+
+let Instance = {
+    Name = "lock"
+    Description = "lock given pgen types, an error is raised if evolution is not possible"
+    Run = Handler
+}
 
 let complexNameToString (ComplexName ns) = ns |> List.rev |> String.concat "."
 

@@ -16,7 +16,6 @@ let rec traverse f list =
     | [] -> Ok []
     | head::tail -> Ok cons <*> (f head) <*> (traverse f tail)
 
-
 let tryMap keyf valf items =
     let rec f = function
     | [] -> Map.empty, []

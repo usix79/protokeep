@@ -6,7 +6,8 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="Types.fs" />
-    <Compile Include="LockFile.fs" />
+    <Compile Include="CheckCommand.fs" />
+    <Compile Include="LockCommand.fs" />
     <Compile Include="Parsers.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

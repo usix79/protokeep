@@ -48,6 +48,12 @@ type LockItem =
     | EnumLock of EnumLock
     | MessageLock of MessageLock
 
+type Command = {
+    Name: string
+    Description: string
+    Run: Module list -> LockItem list -> string list -> Result<unit,string>
+}
+
 module rec Evolution =
 
     open Utils
@@ -260,3 +266,6 @@ module rec Evolution =
                     (fun fieldName -> MissedCaseInUnion (recordName, unionName, fieldName))
                     lockedCases
                 |> Result.map (fun cases -> cases, (snd newLockedCases))))
+
+
+//module Commands =

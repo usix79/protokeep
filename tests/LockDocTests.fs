@@ -76,5 +76,5 @@ message Domain.ServiceCheck.Planned
 
 [<Theory; MemberData("MyTestData", MemberType=typeof<TestData>)>]
 let testAllCases (locks, txt) =
-    Assert.Equal(txt, LockFile.gen locks)
+    Assert.Equal(txt, Protogen.LockCommand.gen locks)
     assertOfString txt locks

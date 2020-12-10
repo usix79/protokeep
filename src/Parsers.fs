@@ -96,7 +96,7 @@ module private Impl =
         keyword "module" >>.
             pipe2
                 (complexName .>> ts)
-                (many (choice [enum'; record'; union']))
+                (many (spaces >>. choice [enum'; record'; union']))
                 (fun name items -> {Name = name; Items = items})
 
     let pgenDocument =
