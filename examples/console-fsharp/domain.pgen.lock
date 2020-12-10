@@ -1,0 +1,18 @@
+enum Domain.TrafficLight
+    value Red = 1
+    value Yellow = 2
+    value Green = 3
+message Domain.LightStatus.Normal
+message Domain.LightStatus.Warning
+    field errorsCount int = 1
+message Domain.LightStatus.OutOfOrder
+    field since timestamp = 1
+message Domain.Crossroad
+    field Id int = 1
+    field Street1 string = 2
+    field Street2 string = 3
+    field Light TrafficLight = 4
+    oneof LightStatus LightStatus
+        case Normal = 5
+        case Warning = 6
+        case OutOfOrder = 7
