@@ -76,7 +76,53 @@ message Crossroad {
     repeated string Notes = 15;
     map<string,string> Props = 16;
 }
-    """)
+    """);
+        ("""
+module Domain
+
+enum TrafficLight = Red | Yellow | Green
+
+union LightStatus =
+    | Normal
+    | Warning of errorsCount:int
+    | OutOfOrder of since:timestamp
+
+record Crossroad = {
+    Id: int
+    Street1: string
+    Street2: string
+    Light: TrafficLight
+    LightStatus: LightStatus
+}""", """
+syntax = "proto3";
+package Domain;
+import "google.protobuf.timestamp.proto";
+enum TrafficLight {
+    Unknown = 0;
+    Red = 1;
+    Yellow = 2;
+    Green = 3;
+}
+message LightStatus__Normal {
+}
+message LightStatus__Warning {
+    int32 ErrorsCount = 1;
+}
+message LightStatus__OutOfOrder {
+    google.protobuf.Timestamp Since = 1;
+}
+message Crossroad {
+    int32 Id = 1;
+    string Street1 = 2;
+    string Street2 = 3;
+    Domain.TrafficLight Light = 4;
+    oneof LightStatus {
+        Domain.LightStatus__Normal LightStatusNormal = 5;
+        Domain.LightStatus__Warning LightStatusWarning = 6;
+        Domain.LightStatus__OutOfOrder LightStatusOutOfOrder = 7;
+    }
+}
+""")
     ] |> Seq.map FSharpValue.GetTupleFields
 
 [<Theory; MemberData("MyTestData", MemberType=typeof<TestData>)>]

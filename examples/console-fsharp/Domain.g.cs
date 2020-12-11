@@ -25,25 +25,36 @@ namespace Domain {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Cgxkb21haW4ucHJvdG8SBkRvbWFpbhofZ29vZ2xlLnByb3RvYnVmLnRpbWVz",
-            "dGFtcC5wcm90bxoeZ29vZ2xlLnByb3RvYnVmLmR1cmF0aW9uLnByb3RvIl4K",
-            "CUNyb3Nzcm9hZBIKCgJJZBgBIAEoBRIPCgdTdHJlZXQxGAIgASgJEg8KB1N0",
-            "cmVldDIYAyABKAkSIwoFTGlnaHQYBCABKA4yFC5Eb21haW4uVHJhZmZpY0xp",
-            "Z2h0IscDCgpDcm9zc3JvYWQyEgoKAklkGAEgASgFEg4KBkxvbmdJZBgCIAEo",
-            "AxINCgVBbHRJZBgDIAEoDBIPCgdTdHJlZXQxGAQgASgJEg8KB1N0cmVldDIY",
-            "BSABKAkSEwoLSXNNb25pdG9yZWQYBiABKAgSDAoEWHBvcxgHIAEoAhIMCgRZ",
-            "cG9zGAggASgBEg0KBVJhdGlvGAkgASgDEi8KC0xhc3RDaGVja2VkGAogASgL",
-            "MhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIyCg9TZXJ2aWNlSW50ZXJ2",
-            "YWwYCyABKAsyGS5nb29nbGUucHJvdG9idWYuRHVyYXRpb24SKgoMQ3VycmVu",
-            "dExpZ2h0GAwgASgOMhQuRG9tYWluLlRyYWZmaWNMaWdodBIXCg1OaWNrbmFt",
-            "ZVZhbHVlGA0gASgJSAASCwoDSW1nGA4gASgMEg0KBU5vdGVzGA8gAygJEiwK",
-            "BVByb3BzGBAgAygLMh0uRG9tYWluLkNyb3Nzcm9hZDIuUHJvcHNFbnRyeRos",
-            "CgpQcm9wc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFC",
-            "CgoITmlja25hbWUqOwoMVHJhZmZpY0xpZ2h0EgsKB1Vua25vd24QABIHCgNS",
-            "ZWQQARIKCgZZZWxsb3cQAhIJCgVHcmVlbhADYgZwcm90bzM="));
+            "dGFtcC5wcm90bxoeZ29vZ2xlLnByb3RvYnVmLmR1cmF0aW9uLnByb3RvIhUK",
+            "E0xpZ2h0U3RhdHVzX19Ob3JtYWwiKwoUTGlnaHRTdGF0dXNfX1dhcm5pbmcS",
+            "EwoLRXJyb3JzQ291bnQYASABKAUiRAoXTGlnaHRTdGF0dXNfX091dE9mT3Jk",
+            "ZXISKQoFU2luY2UYASABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1w",
+            "IqUCCglDcm9zc3JvYWQSCgoCSWQYASABKAUSDwoHU3RyZWV0MRgCIAEoCRIP",
+            "CgdTdHJlZXQyGAMgASgJEiMKBUxpZ2h0GAQgASgOMhQuRG9tYWluLlRyYWZm",
+            "aWNMaWdodBI4ChFMaWdodFN0YXR1c05vcm1hbBgFIAEoCzIbLkRvbWFpbi5M",
+            "aWdodFN0YXR1c19fTm9ybWFsSAASOgoSTGlnaHRTdGF0dXNXYXJuaW5nGAYg",
+            "ASgLMhwuRG9tYWluLkxpZ2h0U3RhdHVzX19XYXJuaW5nSAASQAoVTGlnaHRT",
+            "dGF0dXNPdXRPZk9yZGVyGAcgASgLMh8uRG9tYWluLkxpZ2h0U3RhdHVzX19P",
+            "dXRPZk9yZGVySABCDQoLTGlnaHRTdGF0dXMixwMKCkNyb3Nzcm9hZDISCgoC",
+            "SWQYASABKAUSDgoGTG9uZ0lkGAIgASgDEg0KBUFsdElkGAMgASgMEg8KB1N0",
+            "cmVldDEYBCABKAkSDwoHU3RyZWV0MhgFIAEoCRITCgtJc01vbml0b3JlZBgG",
+            "IAEoCBIMCgRYcG9zGAcgASgCEgwKBFlwb3MYCCABKAESDQoFUmF0aW8YCSAB",
+            "KAMSLwoLTGFzdENoZWNrZWQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGlt",
+            "ZXN0YW1wEjIKD1NlcnZpY2VJbnRlcnZhbBgLIAEoCzIZLmdvb2dsZS5wcm90",
+            "b2J1Zi5EdXJhdGlvbhIqCgxDdXJyZW50TGlnaHQYDCABKA4yFC5Eb21haW4u",
+            "VHJhZmZpY0xpZ2h0EhcKDU5pY2tuYW1lVmFsdWUYDSABKAlIABILCgNJbWcY",
+            "DiABKAwSDQoFTm90ZXMYDyADKAkSLAoFUHJvcHMYECADKAsyHS5Eb21haW4u",
+            "Q3Jvc3Nyb2FkMi5Qcm9wc0VudHJ5GiwKClByb3BzRW50cnkSCwoDa2V5GAEg",
+            "ASgJEg0KBXZhbHVlGAIgASgJOgI4AUIKCghOaWNrbmFtZSo7CgxUcmFmZmlj",
+            "TGlnaHQSCwoHVW5rbm93bhAAEgcKA1JlZBABEgoKBlllbGxvdxACEgkKBUdy",
+            "ZWVuEANiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.GoogleProtobufTimestampReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.GoogleProtobufDurationReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Domain.TrafficLight), }, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.Crossroad), global::Domain.Crossroad.Parser, new[]{ "Id", "Street1", "Street2", "Light" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.LightStatus__Normal), global::Domain.LightStatus__Normal.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.LightStatus__Warning), global::Domain.LightStatus__Warning.Parser, new[]{ "ErrorsCount" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.LightStatus__OutOfOrder), global::Domain.LightStatus__OutOfOrder.Parser, new[]{ "Since" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.Crossroad), global::Domain.Crossroad.Parser, new[]{ "Id", "Street1", "Street2", "Light", "LightStatusNormal", "LightStatusWarning", "LightStatusOutOfOrder" }, new[]{ "LightStatus" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Domain.Crossroad2), global::Domain.Crossroad2.Parser, new[]{ "Id", "LongId", "AltId", "Street1", "Street2", "IsMonitored", "Xpos", "Ypos", "Ratio", "LastChecked", "ServiceInterval", "CurrentLight", "NicknameValue", "Img", "Notes", "Props" }, new[]{ "Nickname" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
           }));
     }
@@ -61,6 +72,495 @@ namespace Domain {
   #endregion
 
   #region Messages
+  public sealed partial class LightStatus__Normal : pb::IMessage<LightStatus__Normal>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<LightStatus__Normal> _parser = new pb::MessageParser<LightStatus__Normal>(() => new LightStatus__Normal());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<LightStatus__Normal> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[0]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__Normal() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__Normal(LightStatus__Normal other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__Normal Clone() {
+      return new LightStatus__Normal(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as LightStatus__Normal);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(LightStatus__Normal other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(LightStatus__Normal other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
+  public sealed partial class LightStatus__Warning : pb::IMessage<LightStatus__Warning>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<LightStatus__Warning> _parser = new pb::MessageParser<LightStatus__Warning>(() => new LightStatus__Warning());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<LightStatus__Warning> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__Warning() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__Warning(LightStatus__Warning other) : this() {
+      errorsCount_ = other.errorsCount_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__Warning Clone() {
+      return new LightStatus__Warning(this);
+    }
+
+    /// <summary>Field number for the "ErrorsCount" field.</summary>
+    public const int ErrorsCountFieldNumber = 1;
+    private int errorsCount_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int ErrorsCount {
+      get { return errorsCount_; }
+      set {
+        errorsCount_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as LightStatus__Warning);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(LightStatus__Warning other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (ErrorsCount != other.ErrorsCount) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (ErrorsCount != 0) hash ^= ErrorsCount.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (ErrorsCount != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(ErrorsCount);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (ErrorsCount != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(ErrorsCount);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (ErrorsCount != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ErrorsCount);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(LightStatus__Warning other) {
+      if (other == null) {
+        return;
+      }
+      if (other.ErrorsCount != 0) {
+        ErrorsCount = other.ErrorsCount;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            ErrorsCount = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            ErrorsCount = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  public sealed partial class LightStatus__OutOfOrder : pb::IMessage<LightStatus__OutOfOrder>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<LightStatus__OutOfOrder> _parser = new pb::MessageParser<LightStatus__OutOfOrder>(() => new LightStatus__OutOfOrder());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<LightStatus__OutOfOrder> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__OutOfOrder() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__OutOfOrder(LightStatus__OutOfOrder other) : this() {
+      since_ = other.since_ != null ? other.since_.Clone() : null;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatus__OutOfOrder Clone() {
+      return new LightStatus__OutOfOrder(this);
+    }
+
+    /// <summary>Field number for the "Since" field.</summary>
+    public const int SinceFieldNumber = 1;
+    private global::Google.Protobuf.WellKnownTypes.Timestamp since_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Google.Protobuf.WellKnownTypes.Timestamp Since {
+      get { return since_; }
+      set {
+        since_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as LightStatus__OutOfOrder);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(LightStatus__OutOfOrder other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Since, other.Since)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (since_ != null) hash ^= Since.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (since_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Since);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (since_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Since);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (since_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Since);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(LightStatus__OutOfOrder other) {
+      if (other == null) {
+        return;
+      }
+      if (other.since_ != null) {
+        if (since_ == null) {
+          Since = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+        }
+        Since.MergeFrom(other.Since);
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (since_ == null) {
+              Since = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+            }
+            input.ReadMessage(Since);
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (since_ == null) {
+              Since = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+            }
+            input.ReadMessage(Since);
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   public sealed partial class Crossroad : pb::IMessage<Crossroad>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -73,7 +573,7 @@ namespace Domain {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[0]; }
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -94,8 +594,22 @@ namespace Domain {
       street1_ = other.street1_;
       street2_ = other.street2_;
       light_ = other.light_;
+      switch (other.LightStatusCase) {
+        case LightStatusOneofCase.LightStatusNormal:
+          LightStatusNormal = other.LightStatusNormal.Clone();
+          break;
+        case LightStatusOneofCase.LightStatusWarning:
+          LightStatusWarning = other.LightStatusWarning.Clone();
+          break;
+        case LightStatusOneofCase.LightStatusOutOfOrder:
+          LightStatusOutOfOrder = other.LightStatusOutOfOrder.Clone();
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
+
+
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Crossroad Clone() {
@@ -146,6 +660,59 @@ namespace Domain {
       }
     }
 
+    /// <summary>Field number for the "LightStatusNormal" field.</summary>
+    public const int LightStatusNormalFieldNumber = 5;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Domain.LightStatus__Normal LightStatusNormal {
+      get { return lightStatusCase_ == LightStatusOneofCase.LightStatusNormal ? (global::Domain.LightStatus__Normal) lightStatus_ : null; }
+      set {
+        lightStatus_ = value;
+        lightStatusCase_ = value == null ? LightStatusOneofCase.None : LightStatusOneofCase.LightStatusNormal;
+      }
+    }
+
+    /// <summary>Field number for the "LightStatusWarning" field.</summary>
+    public const int LightStatusWarningFieldNumber = 6;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Domain.LightStatus__Warning LightStatusWarning {
+      get { return lightStatusCase_ == LightStatusOneofCase.LightStatusWarning ? (global::Domain.LightStatus__Warning) lightStatus_ : null; }
+      set {
+        lightStatus_ = value;
+        lightStatusCase_ = value == null ? LightStatusOneofCase.None : LightStatusOneofCase.LightStatusWarning;
+      }
+    }
+
+    /// <summary>Field number for the "LightStatusOutOfOrder" field.</summary>
+    public const int LightStatusOutOfOrderFieldNumber = 7;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Domain.LightStatus__OutOfOrder LightStatusOutOfOrder {
+      get { return lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder ? (global::Domain.LightStatus__OutOfOrder) lightStatus_ : null; }
+      set {
+        lightStatus_ = value;
+        lightStatusCase_ = value == null ? LightStatusOneofCase.None : LightStatusOneofCase.LightStatusOutOfOrder;
+      }
+    }
+
+    private object lightStatus_;
+    /// <summary>Enum of possible cases for the "LightStatus" oneof.</summary>
+    public enum LightStatusOneofCase {
+      None = 0,
+      LightStatusNormal = 5,
+      LightStatusWarning = 6,
+      LightStatusOutOfOrder = 7,
+    }
+    private LightStatusOneofCase lightStatusCase_ = LightStatusOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public LightStatusOneofCase LightStatusCase {
+      get { return lightStatusCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void ClearLightStatus() {
+      lightStatusCase_ = LightStatusOneofCase.None;
+      lightStatus_ = null;
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as Crossroad);
@@ -163,6 +730,10 @@ namespace Domain {
       if (Street1 != other.Street1) return false;
       if (Street2 != other.Street2) return false;
       if (Light != other.Light) return false;
+      if (!object.Equals(LightStatusNormal, other.LightStatusNormal)) return false;
+      if (!object.Equals(LightStatusWarning, other.LightStatusWarning)) return false;
+      if (!object.Equals(LightStatusOutOfOrder, other.LightStatusOutOfOrder)) return false;
+      if (LightStatusCase != other.LightStatusCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -173,6 +744,10 @@ namespace Domain {
       if (Street1.Length != 0) hash ^= Street1.GetHashCode();
       if (Street2.Length != 0) hash ^= Street2.GetHashCode();
       if (Light != global::Domain.TrafficLight.Unknown) hash ^= Light.GetHashCode();
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusNormal) hash ^= LightStatusNormal.GetHashCode();
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusWarning) hash ^= LightStatusWarning.GetHashCode();
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder) hash ^= LightStatusOutOfOrder.GetHashCode();
+      hash ^= (int) lightStatusCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -205,6 +780,18 @@ namespace Domain {
         output.WriteRawTag(32);
         output.WriteEnum((int) Light);
       }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusNormal) {
+        output.WriteRawTag(42);
+        output.WriteMessage(LightStatusNormal);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusWarning) {
+        output.WriteRawTag(50);
+        output.WriteMessage(LightStatusWarning);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder) {
+        output.WriteRawTag(58);
+        output.WriteMessage(LightStatusOutOfOrder);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -230,6 +817,18 @@ namespace Domain {
         output.WriteRawTag(32);
         output.WriteEnum((int) Light);
       }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusNormal) {
+        output.WriteRawTag(42);
+        output.WriteMessage(LightStatusNormal);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusWarning) {
+        output.WriteRawTag(50);
+        output.WriteMessage(LightStatusWarning);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder) {
+        output.WriteRawTag(58);
+        output.WriteMessage(LightStatusOutOfOrder);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -250,6 +849,15 @@ namespace Domain {
       }
       if (Light != global::Domain.TrafficLight.Unknown) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Light);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusNormal) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(LightStatusNormal);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusWarning) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(LightStatusWarning);
+      }
+      if (lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(LightStatusOutOfOrder);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -274,6 +882,27 @@ namespace Domain {
       if (other.Light != global::Domain.TrafficLight.Unknown) {
         Light = other.Light;
       }
+      switch (other.LightStatusCase) {
+        case LightStatusOneofCase.LightStatusNormal:
+          if (LightStatusNormal == null) {
+            LightStatusNormal = new global::Domain.LightStatus__Normal();
+          }
+          LightStatusNormal.MergeFrom(other.LightStatusNormal);
+          break;
+        case LightStatusOneofCase.LightStatusWarning:
+          if (LightStatusWarning == null) {
+            LightStatusWarning = new global::Domain.LightStatus__Warning();
+          }
+          LightStatusWarning.MergeFrom(other.LightStatusWarning);
+          break;
+        case LightStatusOneofCase.LightStatusOutOfOrder:
+          if (LightStatusOutOfOrder == null) {
+            LightStatusOutOfOrder = new global::Domain.LightStatus__OutOfOrder();
+          }
+          LightStatusOutOfOrder.MergeFrom(other.LightStatusOutOfOrder);
+          break;
+      }
+
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -302,6 +931,33 @@ namespace Domain {
           }
           case 32: {
             Light = (global::Domain.TrafficLight) input.ReadEnum();
+            break;
+          }
+          case 42: {
+            global::Domain.LightStatus__Normal subBuilder = new global::Domain.LightStatus__Normal();
+            if (lightStatusCase_ == LightStatusOneofCase.LightStatusNormal) {
+              subBuilder.MergeFrom(LightStatusNormal);
+            }
+            input.ReadMessage(subBuilder);
+            LightStatusNormal = subBuilder;
+            break;
+          }
+          case 50: {
+            global::Domain.LightStatus__Warning subBuilder = new global::Domain.LightStatus__Warning();
+            if (lightStatusCase_ == LightStatusOneofCase.LightStatusWarning) {
+              subBuilder.MergeFrom(LightStatusWarning);
+            }
+            input.ReadMessage(subBuilder);
+            LightStatusWarning = subBuilder;
+            break;
+          }
+          case 58: {
+            global::Domain.LightStatus__OutOfOrder subBuilder = new global::Domain.LightStatus__OutOfOrder();
+            if (lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder) {
+              subBuilder.MergeFrom(LightStatusOutOfOrder);
+            }
+            input.ReadMessage(subBuilder);
+            LightStatusOutOfOrder = subBuilder;
             break;
           }
         }
@@ -334,6 +990,33 @@ namespace Domain {
             Light = (global::Domain.TrafficLight) input.ReadEnum();
             break;
           }
+          case 42: {
+            global::Domain.LightStatus__Normal subBuilder = new global::Domain.LightStatus__Normal();
+            if (lightStatusCase_ == LightStatusOneofCase.LightStatusNormal) {
+              subBuilder.MergeFrom(LightStatusNormal);
+            }
+            input.ReadMessage(subBuilder);
+            LightStatusNormal = subBuilder;
+            break;
+          }
+          case 50: {
+            global::Domain.LightStatus__Warning subBuilder = new global::Domain.LightStatus__Warning();
+            if (lightStatusCase_ == LightStatusOneofCase.LightStatusWarning) {
+              subBuilder.MergeFrom(LightStatusWarning);
+            }
+            input.ReadMessage(subBuilder);
+            LightStatusWarning = subBuilder;
+            break;
+          }
+          case 58: {
+            global::Domain.LightStatus__OutOfOrder subBuilder = new global::Domain.LightStatus__OutOfOrder();
+            if (lightStatusCase_ == LightStatusOneofCase.LightStatusOutOfOrder) {
+              subBuilder.MergeFrom(LightStatusOutOfOrder);
+            }
+            input.ReadMessage(subBuilder);
+            LightStatusOutOfOrder = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -353,7 +1036,7 @@ namespace Domain {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[1]; }
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

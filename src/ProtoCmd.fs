@@ -48,7 +48,7 @@ let gen (modules:Module list) (locks:LockItem list) =
     let messageLockCache =
         locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
 
-    let f txt ns = function
+    let rec f txt ns = function
     | Enum info ->
         let fullName = Types.mergeName ns info.Name
         line txt $"enum {info.Name} {{"
@@ -56,20 +56,30 @@ let gen (modules:Module list) (locks:LockItem list) =
         for symbol in enumLocksCache.[fullName].Values do
             line txt $"    {symbol.Name} = {symbol.Num};"
         line txt $"}}"
-    | Record info ->
+    | Record info -> fRecord txt ns info.Name info
+    | Union info ->
+        for case in info.Cases do
+            let recordName = info.Name + "__" + case.Name
+            fRecord txt (Types.mergeName ns info.Name) recordName case
+    and fRecord txt ns recordName info =
         let fullName = Types.mergeName ns info.Name
-        line txt $"message {info.Name} {{"
+        line txt $"message {recordName} {{"
+        printfn "NAME: %A" fullName
         for item in messageLockCache.[fullName].LockItems do
             match item with
             | Field info ->
                 match info.Type with
                 | Optional v ->
-                    line txt $"    oneof {info.Name} {{{typeToString v} {info.Name}Value = {info.Num};}}"
+                    line txt $"    oneof {firstCharToUpper info.Name} {{{typeToString v} {firstCharToUpper info.Name}Value = {info.Num};}}"
                 | _ ->
-                    line txt $"    {typeToString info.Type} {info.Name} = {info.Num};"
-            | _ -> ()
+                    line txt $"    {typeToString info.Type} {firstCharToUpper info.Name} = {info.Num};"
+            | OneOf (name,unionName,fields) ->
+                line txt $"    oneof {firstCharToUpper name} {{"
+                for fieldLock in fields do
+                    line txt $"        {cn unionName}__{fieldLock.CaseName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
+                line txt $"    }}"
         line txt $"}}"
-    | Union info -> ()
+
 
     modules
     |> List.map(fun module' ->
