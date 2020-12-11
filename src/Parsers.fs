@@ -36,7 +36,7 @@ module private Impl =
             skipString "float" |>> (fun () -> Float)
             skipString "double" |>> (fun () -> Double)
             skipString "bytes" |>> (fun () -> Bytes)
-            skipString "timestamp" |>> (fun () -> Timespamp)
+            skipString "timestamp" |>> (fun () -> Timestamp)
             skipString "duration" |>> (fun () -> Duration)
             skipString "guid" |>> (fun () -> Guid)
             skipString "decimal" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')' |>> Decimal

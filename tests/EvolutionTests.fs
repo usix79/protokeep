@@ -160,7 +160,7 @@ let ``Union`` () =
                 {Name = "Planned"; Fields = [
                     {Name = "What"; Type = String}
                     {Name = "Where"; Type = String}
-                    {Name = "When"; Type = Timespamp}
+                    {Name = "When"; Type = Timestamp}
                     ]}
             ]}
         ]}]
@@ -183,7 +183,7 @@ let ``Union`` () =
             LockItems = [
                 Field { Name = "What"; Type = String; Num = 1 };
                 Field { Name = "Where"; Type = String;  Num = 2 };
-                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ]
 
     assertEqual expected (Types.lock input lock)
@@ -302,7 +302,7 @@ let MissedFieldInUnion() =
             LockItems = [
                 Field { Name = "What"; Type = String; Num = 1 };
                 Field { Name = "Where"; Type = String;  Num = 2 };
-                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ]
 
     let expected = Error [ Types.MissedCaseInUnion (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
@@ -323,7 +323,7 @@ let AddFieldInUnion() =
                 {Name = "Planned"; Fields = [
                     { Name = "What"; Type = String};
                     { Name = "Where"; Type = String};
-                    { Name = "When"; Type = Timespamp}
+                    { Name = "When"; Type = Timestamp}
                 ]}
                 {Name = "NewCase"; Fields = []}
             ]}
@@ -346,7 +346,7 @@ let AddFieldInUnion() =
             LockItems = [
                 Field { Name = "What"; Type = String; Num = 1 }
                 Field { Name = "Where"; Type = String;  Num = 2 }
-                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ]
 
     let expected = Ok [
@@ -368,7 +368,7 @@ let AddFieldInUnion() =
             LockItems = [
                 Field { Name = "What"; Type = String; Num = 1 }
                 Field { Name = "Where"; Type = String;  Num = 2 }
-                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         MessageLock {
             Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]
             LockItems = [] }

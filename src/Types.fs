@@ -12,7 +12,7 @@ type Type =
     | Float
     | Double
     | Bytes
-    | Timespamp
+    | Timestamp
     | Duration
     | Guid
     | Optional of value: Type
@@ -79,6 +79,12 @@ module rec Types =
     type TypesCache = Map<ComplexName,ModuleItem>
 
     let mergeName (ComplexName ns) name = ComplexName (name::ns)
+
+    let extractNamespace (ComplexName ns) =
+        match ns with
+        | _::tail -> ComplexName (tail)
+        | [] -> ComplexName []
+
 
     let moduleItemName ns = function
         | Enum x -> mergeName ns x.Name
@@ -156,7 +162,9 @@ module rec Types =
 
     let tryFindType (typesCache:TypesCache) (ComplexName(ns)) (ComplexName(typeName)) =
         let rec f ns =
-            typesCache.TryFind(ComplexName (typeName @ ns))
+            let testName = ComplexName (typeName @ ns)
+            typesCache.TryFind(testName)
+            |> Option.map(fun item -> testName,item)
             |> Option.orElseWith(fun () ->
                 match ns with
                 | [] -> None
@@ -167,7 +175,7 @@ module rec Types =
         match type' with
         | Complex typeName ->
             match tryFindType typesCache ns typeName with
-            | Some (Union info) -> Some (typeName,info)
+            | Some (fullTypeName, Union info) -> Some (fullTypeName,info)
             | _ -> None
         | _ -> None
 
@@ -181,6 +189,26 @@ module rec Types =
             | Some _ -> None
             | None -> Some typeName
         | _ -> None
+
+
+    let toFullQualifiedType (typesCache:TypesCache) (ComplexName ns) type' =
+
+        let getFullName (ComplexName(typeName)) =
+            let rec f ns =
+                let testName = ComplexName (typeName @ ns)
+                if typesCache.ContainsKey(ComplexName (typeName @ ns)) then testName
+                else
+                    match ns with
+                    | _::tail -> f tail
+                    | [] -> failwithf "Cann't find type %A" typeName
+            f ns
+
+        match type' with
+        | Optional (Complex typeName) -> getFullName typeName |> Complex |> Optional
+        | Array (Complex typeName) -> getFullName typeName |> Complex |> Array
+        | Map (Complex typeName) -> getFullName typeName |> Complex |> Map
+        | Complex typeName  -> getFullName typeName |> Complex
+        | t -> t
 
     let allowedEvolution from to' =
         // TODO: allow more evolutions
@@ -218,13 +246,14 @@ module rec Types =
                         | Ok (locks,nextNum) -> Ok (OneOf (field.Name, unionName, locks)), nextNum
                         | Error err -> Error err, nextNum
                     | _ -> // regular field
+                        let fullQualifiedType = toFullQualifiedType typesCache ns field.Type
                         match fieldsMap.TryFind field.Name with
                         | None -> // new field
-                            Ok (Field {Name = field.Name; Type = field.Type; Num = nextNum}), (nextNum + 1)
+                            Ok (Field {Name = field.Name; Type = fullQualifiedType; Num = nextNum}), (nextNum + 1)
                         | Some item ->
                             match item with
-                            | Field lock when allowedEvolution lock.Type field.Type ->
-                                Ok (Field {Name = field.Name; Type = field.Type; Num = lock.Num}), nextNum
+                            | Field lock when allowedEvolution lock.Type fullQualifiedType ->
+                                Ok (Field {Name = field.Name; Type = fullQualifiedType; Num = lock.Num}), nextNum
                             | Field lock ->
                                 Error [UnacceptableEvolution(fullName, field.Name, lock.Type, field.Type)], nextNum
                             | OneOf (_, lockedUnionName, _) ->
@@ -266,6 +295,3 @@ module rec Types =
                     (fun fieldName -> MissedCaseInUnion (recordName, unionName, fieldName))
                     lockedCases
                 |> Result.map (fun cases -> cases, (snd newLockedCases))))
-
-
-//module Commands =

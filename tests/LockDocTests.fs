@@ -59,7 +59,7 @@ type TestData() =
             LockItems = [
                 Field { Name = "What"; Type = String; Num = 1 };
                 Field { Name = "Where"; Type = String;  Num = 2 };
-                Field { Name = "When"; Type = Timespamp; Num = 3 }] }
+                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ], """message Domain.Log
     field Id int = 1
     oneof Check Domain.ServiceCheck

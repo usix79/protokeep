@@ -88,7 +88,7 @@ record Crossroad = {
                     { Name = "Xpos"; Type = Float }
                     { Name = "Ypos"; Type = Double }
                     { Name = "Ratio"; Type = Decimal 2 }
-                    { Name = "LastChecked"; Type = Timespamp }
+                    { Name = "LastChecked"; Type = Timestamp }
                     { Name = "ServiceInterval"; Type = Duration }
                     { Name = "CurrentLight"; Type = Complex (ComplexName ["TrafficLight"; "Domain"]) }
                     { Name = "Nickname"; Type = Optional String }
@@ -131,7 +131,7 @@ union ServiceCheck =
                 Name = "ServiceCheck";
                 Cases = [
                     { Name = "Random"; Fields = []}
-                    { Name = "Planned"; Fields = [{Name = "Item1"; Type = Timespamp}] }
+                    { Name = "Planned"; Fields = [{Name = "Item1"; Type = Timestamp}] }
                     { Name = "Campaign"; Fields = [
                         {Name = "name"; Type = String}
                         {Name = "step"; Type = Int}
@@ -152,7 +152,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                 Name = "ServiceCheck";
                 Cases = [
                     { Name = "Random"; Fields = []}
-                    { Name = "Planned"; Fields = [{Name = "Item1"; Type = Timespamp}] }
+                    { Name = "Planned"; Fields = [{Name = "Item1"; Type = Timestamp}] }
                     { Name = "Campaign"; Fields = [
                         {Name = "name"; Type = String}
                         {Name = "step"; Type = Int}
@@ -199,7 +199,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                     Name = "ServiceCheck";
                     Cases = [
                         { Name = "Random"; Fields = []}
-                        { Name = "Planned"; Fields = [{ Name = "Item1"; Type = Timespamp }]}
+                        { Name = "Planned"; Fields = [{ Name = "Item1"; Type = Timestamp }]}
                         { Name = "Campaign"; Fields = [
                             {Name = "name"; Type = String}
                             {Name = "step"; Type = Int}

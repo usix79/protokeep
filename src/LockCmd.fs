@@ -20,13 +20,11 @@ let Handler modules locks = function
             Ok ())
     | [] -> Error "first argument should contain name of the lockfile"
 
-
 let Instance = {
     Name = "lock"
     Description = "lock given pgen types, an error is raised if evolution is not possible"
     Run = Handler
 }
-
 
 let rec typeToString (type':Type) =
     match type' with
@@ -36,9 +34,9 @@ let rec typeToString (type':Type) =
     | Long -> "long"
     | Float -> "float"
     | Double -> "double"
-    | Decimal scale -> $"decimal{scale}"
+    | Decimal scale -> $"decimal({scale})"
     | Bytes -> "bytes"
-    | Timespamp -> "timestamp"
+    | Timestamp -> "timestamp"
     | Duration -> "duration"
     | Guid -> "guid"
     | Optional v -> typeToString v + " option"
