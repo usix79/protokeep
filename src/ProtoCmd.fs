@@ -9,7 +9,6 @@ open Codegen
 
 let wellKnownTypes = ["google.protobuf.duration.proto"; "google.protobuf.timestamp.proto";]
 
-
 let Handler modules locks = function
     | "-o"::outputDirName::args
     | "--output"::outputDirName::args ->
@@ -79,7 +78,6 @@ let gen (modules:Module list) (locks:LockItem list) =
                     line txt $"        {cn unionName}__{fieldLock.CaseName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
                 line txt $"    }}"
         line txt $"}}"
-
 
     modules
     |> List.map(fun module' ->
