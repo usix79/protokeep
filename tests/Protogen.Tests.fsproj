@@ -8,6 +8,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProtoTests.fs" />
     <Compile Include="EvolutionTests.fs" />
     <Compile Include="LockDocTests.fs" />
     <Compile Include="PgenDocTests.fs" />

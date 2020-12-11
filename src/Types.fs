@@ -54,11 +54,11 @@ type Command = {
     Run: Module list -> LockItem list -> string list -> Result<unit,string>
 }
 
-module rec Evolution =
+module rec Types =
 
     open Utils
 
-    type Error =
+    type LockError =
         | General of string
         | DuplicateLockedTypeNames of ComplexName
         | DuplicateTypeNames of ComplexName
@@ -97,7 +97,7 @@ module rec Evolution =
         | Field x -> x.Num
         | OneOf (_, _, cases) -> (cases |> List.maxBy (fun c -> c.Num)).Num
 
-    let lock (modules: Module list) (currentLock: LockItem list) : Result<LockItem list, Error list> =
+    let lock (modules: Module list) (currentLock: LockItem list) : Result<LockItem list, LockError list> =
 
         currentLock
         |> tryMap lockItemName id
@@ -108,7 +108,7 @@ module rec Evolution =
             |> tryMap fst snd
             |> Result.mapError(List.map DuplicateTypeNames)
             |> Result.bind(fun typesCache ->
-                let lockModule (module':Module) : Result<LockItem list, Error list> =
+                let lockModule (module':Module) : Result<LockItem list, LockError list> =
                     module'.Items
                     |> traverse (function
                         | Enum info -> lockEnum lockCache module'.Name info |> (Result.map List.singleton)
@@ -195,7 +195,7 @@ module rec Evolution =
         | Float, Double -> true
         | _ -> from = to'
 
-    let lockRecord (lockCache:LockCache) (typesCache:TypesCache) ns info : Result<LockItem, Error list> =
+    let lockRecord (lockCache:LockCache) (typesCache:TypesCache) ns info : Result<LockItem, LockError list> =
         let fullName = mergeName ns info.Name
 
         match lockCache.TryFind fullName with

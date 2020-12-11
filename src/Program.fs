@@ -3,8 +3,9 @@ open System.IO
 open Protogen.Types
 
 let commands: Command list = [
-    Protogen.CheckCommand.Instance
-    Protogen.LockCommand.Instance
+    Protogen.CheckCmd.Instance
+    Protogen.LockCmd.Instance
+    Protogen.ProtoCmd.Instance
 ]
 
 [<EntryPoint>]
@@ -46,7 +47,10 @@ Protogen tool
                         else
                             Console.WriteLine "Warning, lock file not found, procceed with empty lock"
                             Ok []
-                        |> Result.bind(fun locks -> cmd.Run modules locks (lockFileName::args)))))
+                        |> Result.bind(fun locks ->
+                            let args = if cmd.Name = "lock" then lockFileName::args else args // special case for lock cmd
+                            cmd.Run modules locks args
+                            ))))
         match res with
         | Ok _ -> 0
         | Error txt ->

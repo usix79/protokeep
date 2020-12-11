@@ -1,11 +1,11 @@
 [<RequireQualifiedAccess>]
-module Protogen.CheckCommand
+module Protogen.CheckCmd
 
 open System
 open Types
 
 let Handler modules locks args =
-    Evolution.lock modules locks
+    Types.lock modules locks
     |> Result.mapError (sprintf "%A")
     |> Result.bind(fun newlocks ->
         if newlocks <> locks then Console.WriteLine("Check Ok")

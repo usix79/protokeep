@@ -11,7 +11,7 @@ let assertEqual expected actual =
 
 [<Fact>]
 let ``Test empty evolution`` () =
-    Assert.Equal(Ok [], (Evolution.lock [] []))
+    Assert.Equal(Ok [], (Types.lock [] []))
 
 [<Fact>]
 let ``Duplicate Enums`` () =
@@ -19,9 +19,9 @@ let ``Duplicate Enums`` () =
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
     let lock = []
-    let expected = Error [ Evolution.DuplicateTypeNames (ComplexName ["TrafficLight"; "Domain"])]
+    let expected = Error [ Types.DuplicateTypeNames (ComplexName ["TrafficLight"; "Domain"])]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Duplicate Locked Enums`` () =
@@ -43,9 +43,9 @@ let ``Duplicate Locked Enums`` () =
                 {Name = "Yellow1"; Num = 2}
                 {Name = "Green1"; Num = 3}
             ]}]
-    let expected = Error [ Evolution.DuplicateLockedTypeNames (ComplexName ["TrafficLight"; "Domain"])]
+    let expected = Error [ Types.DuplicateLockedTypeNames (ComplexName ["TrafficLight"; "Domain"])]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Duplicate Symbols in Enum`` () =
@@ -53,9 +53,9 @@ let ``Duplicate Symbols in Enum`` () =
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
         ]}]
     let lock = []
-    let expected = Error [ Evolution.DuplicateSymbolsInEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
+    let expected = Error [ Types.DuplicateSymbolsInEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Duplicate Symbols in Locked Enum`` () =
@@ -71,9 +71,9 @@ let ``Duplicate Symbols in Locked Enum`` () =
                 {Name = "Green"; Num = 3}
                 {Name = "Yellow"; Num = 4}
             ]}]
-    let expected = Error [ Evolution.DuplicateSymbolsInLockedEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
+    let expected = Error [ Types.DuplicateSymbolsInLockedEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Missed Symbol in Enum`` () =
@@ -89,9 +89,9 @@ let ``Missed Symbol in Enum`` () =
                 {Name = "Green"; Num = 3}
                 {Name = "Blue"; Num = 4}
             ]}]
-    let expected = Error [ Evolution.MissedSymbolInEnum (ComplexName ["TrafficLight"; "Domain"], "Blue")]
+    let expected = Error [ Types.MissedSymbolInEnum (ComplexName ["TrafficLight"; "Domain"], "Blue")]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Single Enum`` () =
@@ -107,7 +107,7 @@ let ``Single Enum`` () =
             ]}
         ]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Unknown type of record's field`` () =
@@ -117,9 +117,9 @@ let ``Unknown type of record's field`` () =
             Record {Name = "Simple"; Fields = [{Name= "Id"; Type = Complex (ComplexName ["XXX"])}]}
         ]}]
     let lock = []
-    let expected = Error [ Evolution.UnknownFieldType (ComplexName ["Simple"; "Domain"], "Id", ComplexName ["XXX"])]
+    let expected = Error [ Types.UnknownFieldType (ComplexName ["Simple"; "Domain"], "Id", ComplexName ["XXX"])]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Simple Record`` () =
@@ -143,7 +143,7 @@ let ``Simple Record`` () =
             ]}
         ]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 
 [<Fact>]
@@ -186,7 +186,7 @@ let ``Union`` () =
                 Field { Name = "When"; Type = Timespamp; Num = 3 }] }
         ]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let ``Missed Field Record`` () =
@@ -208,9 +208,9 @@ let ``Missed Field Record`` () =
             ]}
         ]
 
-    let expected = Error [ Evolution.MissedFieldInRecord (ComplexName ["Crossroad"; "Domain"], "Street2") ]
+    let expected = Error [ Types.MissedFieldInRecord (ComplexName ["Crossroad"; "Domain"], "Street2") ]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 
 [<Fact>]
@@ -243,7 +243,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
                 Field {Name = "Street2"; Type = String; Num = 3}
             ]}
         ]
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let UnacceptableEvolutionOfAFieldType () =
@@ -266,9 +266,9 @@ let UnacceptableEvolutionOfAFieldType () =
             ]}
         ]
 
-    let expected = Error [ Evolution.UnacceptableEvolution(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
+    let expected = Error [ Types.UnacceptableEvolution(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 
 [<Fact>]
@@ -305,9 +305,9 @@ let MissedFieldInUnion() =
                 Field { Name = "When"; Type = Timespamp; Num = 3 }] }
         ]
 
-    let expected = Error [ Evolution.MissedCaseInUnion (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
+    let expected = Error [ Types.MissedCaseInUnion (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
 
 [<Fact>]
 let AddFieldInUnion() =
@@ -375,4 +375,4 @@ let AddFieldInUnion() =
         ]
 
 
-    assertEqual expected (Evolution.lock input lock)
+    assertEqual expected (Types.lock input lock)
