@@ -37,7 +37,7 @@ Target.create "Clean" (fun _ -> ())
 Target.create "Build" (fun _ ->
     dotnet "build" protogenDirectory
     dotnetWithArgs [domainModelFileName; "lock"] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [domainModelFileName; "proto"; "-o"; protoFileName] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [domainModelFileName; "proto"; "-o"; "."] protogenDll __SOURCE_DIRECTORY__
     runTool "protoc" (sprintf "--csharp_out=. --csharp_opt=file_extension=.g.cs %s" protoFileName) __SOURCE_DIRECTORY__
 )
 

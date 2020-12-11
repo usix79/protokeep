@@ -24,12 +24,28 @@ namespace Domain {
     static DomainReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "Cgxkb21haW4ucHJvdG8SBkRvbWFpbio7CgxUcmFmZmljTGlnaHQSCwoHVW5r",
-            "bm93bhAAEgcKA1JlZBABEgoKBlllbGxvdxACEgkKBUdyZWVuEANiBnByb3Rv",
-            "Mw=="));
+            "Cgxkb21haW4ucHJvdG8SBkRvbWFpbhofZ29vZ2xlLnByb3RvYnVmLnRpbWVz",
+            "dGFtcC5wcm90bxoeZ29vZ2xlLnByb3RvYnVmLmR1cmF0aW9uLnByb3RvIl4K",
+            "CUNyb3Nzcm9hZBIKCgJJZBgBIAEoBRIPCgdTdHJlZXQxGAIgASgJEg8KB1N0",
+            "cmVldDIYAyABKAkSIwoFTGlnaHQYBCABKA4yFC5Eb21haW4uVHJhZmZpY0xp",
+            "Z2h0IscDCgpDcm9zc3JvYWQyEgoKAklkGAEgASgFEg4KBkxvbmdJZBgCIAEo",
+            "AxINCgVBbHRJZBgDIAEoDBIPCgdTdHJlZXQxGAQgASgJEg8KB1N0cmVldDIY",
+            "BSABKAkSEwoLSXNNb25pdG9yZWQYBiABKAgSDAoEWHBvcxgHIAEoAhIMCgRZ",
+            "cG9zGAggASgBEg0KBVJhdGlvGAkgASgDEi8KC0xhc3RDaGVja2VkGAogASgL",
+            "MhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIyCg9TZXJ2aWNlSW50ZXJ2",
+            "YWwYCyABKAsyGS5nb29nbGUucHJvdG9idWYuRHVyYXRpb24SKgoMQ3VycmVu",
+            "dExpZ2h0GAwgASgOMhQuRG9tYWluLlRyYWZmaWNMaWdodBIXCg1OaWNrbmFt",
+            "ZVZhbHVlGA0gASgJSAASCwoDSW1nGA4gASgMEg0KBU5vdGVzGA8gAygJEiwK",
+            "BVByb3BzGBAgAygLMh0uRG9tYWluLkNyb3Nzcm9hZDIuUHJvcHNFbnRyeRos",
+            "CgpQcm9wc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFC",
+            "CgoITmlja25hbWUqOwoMVHJhZmZpY0xpZ2h0EgsKB1Vua25vd24QABIHCgNS",
+            "ZWQQARIKCgZZZWxsb3cQAhIJCgVHcmVlbhADYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { },
-          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Domain.TrafficLight), }, null, null));
+          new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.GoogleProtobufTimestampReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.GoogleProtobufDurationReflection.Descriptor, },
+          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Domain.TrafficLight), }, null, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.Crossroad), global::Domain.Crossroad.Parser, new[]{ "Id", "Street1", "Street2", "Light" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Domain.Crossroad2), global::Domain.Crossroad2.Parser, new[]{ "Id", "LongId", "AltId", "Street1", "Street2", "IsMonitored", "Xpos", "Ypos", "Ratio", "LastChecked", "ServiceInterval", "CurrentLight", "NicknameValue", "Img", "Notes", "Props" }, new[]{ "Nickname" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
+          }));
     }
     #endregion
 
@@ -40,6 +56,1025 @@ namespace Domain {
     [pbr::OriginalName("Red")] Red = 1,
     [pbr::OriginalName("Yellow")] Yellow = 2,
     [pbr::OriginalName("Green")] Green = 3,
+  }
+
+  #endregion
+
+  #region Messages
+  public sealed partial class Crossroad : pb::IMessage<Crossroad>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<Crossroad> _parser = new pb::MessageParser<Crossroad>(() => new Crossroad());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<Crossroad> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[0]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Crossroad() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Crossroad(Crossroad other) : this() {
+      id_ = other.id_;
+      street1_ = other.street1_;
+      street2_ = other.street2_;
+      light_ = other.light_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Crossroad Clone() {
+      return new Crossroad(this);
+    }
+
+    /// <summary>Field number for the "Id" field.</summary>
+    public const int IdFieldNumber = 1;
+    private int id_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int Id {
+      get { return id_; }
+      set {
+        id_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "Street1" field.</summary>
+    public const int Street1FieldNumber = 2;
+    private string street1_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Street1 {
+      get { return street1_; }
+      set {
+        street1_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "Street2" field.</summary>
+    public const int Street2FieldNumber = 3;
+    private string street2_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Street2 {
+      get { return street2_; }
+      set {
+        street2_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "Light" field.</summary>
+    public const int LightFieldNumber = 4;
+    private global::Domain.TrafficLight light_ = global::Domain.TrafficLight.Unknown;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Domain.TrafficLight Light {
+      get { return light_; }
+      set {
+        light_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as Crossroad);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(Crossroad other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Id != other.Id) return false;
+      if (Street1 != other.Street1) return false;
+      if (Street2 != other.Street2) return false;
+      if (Light != other.Light) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Id != 0) hash ^= Id.GetHashCode();
+      if (Street1.Length != 0) hash ^= Street1.GetHashCode();
+      if (Street2.Length != 0) hash ^= Street2.GetHashCode();
+      if (Light != global::Domain.TrafficLight.Unknown) hash ^= Light.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Id != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(Id);
+      }
+      if (Street1.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Street1);
+      }
+      if (Street2.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(Street2);
+      }
+      if (Light != global::Domain.TrafficLight.Unknown) {
+        output.WriteRawTag(32);
+        output.WriteEnum((int) Light);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Id != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(Id);
+      }
+      if (Street1.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Street1);
+      }
+      if (Street2.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteString(Street2);
+      }
+      if (Light != global::Domain.TrafficLight.Unknown) {
+        output.WriteRawTag(32);
+        output.WriteEnum((int) Light);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Id != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Id);
+      }
+      if (Street1.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Street1);
+      }
+      if (Street2.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Street2);
+      }
+      if (Light != global::Domain.TrafficLight.Unknown) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Light);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(Crossroad other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Id != 0) {
+        Id = other.Id;
+      }
+      if (other.Street1.Length != 0) {
+        Street1 = other.Street1;
+      }
+      if (other.Street2.Length != 0) {
+        Street2 = other.Street2;
+      }
+      if (other.Light != global::Domain.TrafficLight.Unknown) {
+        Light = other.Light;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Id = input.ReadInt32();
+            break;
+          }
+          case 18: {
+            Street1 = input.ReadString();
+            break;
+          }
+          case 26: {
+            Street2 = input.ReadString();
+            break;
+          }
+          case 32: {
+            Light = (global::Domain.TrafficLight) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Id = input.ReadInt32();
+            break;
+          }
+          case 18: {
+            Street1 = input.ReadString();
+            break;
+          }
+          case 26: {
+            Street2 = input.ReadString();
+            break;
+          }
+          case 32: {
+            Light = (global::Domain.TrafficLight) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  public sealed partial class Crossroad2 : pb::IMessage<Crossroad2>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<Crossroad2> _parser = new pb::MessageParser<Crossroad2>(() => new Crossroad2());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<Crossroad2> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Domain.DomainReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Crossroad2() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Crossroad2(Crossroad2 other) : this() {
+      id_ = other.id_;
+      longId_ = other.longId_;
+      altId_ = other.altId_;
+      street1_ = other.street1_;
+      street2_ = other.street2_;
+      isMonitored_ = other.isMonitored_;
+      xpos_ = other.xpos_;
+      ypos_ = other.ypos_;
+      ratio_ = other.ratio_;
+      lastChecked_ = other.lastChecked_ != null ? other.lastChecked_.Clone() : null;
+      serviceInterval_ = other.serviceInterval_ != null ? other.serviceInterval_.Clone() : null;
+      currentLight_ = other.currentLight_;
+      img_ = other.img_;
+      notes_ = other.notes_.Clone();
+      props_ = other.props_.Clone();
+      switch (other.NicknameCase) {
+        case NicknameOneofCase.NicknameValue:
+          NicknameValue = other.NicknameValue;
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Crossroad2 Clone() {
+      return new Crossroad2(this);
+    }
+
+    /// <summary>Field number for the "Id" field.</summary>
+    public const int IdFieldNumber = 1;
+    private int id_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int Id {
+      get { return id_; }
+      set {
+        id_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "LongId" field.</summary>
+    public const int LongIdFieldNumber = 2;
+    private long longId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public long LongId {
+      get { return longId_; }
+      set {
+        longId_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "AltId" field.</summary>
+    public const int AltIdFieldNumber = 3;
+    private pb::ByteString altId_ = pb::ByteString.Empty;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pb::ByteString AltId {
+      get { return altId_; }
+      set {
+        altId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "Street1" field.</summary>
+    public const int Street1FieldNumber = 4;
+    private string street1_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Street1 {
+      get { return street1_; }
+      set {
+        street1_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "Street2" field.</summary>
+    public const int Street2FieldNumber = 5;
+    private string street2_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string Street2 {
+      get { return street2_; }
+      set {
+        street2_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "IsMonitored" field.</summary>
+    public const int IsMonitoredFieldNumber = 6;
+    private bool isMonitored_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool IsMonitored {
+      get { return isMonitored_; }
+      set {
+        isMonitored_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "Xpos" field.</summary>
+    public const int XposFieldNumber = 7;
+    private float xpos_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public float Xpos {
+      get { return xpos_; }
+      set {
+        xpos_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "Ypos" field.</summary>
+    public const int YposFieldNumber = 8;
+    private double ypos_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public double Ypos {
+      get { return ypos_; }
+      set {
+        ypos_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "Ratio" field.</summary>
+    public const int RatioFieldNumber = 9;
+    private long ratio_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public long Ratio {
+      get { return ratio_; }
+      set {
+        ratio_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "LastChecked" field.</summary>
+    public const int LastCheckedFieldNumber = 10;
+    private global::Google.Protobuf.WellKnownTypes.Timestamp lastChecked_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Google.Protobuf.WellKnownTypes.Timestamp LastChecked {
+      get { return lastChecked_; }
+      set {
+        lastChecked_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "ServiceInterval" field.</summary>
+    public const int ServiceIntervalFieldNumber = 11;
+    private global::Google.Protobuf.WellKnownTypes.Duration serviceInterval_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Google.Protobuf.WellKnownTypes.Duration ServiceInterval {
+      get { return serviceInterval_; }
+      set {
+        serviceInterval_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "CurrentLight" field.</summary>
+    public const int CurrentLightFieldNumber = 12;
+    private global::Domain.TrafficLight currentLight_ = global::Domain.TrafficLight.Unknown;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public global::Domain.TrafficLight CurrentLight {
+      get { return currentLight_; }
+      set {
+        currentLight_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "NicknameValue" field.</summary>
+    public const int NicknameValueFieldNumber = 13;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string NicknameValue {
+      get { return nicknameCase_ == NicknameOneofCase.NicknameValue ? (string) nickname_ : ""; }
+      set {
+        nickname_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        nicknameCase_ = NicknameOneofCase.NicknameValue;
+      }
+    }
+
+    /// <summary>Field number for the "Img" field.</summary>
+    public const int ImgFieldNumber = 14;
+    private pb::ByteString img_ = pb::ByteString.Empty;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pb::ByteString Img {
+      get { return img_; }
+      set {
+        img_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "Notes" field.</summary>
+    public const int NotesFieldNumber = 15;
+    private static readonly pb::FieldCodec<string> _repeated_notes_codec
+        = pb::FieldCodec.ForString(122);
+    private readonly pbc::RepeatedField<string> notes_ = new pbc::RepeatedField<string>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pbc::RepeatedField<string> Notes {
+      get { return notes_; }
+    }
+
+    /// <summary>Field number for the "Props" field.</summary>
+    public const int PropsFieldNumber = 16;
+    private static readonly pbc::MapField<string, string>.Codec _map_props_codec
+        = new pbc::MapField<string, string>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForString(18, ""), 130);
+    private readonly pbc::MapField<string, string> props_ = new pbc::MapField<string, string>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public pbc::MapField<string, string> Props {
+      get { return props_; }
+    }
+
+    private object nickname_;
+    /// <summary>Enum of possible cases for the "Nickname" oneof.</summary>
+    public enum NicknameOneofCase {
+      None = 0,
+      NicknameValue = 13,
+    }
+    private NicknameOneofCase nicknameCase_ = NicknameOneofCase.None;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public NicknameOneofCase NicknameCase {
+      get { return nicknameCase_; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void ClearNickname() {
+      nicknameCase_ = NicknameOneofCase.None;
+      nickname_ = null;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as Crossroad2);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(Crossroad2 other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Id != other.Id) return false;
+      if (LongId != other.LongId) return false;
+      if (AltId != other.AltId) return false;
+      if (Street1 != other.Street1) return false;
+      if (Street2 != other.Street2) return false;
+      if (IsMonitored != other.IsMonitored) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(Xpos, other.Xpos)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Ypos, other.Ypos)) return false;
+      if (Ratio != other.Ratio) return false;
+      if (!object.Equals(LastChecked, other.LastChecked)) return false;
+      if (!object.Equals(ServiceInterval, other.ServiceInterval)) return false;
+      if (CurrentLight != other.CurrentLight) return false;
+      if (NicknameValue != other.NicknameValue) return false;
+      if (Img != other.Img) return false;
+      if(!notes_.Equals(other.notes_)) return false;
+      if (!Props.Equals(other.Props)) return false;
+      if (NicknameCase != other.NicknameCase) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Id != 0) hash ^= Id.GetHashCode();
+      if (LongId != 0L) hash ^= LongId.GetHashCode();
+      if (AltId.Length != 0) hash ^= AltId.GetHashCode();
+      if (Street1.Length != 0) hash ^= Street1.GetHashCode();
+      if (Street2.Length != 0) hash ^= Street2.GetHashCode();
+      if (IsMonitored != false) hash ^= IsMonitored.GetHashCode();
+      if (Xpos != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(Xpos);
+      if (Ypos != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Ypos);
+      if (Ratio != 0L) hash ^= Ratio.GetHashCode();
+      if (lastChecked_ != null) hash ^= LastChecked.GetHashCode();
+      if (serviceInterval_ != null) hash ^= ServiceInterval.GetHashCode();
+      if (CurrentLight != global::Domain.TrafficLight.Unknown) hash ^= CurrentLight.GetHashCode();
+      if (nicknameCase_ == NicknameOneofCase.NicknameValue) hash ^= NicknameValue.GetHashCode();
+      if (Img.Length != 0) hash ^= Img.GetHashCode();
+      hash ^= notes_.GetHashCode();
+      hash ^= Props.GetHashCode();
+      hash ^= (int) nicknameCase_;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Id != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(Id);
+      }
+      if (LongId != 0L) {
+        output.WriteRawTag(16);
+        output.WriteInt64(LongId);
+      }
+      if (AltId.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteBytes(AltId);
+      }
+      if (Street1.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(Street1);
+      }
+      if (Street2.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(Street2);
+      }
+      if (IsMonitored != false) {
+        output.WriteRawTag(48);
+        output.WriteBool(IsMonitored);
+      }
+      if (Xpos != 0F) {
+        output.WriteRawTag(61);
+        output.WriteFloat(Xpos);
+      }
+      if (Ypos != 0D) {
+        output.WriteRawTag(65);
+        output.WriteDouble(Ypos);
+      }
+      if (Ratio != 0L) {
+        output.WriteRawTag(72);
+        output.WriteInt64(Ratio);
+      }
+      if (lastChecked_ != null) {
+        output.WriteRawTag(82);
+        output.WriteMessage(LastChecked);
+      }
+      if (serviceInterval_ != null) {
+        output.WriteRawTag(90);
+        output.WriteMessage(ServiceInterval);
+      }
+      if (CurrentLight != global::Domain.TrafficLight.Unknown) {
+        output.WriteRawTag(96);
+        output.WriteEnum((int) CurrentLight);
+      }
+      if (nicknameCase_ == NicknameOneofCase.NicknameValue) {
+        output.WriteRawTag(106);
+        output.WriteString(NicknameValue);
+      }
+      if (Img.Length != 0) {
+        output.WriteRawTag(114);
+        output.WriteBytes(Img);
+      }
+      notes_.WriteTo(output, _repeated_notes_codec);
+      props_.WriteTo(output, _map_props_codec);
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Id != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(Id);
+      }
+      if (LongId != 0L) {
+        output.WriteRawTag(16);
+        output.WriteInt64(LongId);
+      }
+      if (AltId.Length != 0) {
+        output.WriteRawTag(26);
+        output.WriteBytes(AltId);
+      }
+      if (Street1.Length != 0) {
+        output.WriteRawTag(34);
+        output.WriteString(Street1);
+      }
+      if (Street2.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(Street2);
+      }
+      if (IsMonitored != false) {
+        output.WriteRawTag(48);
+        output.WriteBool(IsMonitored);
+      }
+      if (Xpos != 0F) {
+        output.WriteRawTag(61);
+        output.WriteFloat(Xpos);
+      }
+      if (Ypos != 0D) {
+        output.WriteRawTag(65);
+        output.WriteDouble(Ypos);
+      }
+      if (Ratio != 0L) {
+        output.WriteRawTag(72);
+        output.WriteInt64(Ratio);
+      }
+      if (lastChecked_ != null) {
+        output.WriteRawTag(82);
+        output.WriteMessage(LastChecked);
+      }
+      if (serviceInterval_ != null) {
+        output.WriteRawTag(90);
+        output.WriteMessage(ServiceInterval);
+      }
+      if (CurrentLight != global::Domain.TrafficLight.Unknown) {
+        output.WriteRawTag(96);
+        output.WriteEnum((int) CurrentLight);
+      }
+      if (nicknameCase_ == NicknameOneofCase.NicknameValue) {
+        output.WriteRawTag(106);
+        output.WriteString(NicknameValue);
+      }
+      if (Img.Length != 0) {
+        output.WriteRawTag(114);
+        output.WriteBytes(Img);
+      }
+      notes_.WriteTo(ref output, _repeated_notes_codec);
+      props_.WriteTo(ref output, _map_props_codec);
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Id != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Id);
+      }
+      if (LongId != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(LongId);
+      }
+      if (AltId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeBytesSize(AltId);
+      }
+      if (Street1.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Street1);
+      }
+      if (Street2.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Street2);
+      }
+      if (IsMonitored != false) {
+        size += 1 + 1;
+      }
+      if (Xpos != 0F) {
+        size += 1 + 4;
+      }
+      if (Ypos != 0D) {
+        size += 1 + 8;
+      }
+      if (Ratio != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Ratio);
+      }
+      if (lastChecked_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(LastChecked);
+      }
+      if (serviceInterval_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(ServiceInterval);
+      }
+      if (CurrentLight != global::Domain.TrafficLight.Unknown) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) CurrentLight);
+      }
+      if (nicknameCase_ == NicknameOneofCase.NicknameValue) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(NicknameValue);
+      }
+      if (Img.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeBytesSize(Img);
+      }
+      size += notes_.CalculateSize(_repeated_notes_codec);
+      size += props_.CalculateSize(_map_props_codec);
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(Crossroad2 other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Id != 0) {
+        Id = other.Id;
+      }
+      if (other.LongId != 0L) {
+        LongId = other.LongId;
+      }
+      if (other.AltId.Length != 0) {
+        AltId = other.AltId;
+      }
+      if (other.Street1.Length != 0) {
+        Street1 = other.Street1;
+      }
+      if (other.Street2.Length != 0) {
+        Street2 = other.Street2;
+      }
+      if (other.IsMonitored != false) {
+        IsMonitored = other.IsMonitored;
+      }
+      if (other.Xpos != 0F) {
+        Xpos = other.Xpos;
+      }
+      if (other.Ypos != 0D) {
+        Ypos = other.Ypos;
+      }
+      if (other.Ratio != 0L) {
+        Ratio = other.Ratio;
+      }
+      if (other.lastChecked_ != null) {
+        if (lastChecked_ == null) {
+          LastChecked = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+        }
+        LastChecked.MergeFrom(other.LastChecked);
+      }
+      if (other.serviceInterval_ != null) {
+        if (serviceInterval_ == null) {
+          ServiceInterval = new global::Google.Protobuf.WellKnownTypes.Duration();
+        }
+        ServiceInterval.MergeFrom(other.ServiceInterval);
+      }
+      if (other.CurrentLight != global::Domain.TrafficLight.Unknown) {
+        CurrentLight = other.CurrentLight;
+      }
+      if (other.Img.Length != 0) {
+        Img = other.Img;
+      }
+      notes_.Add(other.notes_);
+      props_.Add(other.props_);
+      switch (other.NicknameCase) {
+        case NicknameOneofCase.NicknameValue:
+          NicknameValue = other.NicknameValue;
+          break;
+      }
+
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Id = input.ReadInt32();
+            break;
+          }
+          case 16: {
+            LongId = input.ReadInt64();
+            break;
+          }
+          case 26: {
+            AltId = input.ReadBytes();
+            break;
+          }
+          case 34: {
+            Street1 = input.ReadString();
+            break;
+          }
+          case 42: {
+            Street2 = input.ReadString();
+            break;
+          }
+          case 48: {
+            IsMonitored = input.ReadBool();
+            break;
+          }
+          case 61: {
+            Xpos = input.ReadFloat();
+            break;
+          }
+          case 65: {
+            Ypos = input.ReadDouble();
+            break;
+          }
+          case 72: {
+            Ratio = input.ReadInt64();
+            break;
+          }
+          case 82: {
+            if (lastChecked_ == null) {
+              LastChecked = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+            }
+            input.ReadMessage(LastChecked);
+            break;
+          }
+          case 90: {
+            if (serviceInterval_ == null) {
+              ServiceInterval = new global::Google.Protobuf.WellKnownTypes.Duration();
+            }
+            input.ReadMessage(ServiceInterval);
+            break;
+          }
+          case 96: {
+            CurrentLight = (global::Domain.TrafficLight) input.ReadEnum();
+            break;
+          }
+          case 106: {
+            NicknameValue = input.ReadString();
+            break;
+          }
+          case 114: {
+            Img = input.ReadBytes();
+            break;
+          }
+          case 122: {
+            notes_.AddEntriesFrom(input, _repeated_notes_codec);
+            break;
+          }
+          case 130: {
+            props_.AddEntriesFrom(input, _map_props_codec);
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Id = input.ReadInt32();
+            break;
+          }
+          case 16: {
+            LongId = input.ReadInt64();
+            break;
+          }
+          case 26: {
+            AltId = input.ReadBytes();
+            break;
+          }
+          case 34: {
+            Street1 = input.ReadString();
+            break;
+          }
+          case 42: {
+            Street2 = input.ReadString();
+            break;
+          }
+          case 48: {
+            IsMonitored = input.ReadBool();
+            break;
+          }
+          case 61: {
+            Xpos = input.ReadFloat();
+            break;
+          }
+          case 65: {
+            Ypos = input.ReadDouble();
+            break;
+          }
+          case 72: {
+            Ratio = input.ReadInt64();
+            break;
+          }
+          case 82: {
+            if (lastChecked_ == null) {
+              LastChecked = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+            }
+            input.ReadMessage(LastChecked);
+            break;
+          }
+          case 90: {
+            if (serviceInterval_ == null) {
+              ServiceInterval = new global::Google.Protobuf.WellKnownTypes.Duration();
+            }
+            input.ReadMessage(ServiceInterval);
+            break;
+          }
+          case 96: {
+            CurrentLight = (global::Domain.TrafficLight) input.ReadEnum();
+            break;
+          }
+          case 106: {
+            NicknameValue = input.ReadString();
+            break;
+          }
+          case 114: {
+            Img = input.ReadBytes();
+            break;
+          }
+          case 122: {
+            notes_.AddEntriesFrom(ref input, _repeated_notes_codec);
+            break;
+          }
+          case 130: {
+            props_.AddEntriesFrom(ref input, _map_props_codec);
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
   }
 
   #endregion
