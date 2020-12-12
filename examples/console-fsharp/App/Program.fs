@@ -1,9 +1,5 @@
-// Learn more about F# at http://docs.microsoft.com/dotnet/fsharp
-
-open System
 open ProtoClasses.Domain
 
-// Define a function to construct a message to print
 [<EntryPoint>]
 let main argv =
     let crossroad = Crossroad()

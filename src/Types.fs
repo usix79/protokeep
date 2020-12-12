@@ -103,8 +103,11 @@ module rec Types =
         | Field x -> x.Num
         | OneOf (_, _, cases) -> (cases |> List.maxBy (fun c -> c.Num)).Num
 
-    let lock (modules: Module list) (currentLock: LockItem list) : Result<LockItem list, LockError list> =
+    let lock (modules: Module list) (currentLock: LockItem list): Result<LockItem list, LockError list> =
+        lockInternal modules currentLock
+        |> Result.map(fun (locks, typesCache) -> locks)
 
+    let lockInternal (modules: Module list) (currentLock: LockItem list) : Result<(LockItem list * TypesCache), LockError list> =
         currentLock
         |> tryMap lockItemName id
         |> Result.mapError(List.map DuplicateLockedTypeNames)
@@ -126,7 +129,9 @@ module rec Types =
 
                 modules
                 |> traverse lockModule
-                |> Result.map List.concat ))
+                |> Result.map List.concat
+                |> Result.map (fun locks -> locks, typesCache) ))
+
 
     let lockEnum (lockCache:LockCache) ns info =
 

@@ -38,7 +38,7 @@ let gen (modules:Module list) (locks:LockItem list) =
     let messageLockCache =
         locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
 
-    let rec f txt ns = function
+    let rec genItem txt ns = function
     | Enum info ->
         let fullName = Types.mergeName ns info.Name
         line txt $"enum {info.Name} {{"
@@ -46,15 +46,14 @@ let gen (modules:Module list) (locks:LockItem list) =
         for symbol in enumLocksCache.[fullName].Values do
             line txt $"    {symbol.Name} = {symbol.Num};"
         line txt $"}}"
-    | Record info -> fRecord txt ns info.Name info
+    | Record info -> genRecord txt ns info.Name info
     | Union info ->
         for case in info.Cases do
             let recordName = info.Name + "__" + case.Name
-            fRecord txt (Types.mergeName ns info.Name) recordName case
-    and fRecord txt ns recordName info =
+            genRecord txt (Types.mergeName ns info.Name) recordName case
+    and genRecord txt ns recordName info =
         let fullName = Types.mergeName ns info.Name
         line txt $"message {recordName} {{"
-        printfn "NAME: %A" fullName
         for item in messageLockCache.[fullName].LockItems do
             match item with
             | Field info ->
@@ -80,7 +79,7 @@ let gen (modules:Module list) (locks:LockItem list) =
             if reference <> module'.Name then
                 line txt $"import \"{cn reference}\";"
 
-        module'.Items |> List.iter (f txt module'.Name)
+        module'.Items |> List.iter (genItem txt module'.Name)
         (cn module'.Name, txt.ToString()))
 
 let rec typeToString (type':Type) =

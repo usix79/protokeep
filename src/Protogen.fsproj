@@ -8,6 +8,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Codegen.fs" />
+    <Compile Include="FsharpTypesCmd.fs" />
     <Compile Include="ProtoCmd.fs" />
     <Compile Include="LockCmd.fs" />
     <Compile Include="CheckCmd.fs" />
