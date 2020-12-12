@@ -7,8 +7,6 @@ open System.IO
 open Types
 open Codegen
 
-let wellKnownTypes = ["google.protobuf.duration.proto"; "google.protobuf.timestamp.proto";]
-
 let Handler modules locks = function
     | "-o"::outputDirName::args
     | "--output"::outputDirName::args ->
@@ -22,13 +20,6 @@ let Handler modules locks = function
                     let fullName = Path.Combine(outputDirName, fileName) + ".proto"
                     Console.WriteLine($"Writing .proto definition to {fullName}")
                     File.WriteAllText(fullName, fileContent)
-                // write whell known types
-                let assembly = Reflection.Assembly.GetExecutingAssembly();
-                for t in wellKnownTypes do
-                    let stream = assembly.GetManifestResourceStream("Protogen." + t);
-                    let path = Path.Combine(outputDirName, t)
-                    use outputFileStream = new FileStream(path, FileMode.Create)
-                    stream.CopyTo(outputFileStream);
                 Ok ()
             )
     | x -> Error $"expected arguments [-o|--output] outputDirectory, but {x}"
@@ -84,6 +75,7 @@ let gen (modules:Module list) (locks:LockItem list) =
         let txt = StringBuilder()
         line txt """syntax = "proto3";"""
         line txt $"package {cn module'.Name};"
+        line txt $"option csharp_namespace = \"ProtoClasses.{cn module'.Name}\";";
         for reference in references messageLockCache module' do
             if reference <> module'.Name then
                 line txt $"import \"{cn reference}\";"
@@ -109,15 +101,12 @@ let rec typeToString (type':Type) =
     | Map v -> $"map<string,{typeToString v}>"
     | Complex ns -> cn ns
 
-let timestampName = ComplexName ["proto"; "timestamp"; "protobuf"; "google"]
-let durationName = ComplexName ["proto"; "duration"; "protobuf"; "google"]
-
 let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module) =
     let set = Collections.Generic.HashSet<ComplexName>()
 
     let rec typeReference = function
-        | Timestamp -> Some timestampName
-        | Duration -> Some durationName
+        | Timestamp -> Some <| ComplexName ["google/protobuf/timestamp.proto"]
+        | Duration -> Some <| ComplexName ["google/protobuf/duration.proto"]
         | Complex ns ->  Some <| Types.extractNamespace ns
         | Optional v
         | Array v -> typeReference v

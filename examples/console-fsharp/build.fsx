@@ -4,16 +4,18 @@ nuget Fake.DotNet.Cli
 nuget Fake.IO.FileSystem"
 #load "./.fake/build.fsx/intellisense.fsx"
 
+open System.IO
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
+
 
 Target.initEnvironment ()
 
 let protogenDirectory = "../../"
 let protogenDll = "../../src/bin/Debug/net5.0/Protogen.dll"
 let domainModelFileName = "domain"
-let protoFileName = "domain.proto"
+let protoClassesDir = "./ProtoClasses/"
 
 let runTool cmd args workingDir =
     let arguments = args |> String.split ' ' |> Arguments.OfArgs
@@ -32,18 +34,30 @@ let dotnetWithArgs (args:string list) cmd workingDir =
 
 let dotnet = dotnetWithArgs []
 
-Target.create "Clean" (fun _ -> ())
+Target.create "Clean" (fun _ ->
+    Shell.cleanDirs [protoClassesDir + "obj"; protoClassesDir + "bin"]
+    Directory.GetFiles(protoClassesDir, "*.proto")
+    |> File.deleteAll
+)
 
-Target.create "Build" (fun _ ->
+Target.create "Gen" (fun _ ->
     dotnet "build" protogenDirectory
     dotnetWithArgs [domainModelFileName; "lock"] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [domainModelFileName; "proto"; "-o"; "."] protogenDll __SOURCE_DIRECTORY__
-    runTool "protoc" (sprintf "--csharp_out=. --csharp_opt=file_extension=.g.cs %s" protoFileName) __SOURCE_DIRECTORY__
+    dotnetWithArgs [domainModelFileName; "proto"; "-o"; protoClassesDir] protogenDll __SOURCE_DIRECTORY__
+)
+
+Target.create "Build" (fun _ ->
+    dotnet "build" __SOURCE_DIRECTORY__
+)
+
+Target.create "Run" (fun _ ->
+    dotnet "run -p ./app" __SOURCE_DIRECTORY__
 )
 
 open Fake.Core.TargetOperators
 
 "Clean"
+    ==> "Gen"
     ==> "Build"
 
 Target.runOrDefaultWithArguments "Build"

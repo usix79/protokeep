@@ -18,6 +18,7 @@ enum TrafficLight =
     | Green ""","""
 syntax = "proto3";
 package Domain;
+option csharp_namespace = "ProtoClasses.Domain";
 enum TrafficLight {
     Unknown = 0;
     Red = 1;
@@ -50,8 +51,9 @@ record Crossroad = {
 }""","""
 syntax = "proto3";
 package Domain;
-import "google.protobuf.timestamp.proto";
-import "google.protobuf.duration.proto";
+option csharp_namespace = "ProtoClasses.Domain";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 enum TrafficLight {
     Unknown = 0;
     Red = 1;
@@ -96,7 +98,8 @@ record Crossroad = {
 }""", """
 syntax = "proto3";
 package Domain;
-import "google.protobuf.timestamp.proto";
+option csharp_namespace = "ProtoClasses.Domain";
+import "google/protobuf/timestamp.proto";
 enum TrafficLight {
     Unknown = 0;
     Red = 1;

@@ -15,10 +15,6 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="google.protobuf.duration.proto" />
-    <EmbeddedResource Include="google.protobuf.timestamp.proto" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="FParsec" Version="1.1.1" />
   </ItemGroup>
 </Project>
