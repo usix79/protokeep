@@ -8,7 +8,6 @@
   <ItemGroup>
     <Compile Include="Domain.fs" />
     <Compile Include="DomainConverters.fs" />
-    <Compile Include="TempConvertor.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
