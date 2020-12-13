@@ -7,38 +7,41 @@ open System.IO
 open Types
 open Codegen
 
-let Handler modules locks = function
-    | "-o"::outputDirName::args
-    | "--output"::outputDirName::args ->
-        Types.lock modules locks
+let Handler module' locks = function
+    | "-o"::outputFileName::args
+    | "--output"::outputFileName::args ->
+        Types.lock module' locks
         |> Result.mapError (sprintf "When try to check current lock: %A")
         |> Result.bind(fun newlocks ->
             if newlocks <> locks then
                 Error "Lock file is not corresponded to types definition. Run protogen lock first."
             else
-                for (fileName,fileContent) in gen modules locks do
-                    let fullName = Path.Combine(outputDirName, fileName) + ".proto"
-                    Console.WriteLine($"Writing .proto definition to {fullName}")
-                    File.WriteAllText(fullName, fileContent)
+                let fileContent = gen module' locks
+                let fileName =
+                    if Path.GetExtension(outputFileName) <> ".proto" then outputFileName + ".proto" else outputFileName
+                Console.WriteLine($"Writing .proto definition to {fileName}")
+                File.WriteAllText(fileName, fileContent)
                 Ok ()
             )
-    | x -> Error $"expected arguments [-o|--output] outputDirectory, but {x}"
+    | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 
 let Instance = {
     Name = "proto"
-    Description = "generate protobuf description: proto [-o|--output] outputDirectory"
+    Description = "generate protobuf description: proto [-o|--output] outputFile"
     Run = Handler
 }
 
-let gen (modules:Module list) (locks:LockItem list) =
+let gen (module':Module) (locks:LockItem list) =
 
     let enumLocksCache =
         locks |> List.choose(function EnumLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
     let messageLockCache =
         locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
 
-    let rec genItem txt ns = function
+    let txt = StringBuilder()
+
+    let rec genItem ns = function
     | Enum info ->
         let fullName = Types.mergeName ns info.Name
         line txt $"enum {info.Name} {{"
@@ -46,12 +49,12 @@ let gen (modules:Module list) (locks:LockItem list) =
         for symbol in enumLocksCache.[fullName].Values do
             line txt $"    {symbol.Name} = {symbol.Num};"
         line txt $"}}"
-    | Record info -> genRecord txt ns info.Name info
+    | Record info -> genRecord ns info.Name info
     | Union info ->
         for case in info.Cases do
             let recordName = info.Name + "__" + case.Name
-            genRecord txt (Types.mergeName ns info.Name) recordName case
-    and genRecord txt ns recordName info =
+            genRecord (Types.mergeName ns info.Name) recordName case
+    and genRecord ns recordName info =
         let fullName = Types.mergeName ns info.Name
         line txt $"message {recordName} {{"
         for item in messageLockCache.[fullName].LockItems do
@@ -69,18 +72,15 @@ let gen (modules:Module list) (locks:LockItem list) =
                 line txt $"    }}"
         line txt $"}}"
 
-    modules
-    |> List.map(fun module' ->
-        let txt = StringBuilder()
-        line txt """syntax = "proto3";"""
-        line txt $"package {cn module'.Name};"
-        line txt $"option csharp_namespace = \"ProtoClasses.{cn module'.Name}\";";
-        for reference in references messageLockCache module' do
-            if reference <> module'.Name then
-                line txt $"import \"{cn reference}\";"
+    line txt """syntax = "proto3";"""
+    line txt $"package {cn module'.Name};"
+    line txt $"option csharp_namespace = \"ProtoClasses.{cn module'.Name}\";";
+    for reference in references messageLockCache module' do
+        if reference <> module'.Name then
+            line txt $"import \"{cn reference}\";"
 
-        module'.Items |> List.iter (genItem txt module'.Name)
-        (cn module'.Name, txt.ToString()))
+    module'.Items |> List.iter (genItem module'.Name)
+    txt.ToString()
 
 let rec typeToString (type':Type) =
     match type' with

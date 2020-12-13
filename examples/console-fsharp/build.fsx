@@ -14,8 +14,9 @@ Target.initEnvironment ()
 
 let protogenDirectory = "../../"
 let protogenDll = "../../src/bin/Debug/net5.0/Protogen.dll"
-let domainModelFileName = "domain"
+let pgenFile = "domain.pgen"
 let protoClassesDir = "./ProtoClasses/"
+let protoFile = protoClassesDir + "Domain.proto"
 let fsharpTypesFile = "./App/Domain.fs"
 
 let runTool cmd args workingDir =
@@ -43,9 +44,9 @@ Target.create "Clean" (fun _ ->
 
 Target.create "Gen" (fun _ ->
     dotnet "build" protogenDirectory
-    dotnetWithArgs [domainModelFileName; "lock"] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [domainModelFileName; "proto"; "-o"; protoClassesDir] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [domainModelFileName; "fsharp-types"; "-o"; fsharpTypesFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "lock"] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "proto"; "-o"; protoFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFile] protogenDll __SOURCE_DIRECTORY__
 )
 
 Target.create "Build" (fun _ ->

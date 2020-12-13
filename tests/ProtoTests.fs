@@ -131,10 +131,10 @@ message Crossroad {
 [<Theory; MemberData("MyTestData", MemberType=typeof<TestData>)>]
 let testAllCases (input, expectedOutput:string) =
     Parsers.parsePgenDoc input
-    |> Result.bind(fun modules ->
-        Types.lock modules []
+    |> Result.bind(fun module' ->
+        Types.lock module' []
         |> Result.map(fun locks ->
-            let outputText = snd (ProtoCmd.gen modules locks).Head
+            let outputText = ProtoCmd.gen module' locks
             Assert.Equal(expectedOutput.Trim(), outputText.Trim()))
         |> Result.mapError(fun error -> failwithf "%A" error))
     |> Result.mapError(fun error -> failwithf "%A" error)

@@ -10,14 +10,10 @@ let assertEqual expected actual =
         NotEqualException (sprintf "%A" expected, sprintf "%A" actual) |> raise
 
 [<Fact>]
-let ``Test empty evolution`` () =
-    Assert.Equal(Ok [], (Types.lock [] []))
-
-[<Fact>]
 let ``Duplicate Enums`` () =
-    let input = [{Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Items = [
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
+        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
     let lock = []
     let expected = Error [ Types.DuplicateTypeNames (ComplexName ["TrafficLight"; "Domain"])]
 
@@ -25,9 +21,9 @@ let ``Duplicate Enums`` () =
 
 [<Fact>]
 let ``Duplicate Locked Enums`` () =
-    let input = [{Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Items = [
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
-        ]}]
+        ]}
     let lock = [
         EnumLock {
             Name = ComplexName ["TrafficLight"; "Domain"]
@@ -49,9 +45,9 @@ let ``Duplicate Locked Enums`` () =
 
 [<Fact>]
 let ``Duplicate Symbols in Enum`` () =
-    let input = [{Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Items = [
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
-        ]}]
+        ]}
     let lock = []
     let expected = Error [ Types.DuplicateSymbolsInEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
 
@@ -59,9 +55,9 @@ let ``Duplicate Symbols in Enum`` () =
 
 [<Fact>]
 let ``Duplicate Symbols in Locked Enum`` () =
-    let input = [{Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Items = [
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
-        ]}]
+        ]}
     let lock = [
         EnumLock {
             Name = ComplexName ["TrafficLight"; "Domain"]
@@ -77,9 +73,9 @@ let ``Duplicate Symbols in Locked Enum`` () =
 
 [<Fact>]
 let ``Missed Symbol in Enum`` () =
-    let input = [{Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Items = [
         Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
-        ]}]
+        ]}
     let lock = [
         EnumLock {
             Name = ComplexName ["TrafficLight"; "Domain"]
@@ -95,7 +91,7 @@ let ``Missed Symbol in Enum`` () =
 
 [<Fact>]
 let ``Single Enum`` () =
-    let input = [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
+    let input = {Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
     let lock = []
     let expected = Ok [
         EnumLock {
@@ -111,11 +107,11 @@ let ``Single Enum`` () =
 
 [<Fact>]
 let ``Unknown type of record's field`` () =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Simple"; Fields = [{Name= "Id"; Type = Complex (ComplexName ["XXX"])}]}
-        ]}]
+        ]}
     let lock = []
     let expected = Error [ Types.UnknownFieldType (ComplexName ["Simple"; "Domain"], "Id", ComplexName ["XXX"])]
 
@@ -123,7 +119,7 @@ let ``Unknown type of record's field`` () =
 
 [<Fact>]
 let ``Simple Record`` () =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Crossroad"; Fields = [
@@ -131,7 +127,7 @@ let ``Simple Record`` () =
                 {Name= "Street1"; Type = String}
                 {Name= "Street2"; Type = String}
                 ]}
-        ]}]
+        ]}
     let lock = []
     let expected = Ok [
         MessageLock {
@@ -148,7 +144,7 @@ let ``Simple Record`` () =
 
 [<Fact>]
 let ``Union`` () =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Log"; Fields = [
@@ -163,7 +159,7 @@ let ``Union`` () =
                     {Name = "When"; Type = Timestamp}
                     ]}
             ]}
-        ]}]
+        ]}
     let lock = []
     let expected = Ok [
         MessageLock {
@@ -190,14 +186,14 @@ let ``Union`` () =
 
 [<Fact>]
 let ``Missed Field Record`` () =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Crossroad"; Fields = [
                 {Name= "Id"; Type = Int}
                 {Name= "Street1"; Type = String}
                 ]}
-        ]}]
+        ]}
     let lock = [
         MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
@@ -215,7 +211,7 @@ let ``Missed Field Record`` () =
 
 [<Fact>]
 let ``Acceptable Evolutionof a Field's Type`` () =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Crossroad"; Fields = [
@@ -223,7 +219,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
                 {Name= "Street1"; Type = String}
                 {Name= "Street2"; Type = String}
                 ]}
-        ]}]
+        ]}
     let lock = [
         MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
@@ -247,7 +243,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
 
 [<Fact>]
 let UnacceptableEvolutionOfAFieldType () =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Crossroad"; Fields = [
@@ -255,7 +251,7 @@ let UnacceptableEvolutionOfAFieldType () =
                 {Name= "Street1"; Type = String}
                 {Name= "Street2"; Type = String}
                 ]}
-        ]}]
+        ]}
     let lock = [
         MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
@@ -273,7 +269,7 @@ let UnacceptableEvolutionOfAFieldType () =
 
 [<Fact>]
 let MissedFieldInUnion() =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Log"; Fields = [
@@ -283,7 +279,7 @@ let MissedFieldInUnion() =
             ModuleItem.Union {Name = "ServiceCheck"; Cases = [
                 {Name = "Random"; Fields = []}
             ]}
-        ]}]
+        ]}
     let lock = [
         MessageLock {
             Name = ComplexName ["Log"; "Domain"]
@@ -311,7 +307,7 @@ let MissedFieldInUnion() =
 
 [<Fact>]
 let AddFieldInUnion() =
-    let input = [{
+    let input = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = "Log"; Fields = [
@@ -327,7 +323,7 @@ let AddFieldInUnion() =
                 ]}
                 {Name = "NewCase"; Fields = []}
             ]}
-        ]}]
+        ]}
     let lock = [
         MessageLock {
             Name = ComplexName ["Log"; "Domain"]

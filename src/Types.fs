@@ -51,7 +51,7 @@ type LockItem =
 type Command = {
     Name: string
     Description: string
-    Run: Module list -> LockItem list -> string list -> Result<unit,string>
+    Run: Module -> LockItem list -> string list -> Result<unit,string>
 }
 
 module rec Types =
@@ -103,35 +103,32 @@ module rec Types =
         | Field x -> x.Num
         | OneOf (_, _, cases) -> (cases |> List.maxBy (fun c -> c.Num)).Num
 
-    let lock (modules: Module list) (currentLock: LockItem list): Result<LockItem list, LockError list> =
-        lockInternal modules currentLock
-        |> Result.map(fun (locks, typesCache) -> locks)
+    let lock (module': Module) (currentLock: LockItem list): Result<LockItem list, LockError list> =
+        lockInternal module' currentLock
+        |> Result.map(fun (locks, _) -> locks)
 
-    let lockInternal (modules: Module list) (currentLock: LockItem list) : Result<(LockItem list * TypesCache), LockError list> =
+    let lockInternal (module': Module) (currentLock: LockItem list) : Result<(LockItem list * TypesCache), LockError list> =
         currentLock
         |> tryMap lockItemName id
         |> Result.mapError(List.map DuplicateLockedTypeNames)
         |> Result.bind(fun lockCache ->
-            modules
-            |> List.collect (fun x -> x.Items |> List.map (fun i -> (moduleItemName x.Name i), i))
-            |> tryMap fst snd
+            module'.Items
+            |> tryMap (moduleItemName module'.Name) id
             |> Result.mapError(List.map DuplicateTypeNames)
             |> Result.bind(fun typesCache ->
-                let lockModule (module':Module) : Result<LockItem list, LockError list> =
-                    module'.Items
-                    |> traverse (function
-                        | Enum info -> lockEnum lockCache module'.Name info |> (Result.map List.singleton)
-                        | Record info -> lockRecord lockCache typesCache module'.Name info |> (Result.map List.singleton)
-                        | Union info ->
-                            info.Cases
-                            |> traverse (lockRecord lockCache typesCache (mergeName module'.Name info.Name)))
-                    |> Result.map List.concat
-
-                modules
-                |> traverse lockModule
+                module'.Items
+                |> traverse (function
+                    | Enum info ->
+                        lockEnum lockCache module'.Name info
+                        |> Result.map List.singleton
+                    | Record info ->
+                        lockRecord lockCache typesCache module'.Name info
+                        |> Result.map List.singleton
+                    | Union info ->
+                        info.Cases
+                        |> traverse (lockRecord lockCache typesCache (mergeName module'.Name info.Name)) )
                 |> Result.map List.concat
                 |> Result.map (fun locks -> locks, typesCache) ))
-
 
     let lockEnum (lockCache:LockCache) ns info =
 

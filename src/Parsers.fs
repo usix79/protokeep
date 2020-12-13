@@ -100,7 +100,7 @@ module private Impl =
                 (fun name items -> {Name = name; Items = items})
 
     let pgenDocument =
-        spaces >>. many (module' .>> spaces) .>> eof
+        spaces >>. module' .>> spaces .>> eof
 
     let enumLock =
         keyword "enum" >>.

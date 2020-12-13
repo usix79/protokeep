@@ -7,16 +7,16 @@ open System.IO
 open Types
 open Codegen
 
-let Handler modules locks = function
+let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        Types.lockInternal modules locks
+        Types.lockInternal module' locks
         |> Result.mapError (sprintf "When try to check current lock: %A")
         |> Result.bind(fun (newlocks, typesCache) ->
             if newlocks <> locks then
                 Error "Lock file is not corresponded to types definition. Run protogen lock first."
             else
-                let fileContent = gen modules locks typesCache
+                let fileContent = gen module' locks typesCache
                 let fileName =
                     if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
                 Console.WriteLine($"Writing fsharp types to {fileName}")
@@ -31,11 +31,13 @@ let Instance = {
     Run = Handler
 }
 
-let gen (modules:Module list) (locks:LockItem list) (typesCache:Types.TypesCache) =
+let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     let enumLocksCache =
         locks |> List.choose(function EnumLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
 
-    let rec genItem txt ns = function
+    let txt = StringBuilder()
+
+    let rec genItem ns = function
     | Enum info ->
         let fullName = Types.mergeName ns info.Name
         line txt $"type {info.Name} ="
@@ -58,11 +60,9 @@ let gen (modules:Module list) (locks:LockItem list) (typesCache:Types.TypesCache
                 |> (fun str -> if str <> "" then " of " + str else str)
             line txt $"    | {case.Name}{fieldsStr}"
 
-    let txt = StringBuilder()
-    for module' in modules do
-        line txt $"module rec {cn module'.Name}"
-        for item in module'.Items do
-            genItem txt module'.Name item
+    line txt $"module rec {cn module'.Name}"
+    for item in module'.Items do
+        genItem module'.Name item
 
     txt.ToString()
 

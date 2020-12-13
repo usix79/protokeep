@@ -40,7 +40,7 @@ Protogen tool
                 |> Result.bind(fun pgenFileName ->
                     File.ReadAllText pgenFileName
                     |> Protogen.Parsers.parsePgenDoc
-                    |> Result.bind(fun modules ->
+                    |> Result.bind(fun module' ->
                         let lockFileName = pgenFileName + ".lock"
                         if File.Exists lockFileName then
                             File.ReadAllText lockFileName
@@ -50,7 +50,7 @@ Protogen tool
                             Ok []
                         |> Result.bind(fun locks ->
                             let args = if cmd.Name = "lock" then lockFileName::args else args // special case for lock cmd
-                            cmd.Run modules locks args
+                            cmd.Run module' locks args
                             ))))
         match res with
         | Ok _ -> 0

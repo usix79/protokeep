@@ -7,29 +7,13 @@ open Protogen
 
 let private assertOfString input expected =
     match Parsers.parsePgenDoc input with
-    | Ok res -> Assert.Equal<Module list>(expected, res)
+    | Ok res -> Assert.Equal<Module>(expected, res)
     | Error err -> failwith err
-
-[<Fact>]
-let ``Test empty input`` () =
-    assertOfString "" []
 
 [<Fact>]
 let ``Test single empty module`` () =
     let input = "module Domain.Foundation"
-    assertOfString input [{Name = ComplexName ["Foundation"; "Domain"]; Items = []}]
-
-[<Fact>]
-let ``Test many empty modules`` () =
-    let input = """
-module Domain
-module Domain.Foundation
-"""
-    let expected = [
-            {Name = ComplexName ["Domain"]; Items = []}
-            {Name = ComplexName ["Foundation"; "Domain"]; Items = []}]
-
-    assertOfString input expected
+    assertOfString input {Name = ComplexName ["Foundation"; "Domain"]; Items = []}
 
 [<Fact>]
 let ``Test enum`` () =
@@ -40,7 +24,7 @@ enum TrafficLight =
     | Yellow
     | Green
 """
-    assertOfString input [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
+    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
 
 [<Fact>]
 let ``Test single line enum`` () =
@@ -48,7 +32,7 @@ let ``Test single line enum`` () =
 module Domain
 enum TrafficLight = Red | Yellow | Green
 """
-    assertOfString input [{Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}]
+    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
 
 [<Fact>]
 let ``Test record`` () =
@@ -73,7 +57,7 @@ record Crossroad = {
     Props: string map
 }
 """
-    assertOfString input [{
+    assertOfString input {
         Name = ComplexName ["Domain"]
         Items = [
             Record {
@@ -95,7 +79,7 @@ record Crossroad = {
                     { Name = "Img"; Type = Bytes }
                     { Name = "Notes"; Type = Array String }
                     { Name = "Props"; Type = Map String }
-                ]}]}]
+                ]}]}
 
 [<Fact>]
 let ``Test single line record`` () =
@@ -103,7 +87,7 @@ let ``Test single line record`` () =
 module Domain
 record Crossroad = { Id: int; Street1: string; Street2: string }
 """
-    assertOfString input [{
+    assertOfString input {
         Name = ComplexName ["Domain"]
         Items = [
             Record {
@@ -112,7 +96,7 @@ record Crossroad = { Id: int; Street1: string; Street2: string }
                     { Name = "Id"; Type = Int }
                     { Name = "Street1"; Type = String }
                     { Name = "Street2"; Type = String }
-                ]}]}]
+                ]}]}
 
 [<Fact>]
 let ``Test union`` () =
@@ -124,7 +108,7 @@ union ServiceCheck =
     | Campaign of name:string*step:int
     | RCA of Incident
 """
-    assertOfString input [{
+    assertOfString input {
         Name = ComplexName ["Domain"]
         Items = [
             Union {
@@ -137,7 +121,7 @@ union ServiceCheck =
                         {Name = "step"; Type = Int}
                         ]}
                     { Name = "RCA"; Fields = [{Name = "Item1"; Type = Complex (ComplexName ["Incident"])}] }
-                ]}]}]
+                ]}]}
 
 [<Fact>]
 let ``Test single line union`` () =
@@ -145,7 +129,7 @@ let ``Test single line union`` () =
 module Domain
 union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
 """
-    assertOfString input [{
+    assertOfString input {
         Name = ComplexName ["Domain"]
         Items = [
             Union {
@@ -158,16 +142,14 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                         {Name = "step"; Type = Int}
                         ]}
                     { Name = "RCA"; Fields = [{Name = "Item1"; Type = Complex (ComplexName ["Incident"])}] }
-                ]}]}]
+                ]}]}
 
 [<Fact>]
 let ``Complex Test`` () =
     let input = """
-module Domain
+module Domain.Foundation
 
 enum TrafficLight = Red | Yellow | Green
-
-module Domain.Foundation
 
 enum AltTrafficLight = Red | Yellow | Blue
 
@@ -180,11 +162,10 @@ record Crossroad = {
 union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
 
 """
-    assertOfString input [
-        {   Name = ComplexName ["Domain"]
-            Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}] }
+    assertOfString input
         {   Name = ComplexName ["Foundation"; "Domain"]
             Items = [
+                Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
                 Enum {
                     Name = "AltTrafficLight";
                     Symbols = ["Red"; "Yellow"; "Blue"] }
@@ -207,4 +188,3 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                         { Name = "RCA"; Fields = [{Name = "Item1"; Type = Complex (ComplexName ["Incident"])}] }
                     ]}
                 ]}
-    ]
