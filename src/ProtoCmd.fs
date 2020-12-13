@@ -10,19 +10,14 @@ open Codegen
 let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        Types.lock module' locks
-        |> Result.mapError (sprintf "When try to check current lock: %A")
-        |> Result.bind(fun newlocks ->
-            if newlocks <> locks then
-                Error "Lock file is not corresponded to types definition. Run protogen lock first."
-            else
-                let fileContent = gen module' locks
-                let fileName =
-                    if Path.GetExtension(outputFileName) <> ".proto" then outputFileName + ".proto" else outputFileName
-                Console.WriteLine($"Writing .proto definition to {fileName}")
-                File.WriteAllText(fileName, fileContent)
-                Ok ()
-            )
+        checkLock module' locks
+        |> Result.bind(fun _ ->
+            let fileContent = gen module' locks
+            let fileName =
+                if Path.GetExtension(outputFileName) <> ".proto" then outputFileName + ".proto" else outputFileName
+            Console.WriteLine($"Writing .proto definition to {fileName}")
+            File.WriteAllText(fileName, fileContent)
+            Ok () )
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 
@@ -68,16 +63,16 @@ let gen (module':Module) (locks:LockItem list) =
             | OneOf (name,unionName,fields) ->
                 line txt $"    oneof {firstCharToUpper name} {{"
                 for fieldLock in fields do
-                    line txt $"        {cn unionName}__{fieldLock.CaseName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
+                    line txt $"        {dottedName unionName}__{fieldLock.CaseName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
                 line txt $"    }}"
         line txt $"}}"
 
     line txt """syntax = "proto3";"""
-    line txt $"package {cn module'.Name};"
-    line txt $"option csharp_namespace = \"ProtoClasses.{cn module'.Name}\";";
+    line txt $"package {dottedName module'.Name};"
+    line txt $"option csharp_namespace = \"ProtoClasses.{dottedName module'.Name}\";";
     for reference in references messageLockCache module' do
         if reference <> module'.Name then
-            line txt $"import \"{cn reference}\";"
+            line txt $"import \"{dottedName reference}\";"
 
     module'.Items |> List.iter (genItem module'.Name)
     txt.ToString()
@@ -98,7 +93,7 @@ let rec typeToString (type':Type) =
     | Optional v -> typeToString v
     | Array v -> "repeated " + (typeToString v)
     | Map v -> $"map<string,{typeToString v}>"
-    | Complex ns -> cn ns
+    | Complex ns -> dottedName ns
 
 let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module) =
     let set = Collections.Generic.HashSet<ComplexName>()

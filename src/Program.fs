@@ -7,6 +7,7 @@ let commands: Command list = [
     Protogen.LockCmd.Instance
     Protogen.ProtoCmd.Instance
     Protogen.FsharpTypesCmd.Instance
+    Protogen.FsharpConvertersCmd.Instance
 ]
 
 [<EntryPoint>]

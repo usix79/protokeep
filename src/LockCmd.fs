@@ -42,24 +42,24 @@ let rec typeToString (type':Type) =
     | Optional v -> typeToString v + " option"
     | Array v -> typeToString v + " array"
     | Map v -> typeToString v + " map"
-    | Complex ns -> cn ns
+    | Complex ns -> dottedName ns
 
 let gen (locks:LockItem list) =
     let txt = StringBuilder()
 
     let rec f = function
         | EnumLock lock ->
-            line txt $"enum {cn lock.Name}"
+            line txt $"enum {dottedName lock.Name}"
             for value' in lock.Values do
                 line txt $"    value {value'.Name} = {value'.Num}"
         | MessageLock lock ->
-            line txt $"message {cn lock.Name}"
+            line txt $"message {dottedName lock.Name}"
             for item in lock.LockItems do
                 match item with
                 | Field lock ->
                     line txt $"    field {lock.Name} {typeToString lock.Type} = {lock.Num}"
                 | OneOf (name, unionName, locks) ->
-                    line txt $"    oneof {name} {cn unionName}"
+                    line txt $"    oneof {name} {dottedName unionName}"
                     for case in locks do
                     line txt $"        case {case.CaseName} = {case.Num}"
 

@@ -10,19 +10,14 @@ open Codegen
 let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        Types.lockInternal module' locks
-        |> Result.mapError (sprintf "When try to check current lock: %A")
-        |> Result.bind(fun (newlocks, typesCache) ->
-            if newlocks <> locks then
-                Error "Lock file is not corresponded to types definition. Run protogen lock first."
-            else
-                let fileContent = gen module' locks typesCache
-                let fileName =
-                    if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
-                Console.WriteLine($"Writing fsharp types to {fileName}")
-                File.WriteAllText(fileName, fileContent)
-                Ok ()
-            )
+        checkLock module' locks
+        |> Result.bind(fun typesCache ->
+            let fileContent = gen module' locks typesCache
+            let fileName =
+                if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
+            Console.WriteLine($"Writing fsharp types to {fileName}")
+            File.WriteAllText(fileName, fileContent)
+            Ok () )
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance = {
@@ -60,7 +55,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                 |> (fun str -> if str <> "" then " of " + str else str)
             line txt $"    | {case.Name}{fieldsStr}"
 
-    line txt $"module rec {cn module'.Name}"
+    line txt $"module rec {dottedName module'.Name}"
     for item in module'.Items do
         genItem module'.Name item
 
@@ -82,4 +77,4 @@ let rec typeToString (type':Type) =
     | Optional v -> typeToString v + " option"
     | Array v -> typeToString v + " array"
     | Map v -> $"Map<string,{typeToString v}>"
-    | Complex ns -> cn ns
+    | Complex ns -> dottedName ns
