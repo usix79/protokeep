@@ -49,6 +49,7 @@ let gen (modules:Module list) (locks:LockItem list) (typesCache:Types.TypesCache
         line txt $"}}"
     | Union info ->
         line txt $"type {info.Name} ="
+        line txt $"    | Unknown"
         for case in info.Cases do
             let fieldsStr =
                 case.Fields

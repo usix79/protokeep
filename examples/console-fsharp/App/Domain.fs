@@ -5,6 +5,7 @@ type TrafficLight =
     | Yellow = 2
     | Green = 3
 type LightStatus =
+    | Unknown
     | Normal
     | Warning of errorsCount:int
     | OutOfOrder of since:System.DateTimeOffset

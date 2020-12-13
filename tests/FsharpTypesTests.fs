@@ -14,7 +14,7 @@ enum TrafficLight =
     | Red
     | Yellow
     | Green ""","""
-module Domain
+module rec Domain
 type TrafficLight =
     | Unknown = 0
     | Red = 1
@@ -45,7 +45,7 @@ record Crossroad = {
     Notes: string array
     Props: string map
 }""","""
-module Domain
+module rec Domain
 type TrafficLight =
     | Unknown = 0
     | Red = 1
@@ -53,7 +53,7 @@ type TrafficLight =
     | Green = 3
 type Crossroad = {
     Id : int
-    LongId : long
+    LongId : int64
     AltId : System.Guid
     Street1 : string
     Street2 : string
@@ -86,13 +86,14 @@ record Crossroad = {
     Light: TrafficLight
     LightStatus: LightStatus
 }""", """
-module Domain
+module rec Domain
 type TrafficLight =
     | Unknown = 0
     | Red = 1
     | Yellow = 2
     | Green = 3
 type LightStatus =
+    | Unknown
     | Normal
     | Warning of errorsCount:int
     | OutOfOrder of since:System.DateTimeOffset
