@@ -1,0 +1,80 @@
+message Domain.Op.Val
+    field p1 int = 1
+message Domain.Op.Sum
+    oneof p1 Domain.Op
+        case Val = 1
+        case Sum = 2
+        case Mul = 3
+        case Div = 4
+        case Quantum = 5
+    oneof p2 Domain.Op
+        case Val = 6
+        case Sum = 7
+        case Mul = 8
+        case Div = 9
+        case Quantum = 10
+message Domain.Op.Mul
+    oneof p1 Domain.Op
+        case Val = 1
+        case Sum = 2
+        case Mul = 3
+        case Div = 4
+        case Quantum = 5
+    oneof p2 Domain.Op
+        case Val = 6
+        case Sum = 7
+        case Mul = 8
+        case Div = 9
+        case Quantum = 10
+message Domain.Op.Div
+    oneof p1 Domain.Op
+        case Val = 1
+        case Sum = 2
+        case Mul = 3
+        case Div = 4
+        case Quantum = 5
+    oneof p2 Domain.Op
+        case Val = 6
+        case Sum = 7
+        case Mul = 8
+        case Div = 9
+        case Quantum = 10
+message Domain.Op.Quantum
+    oneof p1 Domain.Op
+        case Val = 1
+        case Sum = 2
+        case Mul = 3
+        case Div = 4
+        case Quantum = 5
+    oneof p2 Domain.Op
+        case Val = 6
+        case Sum = 7
+        case Mul = 8
+        case Div = 9
+        case Quantum = 10
+    field p3 string = 11
+message Domain.OpError.General
+    field p1 string = 1
+message Domain.OpError.DivisionByZero
+message Domain.OpError.NotSupported
+message Domain.OpResult.Success
+    field p1 int = 1
+message Domain.OpResult.Fail
+    oneof p1 Domain.OpError
+        case General = 1
+        case DivisionByZero = 2
+        case NotSupported = 3
+message Domain.Request
+    field Token string = 1
+    oneof Operation Domain.Op
+        case Val = 2
+        case Sum = 3
+        case Mul = 4
+        case Div = 5
+        case Quantum = 6
+message Domain.Response
+    field Token string = 1
+    oneof Result Domain.OpResult
+        case Success = 2
+        case Fail = 3
+    field ExecutionTime duration = 4

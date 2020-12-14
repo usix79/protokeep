@@ -116,13 +116,15 @@ type ConvertDomain () =
         let y = ProtoClasses.Domain.LightStatus__Normal()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.LightStatus__Warning)  =
-        Domain.LightStatus.Warning ((x.ErrorsCount))
+        Domain.LightStatus.Warning
+            ((x.ErrorsCount))
     static member ToProtobufLightStatusCaseWarning (errorsCount) : ProtoClasses.Domain.LightStatus__Warning =
         let y = ProtoClasses.Domain.LightStatus__Warning()
         y.ErrorsCount <- errorsCount
         y
     static member FromProtobuf (x:ProtoClasses.Domain.LightStatus__OutOfOrder)  =
-        Domain.LightStatus.OutOfOrder ((x.Since |> fun v -> v.ToDateTimeOffset()))
+        Domain.LightStatus.OutOfOrder
+            ((x.Since |> fun v -> v.ToDateTimeOffset()))
     static member ToProtobufLightStatusCaseOutOfOrder (since) : ProtoClasses.Domain.LightStatus__OutOfOrder =
         let y = ProtoClasses.Domain.LightStatus__OutOfOrder()
         y.Since <- since |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset

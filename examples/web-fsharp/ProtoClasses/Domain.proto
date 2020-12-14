@@ -1,0 +1,107 @@
+syntax = "proto3";
+package Domain;
+option csharp_namespace = "ProtoClasses.Domain";
+import "google/protobuf/duration.proto";
+message Op__Val {
+    int32 P1 = 1;
+}
+message Op__Sum {
+    oneof P1 {
+        Domain.Op__Val P1Val = 1;
+        Domain.Op__Sum P1Sum = 2;
+        Domain.Op__Mul P1Mul = 3;
+        Domain.Op__Div P1Div = 4;
+        Domain.Op__Quantum P1Quantum = 5;
+    }
+    oneof P2 {
+        Domain.Op__Val P2Val = 6;
+        Domain.Op__Sum P2Sum = 7;
+        Domain.Op__Mul P2Mul = 8;
+        Domain.Op__Div P2Div = 9;
+        Domain.Op__Quantum P2Quantum = 10;
+    }
+}
+message Op__Mul {
+    oneof P1 {
+        Domain.Op__Val P1Val = 1;
+        Domain.Op__Sum P1Sum = 2;
+        Domain.Op__Mul P1Mul = 3;
+        Domain.Op__Div P1Div = 4;
+        Domain.Op__Quantum P1Quantum = 5;
+    }
+    oneof P2 {
+        Domain.Op__Val P2Val = 6;
+        Domain.Op__Sum P2Sum = 7;
+        Domain.Op__Mul P2Mul = 8;
+        Domain.Op__Div P2Div = 9;
+        Domain.Op__Quantum P2Quantum = 10;
+    }
+}
+message Op__Div {
+    oneof P1 {
+        Domain.Op__Val P1Val = 1;
+        Domain.Op__Sum P1Sum = 2;
+        Domain.Op__Mul P1Mul = 3;
+        Domain.Op__Div P1Div = 4;
+        Domain.Op__Quantum P1Quantum = 5;
+    }
+    oneof P2 {
+        Domain.Op__Val P2Val = 6;
+        Domain.Op__Sum P2Sum = 7;
+        Domain.Op__Mul P2Mul = 8;
+        Domain.Op__Div P2Div = 9;
+        Domain.Op__Quantum P2Quantum = 10;
+    }
+}
+message Op__Quantum {
+    oneof P1 {
+        Domain.Op__Val P1Val = 1;
+        Domain.Op__Sum P1Sum = 2;
+        Domain.Op__Mul P1Mul = 3;
+        Domain.Op__Div P1Div = 4;
+        Domain.Op__Quantum P1Quantum = 5;
+    }
+    oneof P2 {
+        Domain.Op__Val P2Val = 6;
+        Domain.Op__Sum P2Sum = 7;
+        Domain.Op__Mul P2Mul = 8;
+        Domain.Op__Div P2Div = 9;
+        Domain.Op__Quantum P2Quantum = 10;
+    }
+    string P3 = 11;
+}
+message OpError__General {
+    string P1 = 1;
+}
+message OpError__DivisionByZero {
+}
+message OpError__NotSupported {
+}
+message OpResult__Success {
+    int32 P1 = 1;
+}
+message OpResult__Fail {
+    oneof P1 {
+        Domain.OpError__General P1General = 1;
+        Domain.OpError__DivisionByZero P1DivisionByZero = 2;
+        Domain.OpError__NotSupported P1NotSupported = 3;
+    }
+}
+message Request {
+    string Token = 1;
+    oneof Operation {
+        Domain.Op__Val OperationVal = 2;
+        Domain.Op__Sum OperationSum = 3;
+        Domain.Op__Mul OperationMul = 4;
+        Domain.Op__Div OperationDiv = 5;
+        Domain.Op__Quantum OperationQuantum = 6;
+    }
+}
+message Response {
+    string Token = 1;
+    oneof Result {
+        Domain.OpResult__Success ResultSuccess = 2;
+        Domain.OpResult__Fail ResultFail = 3;
+    }
+    google.protobuf.Duration ExecutionTime = 4;
+}

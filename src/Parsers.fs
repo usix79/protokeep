@@ -22,10 +22,10 @@ module private Impl =
 
     let enum' =
         keyword "enum" >>.
-            pipe2
-                (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
-                (sepBy1 (between spaces spaces identifier) (pchar '|') )
-                (fun name symbols -> Enum {Name = name; Symbols = symbols})
+        pipe2
+            (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
+            (sepBy1 (between spaces spaces identifier) (pchar '|') )
+            (fun name symbols -> Enum {Name = name; Symbols = symbols})
 
     let type' =
         choice[
@@ -58,12 +58,12 @@ module private Impl =
             (fun name type' -> {Name = name; Type = type'} : FieldInfo)
 
     let record' =
-            keyword "record" >>.
-                pipe2
-                    (identifier .>> ws .>> skipChar '=' .>> spaces)
-                    (between (pchar '{') (pchar '}' .>> spaces)
-                        (sepEndBy field' (pchar ';' <|> newline)))
-                    (fun name fields -> Record {Name = name; Fields = fields})
+        keyword "record" >>.
+        pipe2
+            (identifier .>> ws .>> skipChar '=' .>> spaces)
+            (between (pchar '{') (pchar '}' .>> spaces)
+                (sepEndBy field' (pchar ';' <|> newline)))
+            (fun name fields -> Record {Name = name; Fields = fields})
 
     let unionCaseField' =
         pipe2
@@ -81,41 +81,41 @@ module private Impl =
                         fields
                         |> Option.defaultValue []
                         |> List.mapi (fun idx r -> {
-                                    Name = r.Name |> Option.defaultWith (fun () -> $"Item{idx+1}")
+                                    Name = r.Name |> Option.defaultWith (fun () -> $"p{idx+1}")
                                     Type = r.Type })
                         })
 
     let union' =
         keyword "union" >>.
-            pipe2
-                (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
-                (sepBy1 (between spaces spaces unionCase') (pchar '|') )
-                (fun name cases -> Union {Name = name; Cases = cases})
+        pipe2
+            (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
+            (sepBy1 (between spaces spaces unionCase') (pchar '|') )
+            (fun name cases -> Union {Name = name; Cases = cases})
 
     let module' =
         keyword "module" >>.
-            pipe2
-                (complexName .>> ts)
-                (many (spaces >>. choice [enum'; record'; union']))
-                (fun name items -> {Name = name; Items = items})
+        pipe2
+            (complexName .>> ts)
+            (many (spaces >>. choice [enum'; record'; union']))
+            (fun name items -> {Name = name; Items = items})
 
     let pgenDocument =
         spaces >>. module' .>> spaces .>> eof
 
     let enumLock =
         keyword "enum" >>.
-            pipe2
-                (complexName .>> ts)
-                (many1 (
-                    (ws >>. pstring "value" >>. ws1 >>.
-                        pipe2
-                            identifier
-                            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
-                            (fun value' num -> {Name = value'; Num = num}))))
-                (fun name values -> EnumLock {Name = name; Values = values})
+        pipe2
+            (complexName .>> ts)
+            (many1 (
+                (ws >>. pstring "value" >>. ws1 >>.
+                    pipe2
+                        identifier
+                        ((between ws ws (pchar '=')) >>. pint32 .>> ts )
+                        (fun value' num -> {Name = value'; Num = num}))))
+            (fun name values -> EnumLock {Name = name; Values = values})
 
     let messageField =
-        pstring "field" >>. ws1 >>.
+        keyword "field" >>.
         pipe3
             (identifier .>> ws1)
             (fullType')
@@ -123,26 +123,26 @@ module private Impl =
             (fun name type' num -> Field {Name = name; Type = type'; Num = num})
 
     let messageOneOfCase =
-        pstring "case" >>. ws1 >>.
+        keyword "case" >>.
         pipe2
             (identifier .>> ws1)
             ((between ws ws (pchar '=')) >>. pint32 .>> ts )
             (fun name num -> {CaseName = name; Num = num})
 
     let messageOneOf =
-        pstring "oneof" >>. ws1 >>.
+        keyword "oneof" >>.
         pipe3
             (identifier .>> ws1)
             (complexName .>> ts)
-            (many1 (ws >>. messageOneOfCase))
+            (many1 (spaces >>. messageOneOfCase .>> spaces))
             (fun name unionName cases -> OneOf (name, unionName, cases))
 
     let messageLock =
         keyword "message" >>.
-            pipe2
-                (complexName .>> ts)
-                (many (ws >>. choice [messageField; messageOneOf]))
-                (fun name items -> MessageLock {Name = name; LockItems = items})
+        pipe2
+            (complexName .>> ts)
+            (many (ws >>. choice [messageField; messageOneOf]))
+            (fun name items -> MessageLock {Name = name; LockItems = items})
 
     let lockDocument =
         spaces >>. many (choice [enumLock; messageLock] .>> spaces) .>> eof

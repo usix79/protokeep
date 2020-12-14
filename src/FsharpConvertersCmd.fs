@@ -54,12 +54,14 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Record info ->
         let typeName = Types.mergeName ns info.Name
         let fullNameTxt = typeName |> dottedName
+        let fullNameOfProtoClass = "ProtoClasses." + fullNameTxt
         let lockItems = messageLockCache.[typeName].LockItems
+
 
         fromProtobuf fullNameTxt
         line txt "        {"
         lockItems |> List.iter(fun lockItem ->
-            line txt $"            {Types.messageLockItemName lockItem} = {genLockItemFromProtobuf fullNameTxt lockItem}")
+            line txt $"            {Types.messageLockItemName lockItem} = {genLockItemFromProtobuf fullNameOfProtoClass lockItem}")
         line txt "        }"
 
         toProtobuf fullNameTxt
@@ -84,10 +86,11 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
             else
                 let values =
                     lockItems
-                    |> List.map(fun lockItem -> $"({genLockItemFromProtobuf fullNameTxt lockItem})")
+                    |> List.map(fun lockItem -> $"({genLockItemFromProtobuf fullCaseNameTxt lockItem})")
                     |> String.concat ","
 
-                line txt $"        {caseTypeName |> dottedName} ({values})"
+                line txt $"        {caseTypeName |> dottedName}"
+                line txt $"            ({values})"
 
             line txt $"    static member ToProtobuf{info.Name}Case{case.Name} ({fieldsNames}) : {fullCaseNameTxt} ="
             line txt $"        let y = {fullCaseNameTxt}()"
@@ -100,15 +103,16 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
         | Field item ->
             match item.Type with
             | Optional t ->
-                let caseValue = $"ProtoClasses.{fullNameTxt}.{item.Name}OneofCase.{item.Name}Value"
+                let caseValue = $"{fullNameTxt}.{item.Name}OneofCase.{item.Name}Value"
                 $"if x.{firstCharToUpper item.Name}Case = {caseValue} then Some (x.{item.Name}Value{convertionFrom t}) else None"
             | t -> $"x.{firstCharToUpper item.Name}{convertionFrom t}"
-        | OneOf (name,_,cases) ->
+        | OneOf (name,unionName,cases) ->
+            let name = firstCharToUpper name
             [ ""
               $"                match x.{name}Case with"
               for case in cases do
-                $"                | ProtoClasses.{fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
-              $"                | _ -> Domain.{name}.Unknown"
+                $"                | {fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
+              $"                | _ -> {dottedName unionName}.Unknown"
             ]
             |> String.concat "\n"
 

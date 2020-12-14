@@ -115,12 +115,12 @@ union ServiceCheck =
                 Name = "ServiceCheck";
                 Cases = [
                     { Name = "Random"; Fields = []}
-                    { Name = "Planned"; Fields = [{Name = "Item1"; Type = Timestamp}] }
+                    { Name = "Planned"; Fields = [{Name = "p1"; Type = Timestamp}] }
                     { Name = "Campaign"; Fields = [
                         {Name = "name"; Type = String}
                         {Name = "step"; Type = Int}
                         ]}
-                    { Name = "RCA"; Fields = [{Name = "Item1"; Type = Complex (ComplexName ["Incident"])}] }
+                    { Name = "RCA"; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"])}] }
                 ]}]}
 
 [<Fact>]
@@ -136,12 +136,12 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                 Name = "ServiceCheck";
                 Cases = [
                     { Name = "Random"; Fields = []}
-                    { Name = "Planned"; Fields = [{Name = "Item1"; Type = Timestamp}] }
+                    { Name = "Planned"; Fields = [{Name = "p1"; Type = Timestamp}] }
                     { Name = "Campaign"; Fields = [
                         {Name = "name"; Type = String}
                         {Name = "step"; Type = Int}
                         ]}
-                    { Name = "RCA"; Fields = [{Name = "Item1"; Type = Complex (ComplexName ["Incident"])}] }
+                    { Name = "RCA"; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"])}] }
                 ]}]}
 
 [<Fact>]
@@ -180,11 +180,11 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                     Name = "ServiceCheck";
                     Cases = [
                         { Name = "Random"; Fields = []}
-                        { Name = "Planned"; Fields = [{ Name = "Item1"; Type = Timestamp }]}
+                        { Name = "Planned"; Fields = [{ Name = "p1"; Type = Timestamp }]}
                         { Name = "Campaign"; Fields = [
                             {Name = "name"; Type = String}
                             {Name = "step"; Type = Int}
                             ]}
-                        { Name = "RCA"; Fields = [{Name = "Item1"; Type = Complex (ComplexName ["Incident"])}] }
+                        { Name = "RCA"; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"])}] }
                     ]}
                 ]}

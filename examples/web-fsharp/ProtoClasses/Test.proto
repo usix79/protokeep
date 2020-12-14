@@ -1,0 +1,6 @@
+syntax = "proto3";
+package Domain;
+message Greeting {
+    int32 Id = 1;
+    string Name = 2;
+}

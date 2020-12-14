@@ -1,0 +1,28 @@
+module Domain
+
+union Op =
+    | Val of int
+    | Sum of Op*Op
+    | Mul of Op*Op
+    | Div of Op*Op
+    | Quantum of Op*Op*string
+
+union OpError =
+    | General of string
+    | DivisionByZero
+    | NotSupported
+
+union OpResult =
+    | Success of int
+    | Fail of OpError
+
+record Request = {
+    Token: string
+    Operation: Op
+}
+
+record Response = {
+    Token: string
+    Result: OpResult
+    ExecutionTime: duration
+}
