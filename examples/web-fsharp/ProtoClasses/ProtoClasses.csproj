@@ -8,14 +8,6 @@
     <Protobuf Include="Domain.proto" GrpcServices="None" />
   </ItemGroup>
 
-  <Target Name="BuildClientClasses" AfterTargets="Build">
-    <PropertyGroup>
-      <ProtoCCommand>$(Protobuf_ProtocFullPath) --plugin=protoc-gen-grpc=$(gRPC_PluginFullPath)  -I $(Protobuf_StandardImportsPath) -I $(MSBuildProjectDirectory) --js_out=import_style=commonjs,binary:$(MSBuildProjectDirectory)/../client Test.proto </ProtoCCommand>
-    </PropertyGroup>
-    <Message Importance="high" Text="$(ProtoCCommand)" />
-    <Exec Command="$(ProtoCCommand)" />
-  </Target>
-
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.14.0" />
     <PackageReference Include="Grpc.Tools" Version="2.34.0">

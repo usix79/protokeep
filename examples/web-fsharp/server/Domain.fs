@@ -5,6 +5,7 @@ type Op =
     | Sum of p1:Domain.Op*p2:Domain.Op
     | Mul of p1:Domain.Op*p2:Domain.Op
     | Div of p1:Domain.Op*p2:Domain.Op
+    | Ln of p1:Domain.Op
     | Quantum of p1:Domain.Op*p2:Domain.Op*p3:string
 type OpError =
     | Unknown

@@ -26,3 +26,5 @@ tools/
 
 .DS_Store
 .fake
+
+node_modules/

@@ -5,6 +5,7 @@ union Op =
     | Sum of Op*Op
     | Mul of Op*Op
     | Div of Op*Op
+    | Ln of Op
     | Quantum of Op*Op*string
 
 union OpError =

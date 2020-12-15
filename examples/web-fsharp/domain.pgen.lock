@@ -6,12 +6,14 @@ message Domain.Op.Sum
         case Sum = 2
         case Mul = 3
         case Div = 4
+        case Ln = 11
         case Quantum = 5
     oneof p2 Domain.Op
         case Val = 6
         case Sum = 7
         case Mul = 8
         case Div = 9
+        case Ln = 12
         case Quantum = 10
 message Domain.Op.Mul
     oneof p1 Domain.Op
@@ -19,12 +21,14 @@ message Domain.Op.Mul
         case Sum = 2
         case Mul = 3
         case Div = 4
+        case Ln = 11
         case Quantum = 5
     oneof p2 Domain.Op
         case Val = 6
         case Sum = 7
         case Mul = 8
         case Div = 9
+        case Ln = 12
         case Quantum = 10
 message Domain.Op.Div
     oneof p1 Domain.Op
@@ -32,25 +36,37 @@ message Domain.Op.Div
         case Sum = 2
         case Mul = 3
         case Div = 4
+        case Ln = 11
         case Quantum = 5
     oneof p2 Domain.Op
         case Val = 6
         case Sum = 7
         case Mul = 8
         case Div = 9
+        case Ln = 12
         case Quantum = 10
+message Domain.Op.Ln
+    oneof p1 Domain.Op
+        case Val = 1
+        case Sum = 2
+        case Mul = 3
+        case Div = 4
+        case Ln = 5
+        case Quantum = 6
 message Domain.Op.Quantum
     oneof p1 Domain.Op
         case Val = 1
         case Sum = 2
         case Mul = 3
         case Div = 4
+        case Ln = 12
         case Quantum = 5
     oneof p2 Domain.Op
         case Val = 6
         case Sum = 7
         case Mul = 8
         case Div = 9
+        case Ln = 13
         case Quantum = 10
     field p3 string = 11
 message Domain.OpError.General
@@ -71,6 +87,7 @@ message Domain.Request
         case Sum = 3
         case Mul = 4
         case Div = 5
+        case Ln = 7
         case Quantum = 6
 message Domain.Response
     field Token string = 1

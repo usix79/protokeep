@@ -1,10 +1,14 @@
 import { PromiseBuilder__Delay_62FBFDE1, PromiseBuilder__Run_212F1D4B } from "./.fable/Fable.Promise.2.0.0/Promise.fs.js";
+import { proto } from "./Test.proto1_pb";
+import { printf, toConsole } from "./.fable/fable-library.3.0.1/String.js";
 import { fetch$, Types_RequestProperties } from "./.fable/Fable.Fetch.2.2.0/Fetch.fs.js";
 import { ofArray } from "./.fable/fable-library.3.0.1/List.js";
 import { promise } from "./.fable/Fable.Promise.2.0.0/PromiseImpl.fs.js";
 
 (function () {
     const pr = PromiseBuilder__Run_212F1D4B(promise, PromiseBuilder__Delay_62FBFDE1(promise, () => {
+        const xxx = proto.Domain.Greeting();
+        toConsole(printf("AGA: %A"))(xxx);
         const props = ofArray([new Types_RequestProperties(0, "POST"), new Types_RequestProperties(1, {
             ["Content-Type"]: "application/json",
         }), new Types_RequestProperties(2, "{ \"Token\": \"Sigma-7\", \"OperationSum\": { \"P1Val\": { \"P1\": 2 }, \"P2Mul\": { \"P1Val\": { \"P1\": 4 }, \"P2Val\": { \"P1\": 10 } } } }")]);

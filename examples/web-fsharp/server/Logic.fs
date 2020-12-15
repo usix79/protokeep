@@ -15,5 +15,6 @@ let rec calc = function
         bind2 calc op1 calc op2 (fun v1 v2 ->
             if v2 <> 0 then (/) v1 v2 |> Ok
             else Error OpError.DivisionByZero)
+    | Ln op -> calc op |> Result.map (float >> System.Math.Log >> int)
     | Quantum _ -> Error OpError.NotSupported
     | Op.Unknown -> OpError.General "Unknown operation" |> Error
