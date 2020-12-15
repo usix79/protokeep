@@ -189,16 +189,6 @@ type ConvertDomain () =
         let y = ProtoClasses.Domain.OpError__General()
         y.P1 <- p1
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.OpError__DivisionByZero)  =
-        Domain.OpError.DivisionByZero
-    static member ToProtobufOpErrorCaseDivisionByZero () : ProtoClasses.Domain.OpError__DivisionByZero =
-        let y = ProtoClasses.Domain.OpError__DivisionByZero()
-        y
-    static member FromProtobuf (x:ProtoClasses.Domain.OpError__NotSupported)  =
-        Domain.OpError.NotSupported
-    static member ToProtobufOpErrorCaseNotSupported () : ProtoClasses.Domain.OpError__NotSupported =
-        let y = ProtoClasses.Domain.OpError__NotSupported()
-        y
     static member FromProtobuf (x:ProtoClasses.Domain.OpResult__Success)  =
         Domain.OpResult.Success
             ((x.P1))
@@ -211,15 +201,15 @@ type ConvertDomain () =
             ((
                 match x.P1Case with
                 | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1General -> x.P1General |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1DivisionByZero -> x.P1DivisionByZero |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1NotSupported -> x.P1NotSupported |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1DivisionByZero -> Domain.OpError.DivisionByZero
+                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1NotSupported -> Domain.OpError.NotSupported
                 | _ -> Domain.OpError.Unknown))
     static member ToProtobufOpResultCaseFail (p1) : ProtoClasses.Domain.OpResult__Fail =
         let y = ProtoClasses.Domain.OpResult__Fail()
         match p1 with
         | Domain.OpError.General (p1) -> y.P1General <- ConvertDomain.ToProtobufOpErrorCaseGeneral(p1)
-        | Domain.OpError.DivisionByZero -> y.P1DivisionByZero <- ConvertDomain.ToProtobufOpErrorCaseDivisionByZero()
-        | Domain.OpError.NotSupported -> y.P1NotSupported <- ConvertDomain.ToProtobufOpErrorCaseNotSupported()
+        | Domain.OpError.DivisionByZero -> y.P1DivisionByZero <- Google.Protobuf.WellKnownTypes.Empty()
+        | Domain.OpError.NotSupported -> y.P1NotSupported <- Google.Protobuf.WellKnownTypes.Empty()
         | Domain.OpError.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Request) : Domain.Request =

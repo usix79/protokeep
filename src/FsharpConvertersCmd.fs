@@ -74,7 +74,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Union info ->
         let typeName = Types.mergeName ns info.Name
         let fullNameTxt = typeName |> dottedName
-        for case in info.Cases do
+        for case in info.Cases |> List.filter (fun case -> not case.Fields.IsEmpty) do
             let caseTypeName = Types.mergeName typeName case.Name
             let fullCaseNameTxt = $"ProtoClasses.{fullNameTxt}__{case.Name}"
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
@@ -111,7 +111,12 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
             [ ""
               $"                match x.{name}Case with"
               for case in cases do
-                $"                | {fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
+                let caseMessageLock = messageLockCache.[Types.mergeName unionName case.CaseName]
+                let rightValue =
+                    match caseMessageLock.LockItems with
+                    | [] -> $"{dottedName unionName}.{case.CaseName}"
+                    | _  -> $"x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
+                $"                | {fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> {rightValue}"
               $"                | _ -> {dottedName unionName}.Unknown"
             ]
             |> String.concat "\n"
@@ -138,14 +143,22 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
         | OneOf (_,unionName,cases) ->
             line txt $"        match {xName} with"
             for case in cases do
+                let caseMessageLock = messageLockCache.[Types.mergeName unionName case.CaseName]
+
                 let values =
-                    messageLockCache.[Types.mergeName unionName case.CaseName].LockItems
+                    caseMessageLock.LockItems
                     |> List.map Types.messageLockItemName
                     |> String.concat ","
                 let condition =
                     $"        | {dottedName unionName}.{case.CaseName}"
                     + if values <> "" then $" ({values})" else ""
-                line txt $"{condition} -> {yName}{case.CaseName} <- Convert{lastNames unionName |> solidName}.ToProtobuf{firstName unionName}Case{case.CaseName}({values})"
+
+                let rightValue =
+                    match caseMessageLock.LockItems with
+                    | [] -> "Google.Protobuf.WellKnownTypes.Empty()"
+                    | _ -> $"Convert{lastNames unionName |> solidName}.ToProtobuf{firstName unionName}Case{case.CaseName}({values})"
+
+                line txt $"{condition} -> {yName}{case.CaseName} <- {rightValue}"
             line txt $"        | {dottedName unionName}.Unknown -> ()"
 
     line txt $"namespace ProtoConverters.FsharpTypes"

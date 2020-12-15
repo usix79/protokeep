@@ -1,6 +1,7 @@
 syntax = "proto3";
 package Domain;
 option csharp_namespace = "ProtoClasses.Domain";
+import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
 message Op__Val {
     int32 P1 = 1;
@@ -91,18 +92,14 @@ message Op__Quantum {
 message OpError__General {
     string P1 = 1;
 }
-message OpError__DivisionByZero {
-}
-message OpError__NotSupported {
-}
 message OpResult__Success {
     int32 P1 = 1;
 }
 message OpResult__Fail {
     oneof P1 {
         Domain.OpError__General P1General = 1;
-        Domain.OpError__DivisionByZero P1DivisionByZero = 2;
-        Domain.OpError__NotSupported P1NotSupported = 3;
+        google.protobuf.Empty P1DivisionByZero = 2;
+        google.protobuf.Empty P1NotSupported = 3;
     }
 }
 message Request {

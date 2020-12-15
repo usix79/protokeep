@@ -47,8 +47,9 @@ let gen (module':Module) (locks:LockItem list) =
     | Record info -> genRecord ns info.Name info
     | Union info ->
         for case in info.Cases do
-            let recordName = info.Name + "__" + case.Name
-            genRecord (Types.mergeName ns info.Name) recordName case
+            if not case.Fields.IsEmpty then
+                let recordName = info.Name + "__" + case.Name
+                genRecord (Types.mergeName ns info.Name) recordName case
     and genRecord ns recordName info =
         let fullName = Types.mergeName ns info.Name
         line txt $"message {recordName} {{"
@@ -63,7 +64,11 @@ let gen (module':Module) (locks:LockItem list) =
             | OneOf (name,unionName,fields) ->
                 line txt $"    oneof {firstCharToUpper name} {{"
                 for fieldLock in fields do
-                    line txt $"        {dottedName unionName}__{fieldLock.CaseName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
+                    let fieldMessage = messageLockCache.[Types.mergeName unionName fieldLock.CaseName]
+                    let fieldMessageName =
+                        if fieldMessage.LockItems.IsEmpty then "google.protobuf.Empty"
+                        else $"{dottedName unionName}__{fieldLock.CaseName}"
+                    line txt $"        {fieldMessageName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
                 line txt $"    }}"
         line txt $"}}"
 
@@ -114,9 +119,15 @@ let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module
             info.Cases |> List.iter (fRecord ns)
     and fRecord ns info =
         messageLockCache.[Types.mergeName ns info.Name].LockItems
-        |> List.choose (function
-            | Field x -> typeReference x.Type
-            | OneOf (_,unionName,_) -> Types.extractNamespace unionName |> Some)
+        |> List.collect (function
+            | Field x -> [typeReference x.Type]
+            | OneOf (_,unionName,cases) ->
+                [   Types.extractNamespace unionName |> Some
+                    for case in cases do
+                        if messageLockCache.[Types.mergeName unionName case.CaseName].LockItems.IsEmpty then
+                            ComplexName ["google/protobuf/empty.proto"] |> Some
+                ] )
+        |> List.choose id
         |> List.iter (fun r -> set.Add(r) |> ignore)
 
     module'.Items |> List.iter (f module'.Name)

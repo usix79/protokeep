@@ -110,11 +110,6 @@ type ConvertDomain () =
         enum<Domain.TrafficLight>(int x)
     static member ToProtobuf (x:Domain.TrafficLight) : ProtoClasses.Domain.TrafficLight =
         enum<ProtoClasses.Domain.TrafficLight>(int x)
-    static member FromProtobuf (x:ProtoClasses.Domain.LightStatus__Normal)  =
-        Domain.LightStatus.Normal
-    static member ToProtobufLightStatusCaseNormal () : ProtoClasses.Domain.LightStatus__Normal =
-        let y = ProtoClasses.Domain.LightStatus__Normal()
-        y
     static member FromProtobuf (x:ProtoClasses.Domain.LightStatus__Warning)  =
         Domain.LightStatus.Warning
             ((x.ErrorsCount))
@@ -137,7 +132,7 @@ type ConvertDomain () =
             Light = x.Light |> ConvertDomain.FromProtobuf
             LightStatus = """ + """
                 match x.LightStatusCase with
-                | ProtoClasses.Domain.Crossroad.LightStatusOneofCase.LightStatusNormal -> x.LightStatusNormal |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Crossroad.LightStatusOneofCase.LightStatusNormal -> Domain.LightStatus.Normal
                 | ProtoClasses.Domain.Crossroad.LightStatusOneofCase.LightStatusWarning -> x.LightStatusWarning |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Crossroad.LightStatusOneofCase.LightStatusOutOfOrder -> x.LightStatusOutOfOrder |> ConvertDomain.FromProtobuf
                 | _ -> Domain.LightStatus.Unknown
@@ -149,7 +144,7 @@ type ConvertDomain () =
         y.Street2 <- x.Street2
         y.Light <- x.Light |> ConvertDomain.ToProtobuf
         match x.LightStatus with
-        | Domain.LightStatus.Normal -> y.LightStatusNormal <- ConvertDomain.ToProtobufLightStatusCaseNormal()
+        | Domain.LightStatus.Normal -> y.LightStatusNormal <- Google.Protobuf.WellKnownTypes.Empty()
         | Domain.LightStatus.Warning (errorsCount) -> y.LightStatusWarning <- ConvertDomain.ToProtobufLightStatusCaseWarning(errorsCount)
         | Domain.LightStatus.OutOfOrder (since) -> y.LightStatusOutOfOrder <- ConvertDomain.ToProtobufLightStatusCaseOutOfOrder(since)
         | Domain.LightStatus.Unknown -> ()
