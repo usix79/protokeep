@@ -24,4 +24,5 @@ type Response = {
     Token : string
     Result : Domain.OpResult
     ExecutionTime : System.TimeSpan
+    Extra : string option
 }

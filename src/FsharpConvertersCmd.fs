@@ -74,16 +74,15 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Union info ->
         let typeName = Types.mergeName ns info.Name
         let fullNameTxt = typeName |> dottedName
-        for case in info.Cases |> List.filter (fun case -> not case.Fields.IsEmpty) do
+        for case in info.Cases do
             let caseTypeName = Types.mergeName typeName case.Name
             let fullCaseNameTxt = $"ProtoClasses.{fullNameTxt}__{case.Name}"
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
             let lockItems = messageLockCache.[caseTypeName].LockItems
 
-            line txt $"    static member FromProtobuf (x:{fullCaseNameTxt})  ="
-            if lockItems.IsEmpty then
-                line txt $"        {caseTypeName |> dottedName}"
-            else
+            match lockItems with
+            | Types.MultiParamCase ->
+                line txt $"    static member FromProtobuf (x:{fullCaseNameTxt})  ="
                 let values =
                     lockItems
                     |> List.map(fun lockItem -> $"({genLockItemFromProtobuf fullCaseNameTxt lockItem})")
@@ -92,12 +91,13 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                 line txt $"        {caseTypeName |> dottedName}"
                 line txt $"            ({values})"
 
-            line txt $"    static member ToProtobuf{info.Name}Case{case.Name} ({fieldsNames}) : {fullCaseNameTxt} ="
-            line txt $"        let y = {fullCaseNameTxt}()"
-            lockItems |> List.iter (fun item ->
-                let itemName = Types.messageLockItemName item
-                genLockItemToProtobuf $"{itemName}" $"y.{firstCharToUpper itemName}" item)
-            line txt $"        y"
+                line txt $"    static member ToProtobuf{info.Name}Case{case.Name} ({fieldsNames}) : {fullCaseNameTxt} ="
+                line txt $"        let y = {fullCaseNameTxt}()"
+                lockItems |> List.iter (fun item ->
+                    let itemName = Types.messageLockItemName item
+                    genLockItemToProtobuf $"{itemName}" $"y.{firstCharToUpper itemName}" item)
+                line txt $"        y"
+            | _ -> ()
 
     and genLockItemFromProtobuf fullNameTxt = function
         | Field item ->
@@ -111,11 +111,13 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
             [ ""
               $"                match x.{name}Case with"
               for case in cases do
-                let caseMessageLock = messageLockCache.[Types.mergeName unionName case.CaseName]
+                let caseTypeName = Types.mergeName unionName case.CaseName
+                let caseMessageLock = messageLockCache.[caseTypeName]
                 let rightValue =
                     match caseMessageLock.LockItems with
-                    | [] -> $"{dottedName unionName}.{case.CaseName}"
-                    | _  -> $"x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
+                    | Types.EmptyCase -> $"{dottedName unionName}.{case.CaseName}"
+                    | Types.SingleParamCase fieldInfo -> $"{dottedName caseTypeName}(x.{name}{case.CaseName}{convertionFrom fieldInfo.Type})"
+                    | Types.MultiParamCase  -> $"x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
                 $"                | {fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> {rightValue}"
               $"                | _ -> {dottedName unionName}.Unknown"
             ]
@@ -153,12 +155,16 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                     $"        | {dottedName unionName}.{case.CaseName}"
                     + if values <> "" then $" ({values})" else ""
 
-                let rightValue =
-                    match caseMessageLock.LockItems with
-                    | [] -> "Google.Protobuf.WellKnownTypes.Empty()"
-                    | _ -> $"Convert{lastNames unionName |> solidName}.ToProtobuf{firstName unionName}Case{case.CaseName}({values})"
+                match caseMessageLock.LockItems with
+                | Types.EmptyCase ->
+                    line txt $"{condition} -> {yName}{case.CaseName} <- Google.Protobuf.WellKnownTypes.Empty()"
+                | Types.SingleParamCase paramInfo ->
+                    line txt $"{condition} ->"
+                    genLockItemToProtobuf paramInfo.Name $"    {yName}{case.CaseName}" (Field paramInfo)
+                | Types.MultiParamCase ->
+                    line txt ($"{condition} -> {yName}{case.CaseName} <- " +
+                        $"Convert{lastNames unionName |> solidName}.ToProtobuf{firstName unionName}Case{case.CaseName}({values})")
 
-                line txt $"{condition} -> {yName}{case.CaseName} <- {rightValue}"
             line txt $"        | {dottedName unionName}.Unknown -> ()"
 
     line txt $"namespace ProtoConverters.FsharpTypes"

@@ -46,8 +46,15 @@ let gen (module':Module) (locks:LockItem list) =
         line txt $"}}"
     | Record info -> genRecord ns info.Name info
     | Union info ->
+        let fullName = Types.mergeName ns info.Name
         for case in info.Cases do
-            if not case.Fields.IsEmpty then
+            let needRecord =
+                match messageLockCache.[Types.mergeName fullName case.Name].LockItems with
+                | Types.EmptyCase -> false
+                | Types.SingleParamCase _ -> false
+                | Types.MultiParamCase -> true
+
+            if needRecord then
                 let recordName = info.Name + "__" + case.Name
                 genRecord (Types.mergeName ns info.Name) recordName case
     and genRecord ns recordName info =
@@ -65,10 +72,12 @@ let gen (module':Module) (locks:LockItem list) =
                 line txt $"    oneof {firstCharToUpper name} {{"
                 for fieldLock in fields do
                     let fieldMessage = messageLockCache.[Types.mergeName unionName fieldLock.CaseName]
-                    let fieldMessageName =
-                        if fieldMessage.LockItems.IsEmpty then "google.protobuf.Empty"
-                        else $"{dottedName unionName}__{fieldLock.CaseName}"
-                    line txt $"        {fieldMessageName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
+                    let fieldTypeName =
+                        match fieldMessage.LockItems with
+                        | Types.EmptyCase -> "google.protobuf.Empty"
+                        | Types.SingleParamCase fieldLock -> $"{typeToString fieldLock.Type}"
+                        | Types.MultiParamCase -> $"{dottedName unionName}__{fieldLock.CaseName}"
+                    line txt $"        {fieldTypeName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
                 line txt $"    }}"
         line txt $"}}"
 

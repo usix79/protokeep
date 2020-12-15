@@ -74,9 +74,16 @@ module rec Types =
         | UnionChangedToRecord of recordName:ComplexName*fieldName:string*unionName:string
         | UnacceptableEvolution of recordName:ComplexName*fieldName:string*oldType:Type*newType:Type
         | MissedCaseInUnion of recordName:ComplexName*unionName:ComplexName*fieldName:string
+        | AddingFieldIsNotAllowed of recordName:ComplexName*fieldName:string
 
     type LockCache = Map<ComplexName,LockItem>
     type TypesCache = Map<ComplexName,ModuleItem>
+
+    let (|EmptyCase|SingleParamCase|MultiParamCase|) = function
+        | [] -> EmptyCase
+        | [Field {Type = Optional (_)}] -> MultiParamCase
+        | [Field fieldLock] -> SingleParamCase fieldLock
+        | _ -> MultiParamCase
 
     let mergeName (ComplexName ns) name = ComplexName (name::ns)
 
@@ -122,11 +129,11 @@ module rec Types =
                         lockEnum lockCache module'.Name info
                         |> Result.map List.singleton
                     | Record info ->
-                        lockRecord lockCache typesCache module'.Name info
+                        lockRecord lockCache typesCache false module'.Name info
                         |> Result.map List.singleton
                     | Union info ->
                         info.Cases
-                        |> traverse (lockRecord lockCache typesCache (mergeName module'.Name info.Name)) )
+                        |> traverse (lockRecord lockCache typesCache true (mergeName module'.Name info.Name)) )
                 |> Result.map List.concat
                 |> Result.map (fun locks -> locks, typesCache) ))
 
@@ -225,7 +232,7 @@ module rec Types =
         | Float, Double -> true
         | _ -> from = to'
 
-    let lockRecord (lockCache:LockCache) (typesCache:TypesCache) ns info : Result<LockItem, LockError list> =
+    let lockRecord (lockCache:LockCache) (typesCache:TypesCache) fieldsAreLocked ns info : Result<LockItem, LockError list> =
         let fullName = mergeName ns info.Name
 
         match lockCache.TryFind fullName with
@@ -251,7 +258,10 @@ module rec Types =
                         let fullQualifiedType = toFullQualifiedType typesCache ns field.Type
                         match fieldsMap.TryFind field.Name with
                         | None -> // new field
-                            Ok (Field {Name = field.Name; Type = fullQualifiedType; Num = nextNum}), (nextNum + 1)
+                            if not fieldsMap.IsEmpty && fieldsAreLocked then
+                                Error [AddingFieldIsNotAllowed (fullName, field.Name)], nextNum
+                            else
+                                Ok (Field {Name = field.Name; Type = fullQualifiedType; Num = nextNum}), (nextNum + 1)
                         | Some item ->
                             match item with
                             | Field lock when allowedEvolution lock.Type fullQualifiedType ->

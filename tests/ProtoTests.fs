@@ -107,12 +107,6 @@ enum TrafficLight {
     Yellow = 2;
     Green = 3;
 }
-message LightStatus__Warning {
-    int32 ErrorsCount = 1;
-}
-message LightStatus__OutOfOrder {
-    google.protobuf.Timestamp Since = 1;
-}
 message Crossroad {
     int32 Id = 1;
     string Street1 = 2;
@@ -120,8 +114,8 @@ message Crossroad {
     Domain.TrafficLight Light = 4;
     oneof LightStatus {
         google.protobuf.Empty LightStatusNormal = 5;
-        Domain.LightStatus__Warning LightStatusWarning = 6;
-        Domain.LightStatus__OutOfOrder LightStatusOutOfOrder = 7;
+        int32 LightStatusWarning = 6;
+        google.protobuf.Timestamp LightStatusOutOfOrder = 7;
     }
 }
 """)

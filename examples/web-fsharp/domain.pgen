@@ -26,4 +26,5 @@ record Response = {
     Token: string
     Result: OpResult
     ExecutionTime: duration
+    Extra: string option
 }

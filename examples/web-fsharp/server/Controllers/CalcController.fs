@@ -42,6 +42,7 @@ Usage:
                         | Ok v -> Success v
                         | Error v -> Fail v
                     ExecutionTime = TimeSpan.Zero
+                    Extra = None
                 }
 
             return

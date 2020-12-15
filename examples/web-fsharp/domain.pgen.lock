@@ -95,3 +95,4 @@ message Domain.Response
         case Success = 2
         case Fail = 3
     field ExecutionTime duration = 4
+    field Extra string option = 5
