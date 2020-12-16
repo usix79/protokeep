@@ -18,3 +18,4 @@ let rec calc = function
     | Ln op -> calc op |> Result.map (float >> System.Math.Log >> int)
     | Quantum _ -> Error OpError.NotSupported
     | Op.Unknown -> OpError.General "Unknown operation" |> Error
+    | Zero -> Ok 0

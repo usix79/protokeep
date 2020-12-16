@@ -74,7 +74,7 @@ let gen (module':Module) (locks:LockItem list) =
                     let fieldMessage = messageLockCache.[Types.mergeName unionName fieldLock.CaseName]
                     let fieldTypeName =
                         match fieldMessage.LockItems with
-                        | Types.EmptyCase -> "google.protobuf.Empty"
+                        | Types.EmptyCase -> "bool" // empty case would be bool
                         | Types.SingleParamCase fieldLock -> $"{typeToString fieldLock.Type}"
                         | Types.MultiParamCase -> $"{dottedName unionName}__{fieldLock.CaseName}"
                     line txt $"        {fieldTypeName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
@@ -128,15 +128,9 @@ let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module
             info.Cases |> List.iter (fRecord ns)
     and fRecord ns info =
         messageLockCache.[Types.mergeName ns info.Name].LockItems
-        |> List.collect (function
-            | Field x -> [typeReference x.Type]
-            | OneOf (_,unionName,cases) ->
-                [   Types.extractNamespace unionName |> Some
-                    for case in cases do
-                        if messageLockCache.[Types.mergeName unionName case.CaseName].LockItems.IsEmpty then
-                            ComplexName ["google/protobuf/empty.proto"] |> Some
-                ] )
-        |> List.choose id
+        |> List.choose (function
+            | Field x -> typeReference x.Type
+            | OneOf (_,unionName,_) -> Types.extractNamespace unionName |> Some )
         |> List.iter (fun r -> set.Add(r) |> ignore)
 
     module'.Items |> List.iter (f module'.Name)

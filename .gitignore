@@ -28,3 +28,4 @@ tools/
 .fake
 
 node_modules/
+*.fs.js

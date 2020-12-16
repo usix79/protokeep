@@ -10,6 +10,7 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
                 | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
@@ -18,26 +19,29 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member ToProtobufOpCaseSum (p1,p2) : ProtoClasses.Domain.Op__Sum =
+    static member OpCaseSumToProtobuf (p1,p2) : ProtoClasses.Domain.Op__Sum =
         let y = ProtoClasses.Domain.Op__Sum()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P1Zero <- true
         | Domain.Op.Unknown -> ()
         match p2 with
         | Domain.Op.Val (p1) ->
             y.P2Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Op__Mul)  =
@@ -50,6 +54,7 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
                 | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
@@ -58,26 +63,29 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member ToProtobufOpCaseMul (p1,p2) : ProtoClasses.Domain.Op__Mul =
+    static member OpCaseMulToProtobuf (p1,p2) : ProtoClasses.Domain.Op__Mul =
         let y = ProtoClasses.Domain.Op__Mul()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P1Zero <- true
         | Domain.Op.Unknown -> ()
         match p2 with
         | Domain.Op.Val (p1) ->
             y.P2Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Op__Div)  =
@@ -90,6 +98,7 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
                 | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
@@ -98,26 +107,29 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member ToProtobufOpCaseDiv (p1,p2) : ProtoClasses.Domain.Op__Div =
+    static member OpCaseDivToProtobuf (p1,p2) : ProtoClasses.Domain.Op__Div =
         let y = ProtoClasses.Domain.Op__Div()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P1Zero <- true
         | Domain.Op.Unknown -> ()
         match p2 with
         | Domain.Op.Val (p1) ->
             y.P2Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Op__Ln)  =
@@ -130,17 +142,19 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member ToProtobufOpCaseLn (p1) : ProtoClasses.Domain.Op__Ln =
+    static member OpCaseLnToProtobuf (p1) : ProtoClasses.Domain.Op__Ln =
         let y = ProtoClasses.Domain.Op__Ln()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P1Zero <- true
         | Domain.Op.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Op__Quantum)  =
@@ -153,6 +167,7 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
                 | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
@@ -161,26 +176,29 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(x.P3))
-    static member ToProtobufOpCaseQuantum (p1,p2,p3) : ProtoClasses.Domain.Op__Quantum =
+    static member OpCaseQuantumToProtobuf (p1,p2,p3) : ProtoClasses.Domain.Op__Quantum =
         let y = ProtoClasses.Domain.Op__Quantum()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P1Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P1Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P1Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P1Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P1Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P1Zero <- true
         | Domain.Op.Unknown -> ()
         match p2 with
         | Domain.Op.Val (p1) ->
             y.P2Val <- p1
-        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.P2Sum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.P2Mul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.P2Div <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.P2Ln <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.P2Quantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y.P3 <- p3
         y
@@ -192,13 +210,13 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1DivisionByZero -> Domain.OpError.DivisionByZero
                 | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1NotSupported -> Domain.OpError.NotSupported
                 | _ -> Domain.OpError.Unknown))
-    static member ToProtobufOpResultCaseFail (p1) : ProtoClasses.Domain.OpResult__Fail =
+    static member OpResultCaseFailToProtobuf (p1) : ProtoClasses.Domain.OpResult__Fail =
         let y = ProtoClasses.Domain.OpResult__Fail()
         match p1 with
         | Domain.OpError.General (p1) ->
             y.P1General <- p1
-        | Domain.OpError.DivisionByZero -> y.P1DivisionByZero <- Google.Protobuf.WellKnownTypes.Empty()
-        | Domain.OpError.NotSupported -> y.P1NotSupported <- Google.Protobuf.WellKnownTypes.Empty()
+        | Domain.OpError.DivisionByZero -> y.P1DivisionByZero <- true
+        | Domain.OpError.NotSupported -> y.P1NotSupported <- true
         | Domain.OpError.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Request) : Domain.Request =
@@ -212,6 +230,7 @@ type ConvertDomain () =
                 | ProtoClasses.Domain.Request.OperationOneofCase.OperationDiv -> x.OperationDiv |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Request.OperationOneofCase.OperationLn -> x.OperationLn |> ConvertDomain.FromProtobuf
                 | ProtoClasses.Domain.Request.OperationOneofCase.OperationQuantum -> x.OperationQuantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Request.OperationOneofCase.OperationZero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown
         }
     static member ToProtobuf (x:Domain.Request) : ProtoClasses.Domain.Request =
@@ -220,11 +239,12 @@ type ConvertDomain () =
         match x.Operation with
         | Domain.Op.Val (p1) ->
             y.OperationVal <- p1
-        | Domain.Op.Sum (p1,p2) -> y.OperationSum <- ConvertDomain.ToProtobufOpCaseSum(p1,p2)
-        | Domain.Op.Mul (p1,p2) -> y.OperationMul <- ConvertDomain.ToProtobufOpCaseMul(p1,p2)
-        | Domain.Op.Div (p1,p2) -> y.OperationDiv <- ConvertDomain.ToProtobufOpCaseDiv(p1,p2)
-        | Domain.Op.Ln (p1) -> y.OperationLn <- ConvertDomain.ToProtobufOpCaseLn(p1)
-        | Domain.Op.Quantum (p1,p2,p3) -> y.OperationQuantum <- ConvertDomain.ToProtobufOpCaseQuantum(p1,p2,p3)
+        | Domain.Op.Sum (p1,p2) -> y.OperationSum <- ConvertDomain.OpCaseSumToProtobuf(p1,p2)
+        | Domain.Op.Mul (p1,p2) -> y.OperationMul <- ConvertDomain.OpCaseMulToProtobuf(p1,p2)
+        | Domain.Op.Div (p1,p2) -> y.OperationDiv <- ConvertDomain.OpCaseDivToProtobuf(p1,p2)
+        | Domain.Op.Ln (p1) -> y.OperationLn <- ConvertDomain.OpCaseLnToProtobuf(p1)
+        | Domain.Op.Quantum (p1,p2,p3) -> y.OperationQuantum <- ConvertDomain.OpCaseQuantumToProtobuf(p1,p2,p3)
+        | Domain.Op.Zero -> y.OperationZero <- true
         | Domain.Op.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Response) : Domain.Response =
@@ -237,6 +257,8 @@ type ConvertDomain () =
                 | _ -> Domain.OpResult.Unknown
             ExecutionTime = x.ExecutionTime |> fun v -> v.ToTimeSpan()
             Extra = if x.ExtraCase = ProtoClasses.Domain.Response.ExtraOneofCase.ExtraValue then Some (x.ExtraValue) else None
+            Since = x.Since |> fun v -> v.ToDateTimeOffset()
+            Tags = x.Tags |> Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq
         }
     static member ToProtobuf (x:Domain.Response) : ProtoClasses.Domain.Response =
         let y = ProtoClasses.Domain.Response()
@@ -244,10 +266,12 @@ type ConvertDomain () =
         match x.Result with
         | Domain.OpResult.Success (p1) ->
             y.ResultSuccess <- p1
-        | Domain.OpResult.Fail (p1) -> y.ResultFail <- ConvertDomain.ToProtobufOpResultCaseFail(p1)
+        | Domain.OpResult.Fail (p1) -> y.ResultFail <- ConvertDomain.OpResultCaseFailToProtobuf(p1)
         | Domain.OpResult.Unknown -> ()
         y.ExecutionTime <- x.ExecutionTime |> Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan
         match x.Extra with
         | Some v -> y.ExtraValue <- v
         | None -> ()
+        y.Since <- x.Since |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset
+        y.Tags.Add(x.Tags)
         y

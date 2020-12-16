@@ -15,7 +15,7 @@ let Handler module' locks = function
             let fileContent = gen module' locks typesCache
             let fileName =
                 if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
-            Console.WriteLine($"Writing fsharp types to {fileName}")
+            Console.WriteLine($"Writing fsharp conveters to {fileName}")
             File.WriteAllText(fileName, fileContent)
             Ok () )
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
@@ -91,7 +91,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                 line txt $"        {caseTypeName |> dottedName}"
                 line txt $"            ({values})"
 
-                line txt $"    static member ToProtobuf{info.Name}Case{case.Name} ({fieldsNames}) : {fullCaseNameTxt} ="
+                line txt $"    static member {info.Name}Case{case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
                 line txt $"        let y = {fullCaseNameTxt}()"
                 lockItems |> List.iter (fun item ->
                     let itemName = Types.messageLockItemName item
@@ -117,7 +117,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                     match caseMessageLock.LockItems with
                     | Types.EmptyCase -> $"{dottedName unionName}.{case.CaseName}"
                     | Types.SingleParamCase fieldInfo -> $"{dottedName caseTypeName}(x.{name}{case.CaseName}{convertionFrom fieldInfo.Type})"
-                    | Types.MultiParamCase  -> $"x.{name}{case.CaseName} |> ConvertDomain.FromProtobuf"
+                    | Types.MultiParamCase  -> $"x.{name}{case.CaseName} |> Convert{lastNames unionName |> solidName }.FromProtobuf"
                 $"                | {fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> {rightValue}"
               $"                | _ -> {dottedName unionName}.Unknown"
             ]
@@ -157,13 +157,13 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
 
                 match caseMessageLock.LockItems with
                 | Types.EmptyCase ->
-                    line txt $"{condition} -> {yName}{case.CaseName} <- Google.Protobuf.WellKnownTypes.Empty()"
+                    line txt $"{condition} -> {yName}{case.CaseName} <- true"
                 | Types.SingleParamCase paramInfo ->
                     line txt $"{condition} ->"
                     genLockItemToProtobuf paramInfo.Name $"    {yName}{case.CaseName}" (Field paramInfo)
                 | Types.MultiParamCase ->
                     line txt ($"{condition} -> {yName}{case.CaseName} <- " +
-                        $"Convert{lastNames unionName |> solidName}.ToProtobuf{firstName unionName}Case{case.CaseName}({values})")
+                        $"Convert{lastNames unionName |> solidName}.{firstName unionName}Case{case.CaseName}ToProtobuf({values})")
 
             line txt $"        | {dottedName unionName}.Unknown -> ()"
 

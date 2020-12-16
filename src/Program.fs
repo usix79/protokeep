@@ -8,6 +8,7 @@ let commands: Command list = [
     Protogen.ProtoCmd.Instance
     Protogen.FsharpTypesCmd.Instance
     Protogen.FsharpConvertersCmd.Instance
+    Protogen.FableConvertersCmd.Instance
 ]
 
 [<EntryPoint>]

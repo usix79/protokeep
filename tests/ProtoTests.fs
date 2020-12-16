@@ -100,7 +100,6 @@ syntax = "proto3";
 package Domain;
 option csharp_namespace = "ProtoClasses.Domain";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
 enum TrafficLight {
     Unknown = 0;
     Red = 1;
@@ -113,7 +112,7 @@ message Crossroad {
     string Street2 = 3;
     Domain.TrafficLight Light = 4;
     oneof LightStatus {
-        google.protobuf.Empty LightStatusNormal = 5;
+        bool LightStatusNormal = 5;
         int32 LightStatusWarning = 6;
         google.protobuf.Timestamp LightStatusOutOfOrder = 7;
     }

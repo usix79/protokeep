@@ -7,6 +7,7 @@ union Op =
     | Div of Op*Op
     | Ln of Op
     | Quantum of Op*Op*string
+    | Zero
 
 union OpError =
     | General of string
@@ -27,4 +28,6 @@ record Response = {
     Result: OpResult
     ExecutionTime: duration
     Extra: string option
+    Since: timestamp
+    Tags: string map
 }

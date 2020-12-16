@@ -15,15 +15,9 @@ type CalcController (logger : ILogger<CalcController>) =
     inherit ControllerBase()
 
     [<HttpGet>]
-    member _.Get() =
-        """
-Usage:
-    /json - for json request
-    /bin - for binary request
-"""
+    member _.Get() = "Post valid request"
 
     [<HttpPost>]
-    [<Route("json")>]
     member x.Json() =
         task{
             use reader = new StreamReader(x.Request.Body)
@@ -41,8 +35,10 @@ Usage:
                         match calc req.Operation with
                         | Ok v -> Success v
                         | Error v -> Fail v
-                    ExecutionTime = TimeSpan.Zero
+                    ExecutionTime = TimeSpan.FromMilliseconds(1341.)
                     Extra = None
+                    Since = DateTimeOffset.UtcNow
+                    Tags = ["tag1", "AGA"; "tag2", "BG"; "tag3333", "Hello"] |> Map.ofList
                 }
 
             return
