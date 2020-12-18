@@ -13,6 +13,7 @@
     <Compile Include="FsharpTypesTests.fs" />
     <Compile Include="ProtoTests.fs" />
     <Compile Include="EvolutionTests.fs" />
+    <Compile Include="CoreDocTests.fs" />
     <Compile Include="LockDocTests.fs" />
     <Compile Include="PgenDocTests.fs" />
   </ItemGroup>

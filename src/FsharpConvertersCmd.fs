@@ -10,7 +10,7 @@ open Codegen
 let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        checkLock module' locks
+        Program.checkLock module' locks
         |> Result.bind(fun typesCache ->
             let fileContent = gen module' locks typesCache
             let fileName =
@@ -167,7 +167,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
 
             line txt $"        | {dottedName unionName}.Unknown -> ()"
 
-    line txt $"namespace ProtoConverters.FsharpTypes"
+    line txt $"namespace Protogen.FsharpConverters"
     line txt $"type Convert{solidName module'.Name} () ="
     for item in module'.Items do
         genItem item

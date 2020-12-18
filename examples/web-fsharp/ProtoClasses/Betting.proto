@@ -1,0 +1,108 @@
+syntax = "proto3";
+package Betting;
+option csharp_namespace = "ProtoClasses.Betting";
+enum OutcomeResult {
+    OutcomeResultUnknown = 0;
+    OutcomeResultWin = 1;
+    OutcomeResultLose = 2;
+    OutcomeResultVoid = 3;
+    OutcomeResultCanceled = 4;
+}
+message Outcome__PricedWithProb {
+    int64 Price = 1;
+    float Prob = 2;
+}
+message Winner3Way {
+    oneof Win1 {
+        bool Win1Empty = 1;
+        int64 Win1Priced = 2;
+        Betting.Outcome__PricedWithProb Win1PricedWithProb = 3;
+        Betting.OutcomeResult Win1Resulted = 4;
+    }
+    oneof Draw {
+        bool DrawEmpty = 5;
+        int64 DrawPriced = 6;
+        Betting.Outcome__PricedWithProb DrawPricedWithProb = 7;
+        Betting.OutcomeResult DrawResulted = 8;
+    }
+    oneof Win2 {
+        bool Win2Empty = 9;
+        int64 Win2Priced = 10;
+        Betting.Outcome__PricedWithProb Win2PricedWithProb = 11;
+        Betting.OutcomeResult Win2Resulted = 12;
+    }
+}
+message Handicap {
+    int64 Value = 1;
+    oneof Win1 {
+        bool Win1Empty = 2;
+        int64 Win1Priced = 3;
+        Betting.Outcome__PricedWithProb Win1PricedWithProb = 4;
+        Betting.OutcomeResult Win1Resulted = 5;
+    }
+    oneof Win2 {
+        bool Win2Empty = 6;
+        int64 Win2Priced = 7;
+        Betting.Outcome__PricedWithProb Win2PricedWithProb = 8;
+        Betting.OutcomeResult Win2Resulted = 9;
+    }
+}
+message Total {
+    int64 Value = 1;
+    oneof Over {
+        bool OverEmpty = 2;
+        int64 OverPriced = 3;
+        Betting.Outcome__PricedWithProb OverPricedWithProb = 4;
+        Betting.OutcomeResult OverResulted = 5;
+    }
+    oneof Under {
+        bool UnderEmpty = 6;
+        int64 UnderPriced = 7;
+        Betting.Outcome__PricedWithProb UnderPricedWithProb = 8;
+        Betting.OutcomeResult UnderResulted = 9;
+    }
+}
+message Score {
+    int32 S1 = 1;
+    int32 S2 = 2;
+}
+message ScoreOutcome {
+    Betting.Score Score = 1;
+    oneof Outcome {
+        bool OutcomeEmpty = 2;
+        int64 OutcomePriced = 3;
+        Betting.Outcome__PricedWithProb OutcomePricedWithProb = 4;
+        Betting.OutcomeResult OutcomeResulted = 5;
+    }
+}
+message CorrectScore {
+    repeated Betting.ScoreOutcome Scores = 1;
+}
+enum Period {
+    PeriodUnknown = 0;
+    PeriodHalf1 = 1;
+    PeriodHalf2 = 2;
+    PeriodMainTime = 3;
+}
+enum Statistic {
+    StatisticUnknown = 0;
+    StatisticGoals = 1;
+    StatisticYellowCards = 2;
+    StatisticCorners = 3;
+}
+enum Status {
+    StatusUnknown = 0;
+    StatusOpen = 1;
+    StatusClosed = 2;
+}
+message MarketItem {
+    Betting.Statistic Statistic = 1;
+    Betting.Period Period = 2;
+    oneof Market {
+        Betting.Winner3Way MarketWinner3Way = 3;
+        Betting.Handicap MarketHandicap = 4;
+        Betting.Total MarketTotal = 5;
+        Betting.CorrectScore MarketCorrectScore = 6;
+    }
+    Betting.Status Status = 7;
+}

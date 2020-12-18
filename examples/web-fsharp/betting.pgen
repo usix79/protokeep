@@ -1,0 +1,72 @@
+module Betting
+
+enum OutcomeResult =
+    | Win
+    | Lose
+    | Void
+    | Canceled
+
+union Outcome =
+    | Empty
+    | Priced of price: decimal(3)
+    | PricedWithProb of price: decimal(3) * prob: float
+    | Resulted of result: OutcomeResult
+
+record Winner3Way = {
+    Win1: Outcome
+    Draw: Outcome
+    Win2: Outcome
+}
+
+record Handicap = {
+    Value:decimal(2)
+    Win1: Outcome
+    Win2: Outcome
+}
+
+record Total = {
+    Value:decimal(2)
+    Over: Outcome
+    Under: Outcome
+}
+
+record Score = {
+    S1 : int
+    S2 : int
+}
+
+record ScoreOutcome = {
+    Score: Score
+    Outcome: Outcome
+}
+
+record CorrectScore = {
+    Scores : ScoreOutcome array
+}
+
+union Market =
+    | Winner3Way of Winner3Way
+    | Handicap of Handicap
+    | Total of Total
+    | CorrectScore of CorrectScore
+
+enum Period =
+    | Half1
+    | Half2
+    | MainTime
+
+enum Statistic =
+    | Goals
+    | YellowCards
+    | Corners
+
+enum Status =
+    | Open
+    | Closed
+
+record MarketItem = {
+    Statistic : Statistic
+    Period : Period
+    Market : Market
+    Status : Status
+}

@@ -9,7 +9,7 @@ type TestData() =
   static member MyTestData =
     [
         ("""module Domain""","""
-namespace ProtoConverters.FsharpTypes
+namespace Protogen.FsharpConverters
 type ConvertDomain () =
 """);
         ("""
@@ -19,7 +19,7 @@ enum TrafficLight =
     | Yellow
     | Green
 ""","""
-namespace ProtoConverters.FsharpTypes
+namespace Protogen.FsharpConverters
 type ConvertDomain () =
     static member FromProtobuf (x:ProtoClasses.Domain.TrafficLight) : Domain.TrafficLight =
         enum<Domain.TrafficLight>(int x)
@@ -46,7 +46,7 @@ record Crossroad = {
     Props: string map
 }
 ""","""
-namespace ProtoConverters.FsharpTypes
+namespace Protogen.FsharpConverters
 type ConvertDomain () =
     static member FromProtobuf (x:ProtoClasses.Domain.Crossroad) : Domain.Crossroad =
         {
@@ -104,7 +104,7 @@ record Crossroad = {
     Light: TrafficLight
     LightStatus: LightStatus
 }    ""","""
-namespace ProtoConverters.FsharpTypes
+namespace Protogen.FsharpConverters
 type ConvertDomain () =
     static member FromProtobuf (x:ProtoClasses.Domain.TrafficLight) : Domain.TrafficLight =
         enum<Domain.TrafficLight>(int x)

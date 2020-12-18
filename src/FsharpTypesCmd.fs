@@ -10,7 +10,7 @@ open Codegen
 let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        checkLock module' locks
+        Program.checkLock module' locks
         |> Result.bind(fun typesCache ->
             let fileContent = gen module' locks typesCache
             let fileName =

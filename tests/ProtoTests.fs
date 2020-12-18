@@ -20,10 +20,10 @@ syntax = "proto3";
 package Domain;
 option csharp_namespace = "ProtoClasses.Domain";
 enum TrafficLight {
-    Unknown = 0;
-    Red = 1;
-    Yellow = 2;
-    Green = 3;
+    TrafficLightUnknown = 0;
+    TrafficLightRed = 1;
+    TrafficLightYellow = 2;
+    TrafficLightGreen = 3;
 }"""    );
         ("""
 module Domain
@@ -55,10 +55,10 @@ option csharp_namespace = "ProtoClasses.Domain";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 enum TrafficLight {
-    Unknown = 0;
-    Red = 1;
-    Yellow = 2;
-    Green = 3;
+    TrafficLightUnknown = 0;
+    TrafficLightRed = 1;
+    TrafficLightYellow = 2;
+    TrafficLightGreen = 3;
 }
 message Crossroad {
     int32 Id = 1;
@@ -101,10 +101,10 @@ package Domain;
 option csharp_namespace = "ProtoClasses.Domain";
 import "google/protobuf/timestamp.proto";
 enum TrafficLight {
-    Unknown = 0;
-    Red = 1;
-    Yellow = 2;
-    Green = 3;
+    TrafficLightUnknown = 0;
+    TrafficLightRed = 1;
+    TrafficLightYellow = 2;
+    TrafficLightGreen = 3;
 }
 message Crossroad {
     int32 Id = 1;

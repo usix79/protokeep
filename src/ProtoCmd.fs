@@ -10,7 +10,7 @@ open Codegen
 let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        checkLock module' locks
+        Program.checkLock module' locks
         |> Result.bind(fun _ ->
             let fileContent = gen module' locks
             let fileName =
@@ -40,9 +40,9 @@ let gen (module':Module) (locks:LockItem list) =
     | Enum info ->
         let fullName = Types.mergeName ns info.Name
         line txt $"enum {info.Name} {{"
-        line txt "    Unknown = 0;"
+        line txt $"    {info.Name}Unknown = 0;"
         for symbol in enumLocksCache.[fullName].Values do
-            line txt $"    {symbol.Name} = {symbol.Num};"
+            line txt $"    {info.Name}{symbol.Name} = {symbol.Num};"
         line txt $"}}"
     | Record info -> genRecord ns info.Name info
     | Union info ->

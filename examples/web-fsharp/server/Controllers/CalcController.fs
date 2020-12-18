@@ -6,6 +6,7 @@ open Microsoft.Extensions.Logging
 open System.IO
 open FSharp.Control.Tasks.V2
 
+open Protogen
 open Domain
 open Logic
 
@@ -26,7 +27,7 @@ type CalcController (logger : ILogger<CalcController>) =
             let req =
                 jsonReq
                 |> Google.Protobuf.JsonParser.Default.Parse<ProtoClasses.Domain.Request>
-                |> ProtoConverters.FsharpTypes.ConvertDomain.FromProtobuf
+                |> FsharpConverters.ConvertDomain.FromProtobuf
 
             let resp =
                 {
@@ -43,6 +44,6 @@ type CalcController (logger : ILogger<CalcController>) =
 
             return
                 resp
-                |> ProtoConverters.FsharpTypes.ConvertDomain.ToProtobuf
+                |> FsharpConverters.ConvertDomain.ToProtobuf
                 |> Google.Protobuf.JsonFormatter.Default.Format
         }

@@ -1,0 +1,93 @@
+enum Betting.OutcomeResult
+    value Win = 1
+    value Lose = 2
+    value Void = 3
+    value Canceled = 4
+message Betting.Outcome.Empty
+message Betting.Outcome.Priced
+    field price decimal(3) = 1
+message Betting.Outcome.PricedWithProb
+    field price decimal(3) = 1
+    field prob float = 2
+message Betting.Outcome.Resulted
+    field result Betting.OutcomeResult = 1
+message Betting.Winner3Way
+    oneof Win1 Betting.Outcome
+        case Empty = 1
+        case Priced = 2
+        case PricedWithProb = 3
+        case Resulted = 4
+    oneof Draw Betting.Outcome
+        case Empty = 5
+        case Priced = 6
+        case PricedWithProb = 7
+        case Resulted = 8
+    oneof Win2 Betting.Outcome
+        case Empty = 9
+        case Priced = 10
+        case PricedWithProb = 11
+        case Resulted = 12
+message Betting.Handicap
+    field Value decimal(2) = 1
+    oneof Win1 Betting.Outcome
+        case Empty = 2
+        case Priced = 3
+        case PricedWithProb = 4
+        case Resulted = 5
+    oneof Win2 Betting.Outcome
+        case Empty = 6
+        case Priced = 7
+        case PricedWithProb = 8
+        case Resulted = 9
+message Betting.Total
+    field Value decimal(2) = 1
+    oneof Over Betting.Outcome
+        case Empty = 2
+        case Priced = 3
+        case PricedWithProb = 4
+        case Resulted = 5
+    oneof Under Betting.Outcome
+        case Empty = 6
+        case Priced = 7
+        case PricedWithProb = 8
+        case Resulted = 9
+message Betting.Score
+    field S1 int = 1
+    field S2 int = 2
+message Betting.ScoreOutcome
+    field Score Betting.Score = 1
+    oneof Outcome Betting.Outcome
+        case Empty = 2
+        case Priced = 3
+        case PricedWithProb = 4
+        case Resulted = 5
+message Betting.CorrectScore
+    field Scores Betting.ScoreOutcome array = 1
+message Betting.Market.Winner3Way
+    field p1 Betting.Winner3Way = 1
+message Betting.Market.Handicap
+    field p1 Betting.Handicap = 1
+message Betting.Market.Total
+    field p1 Betting.Total = 1
+message Betting.Market.CorrectScore
+    field p1 Betting.CorrectScore = 1
+enum Betting.Period
+    value Half1 = 1
+    value Half2 = 2
+    value MainTime = 3
+enum Betting.Statistic
+    value Goals = 1
+    value YellowCards = 2
+    value Corners = 3
+enum Betting.Status
+    value Open = 1
+    value Closed = 2
+message Betting.MarketItem
+    field Statistic Betting.Statistic = 1
+    field Period Betting.Period = 2
+    oneof Market Betting.Market
+        case Winner3Way = 3
+        case Handicap = 4
+        case Total = 5
+        case CorrectScore = 6
+    field Status Betting.Status = 7

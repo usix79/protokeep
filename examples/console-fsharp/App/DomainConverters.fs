@@ -24,7 +24,7 @@ type ConvertDomain () =
         y.Street2 <- x.Street2
         y.Light <- x.Light |> ConvertDomain.ToProtobuf
         match x.LightStatus with
-        | Domain.LightStatus.Normal -> y.LightStatusNormal <- Google.Protobuf.WellKnownTypes.Empty()
+        | Domain.LightStatus.Normal -> y.LightStatusNormal <- true
         | Domain.LightStatus.Warning (errorsCount) ->
             y.LightStatusWarning <- errorsCount
         | Domain.LightStatus.OutOfOrder (since) ->

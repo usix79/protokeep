@@ -10,14 +10,23 @@ open Codegen
 let Handler module' locks = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        checkLock module' locks
+        Program.checkLock module' locks
         |> Result.bind(fun typesCache ->
             let fileContent:string = gen module' locks typesCache
             let fileName =
                 if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
             Console.WriteLine($"Writing fable converters types to {fileName}")
-            let fileContent = fileContent.Replace ("open Helpers", helpersBody)
             File.WriteAllText(fileName, fileContent)
+
+            Program.checkArgCore "Protogen.fs" args
+            |> Option.iter (fun coreFileName ->
+                let coreFileText =
+                    if (File.Exists coreFileName) then File.ReadAllText(coreFileName) else ""
+
+                let updatedCoreFileText = CoreFsharp.update coreFileText "FableConverterHelpers" helpersBody
+                Console.WriteLine($"Writing fable converters helopers to {coreFileName}")
+                File.WriteAllText (coreFileName, updatedCoreFileText)
+            )
             Ok () )
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
@@ -47,12 +56,12 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
 
         line txt $"    static member {info.Name}FromString = function"
         for symbol in info.Symbols do
-            line txt $"        | \"{symbol}\" -> {fullNameTxt}.{symbol}"
+            line txt $"        | \"{info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
         line txt $"        | _ -> {fullNameTxt}.Unknown"
 
         line txt $"    static member {info.Name}ToString = function"
         for symbol in info.Symbols do
-            line txt $"        | {fullNameTxt}.{symbol} -> \"{symbol}\""
+            line txt $"        | {fullNameTxt}.{symbol} -> \"{info.Name}{symbol}\""
         line txt $"        | _ -> \"Unknown\""
 
     | Record info ->
@@ -181,9 +190,9 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
         line txt $"        ] |> Map.ofList |> JObject"
 
 
-    line txt $"namespace ProtoConverters.Fable"
+    line txt $"namespace Protogen.FableConverters"
     line txt $"open Fable.SimpleJson"
-    line txt $"open Helpers"
+    line txt $"open Protogen.FableConverterHelpers"
     line txt $"type Convert{solidName module'.Name} () ="
     for item in module'.Items do
         genItem item
@@ -262,7 +271,8 @@ let packField (enumLockCache:Map<ComplexName,EnumLock>) (vName:string) type' =
 
 
 let helpersBody = """
-module Helpers =
+    open Fable.SimpleJson
+
     let getProps = function JObject p -> p | _ -> Map.empty
     let ifBool action = function (JBool v) -> action v | _ -> ()
     let ifString action = function (JString v) -> action v | _ -> ()
@@ -296,6 +306,4 @@ module Helpers =
 
     let fromTimeSpan (v:System.TimeSpan) =
         sprintf "%d.%ds" (int64 v.TotalSeconds) v.Milliseconds
-
-open Helpers
 """

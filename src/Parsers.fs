@@ -11,6 +11,7 @@ module private Impl =
     let ts<'u> : Parser<_,'u> = ws >>. (skipNewline <|> eof)  // trailing spaces
     let keyword name = pstring name >>. ws1
 
+
     let identifier =
         let isIdentifierFirstChar c = isLetter c || c = '_'
         let isIdentifierChar c = isLetter c || isDigit c || c = '_'
@@ -147,6 +148,19 @@ module private Impl =
     let lockDocument =
         spaces >>. many (choice [enumLock; messageLock] .>> spaces) .>> eof
 
+    let fsharpCoreDocument =
+        spaces >>. pstring "namespace" >>. ws1 >>. pstring "Protogen" >>. skipRestOfLine true >>.
+        pstring "module" >>.
+        many (
+            pipe2
+                (ws1 >>. identifier .>> ws1 .>> pchar '=' .>> ts)
+                (many1Till
+                    (restOfLine true)
+                    (skipString "module" <|> eof))
+                (fun moduleName moduleBody -> moduleName, moduleBody |> String.concat "\n")
+            )
+        .>> eof
+
 let parsePgenDoc input =
     match run Impl.pgenDocument input with
     | Success (model,_,_) -> Result.Ok model
@@ -154,5 +168,10 @@ let parsePgenDoc input =
 
 let parseLockDoc input =
     match run Impl.lockDocument input with
+    | Success (model,_,_) -> Result.Ok model
+    | Failure (err,_,_) -> Result.Error err
+
+let parseFsharpCoreDoc input =
+    match run Impl.fsharpCoreDocument input with
     | Success (model,_,_) -> Result.Ok model
     | Failure (err,_,_) -> Result.Error err

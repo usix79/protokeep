@@ -9,7 +9,7 @@ type TestData() =
   static member MyTestData =
     [
         ("""module Domain""","""
-namespace ProtoConverters.Fable
+namespace Protogen.FableConverters
 open Fable.SimpleJson
 open Helpers
 type ConvertDomain () =
@@ -21,21 +21,21 @@ enum TrafficLight =
     | Yellow
     | Green
 ""","""
-namespace ProtoConverters.Fable
+namespace Protogen.FableConverters
 open Fable.SimpleJson
 open Helpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
     static member TrafficLightFromString = function
-        | "Red" -> Domain.TrafficLight.Red
-        | "Yellow" -> Domain.TrafficLight.Yellow
-        | "Green" -> Domain.TrafficLight.Green
+        | "TrafficLightRed" -> Domain.TrafficLight.Red
+        | "TrafficLightYellow" -> Domain.TrafficLight.Yellow
+        | "TrafficLightGreen" -> Domain.TrafficLight.Green
         | _ -> Domain.TrafficLight.Unknown
     static member TrafficLightToString = function
-        | Domain.TrafficLight.Red -> "Red"
-        | Domain.TrafficLight.Yellow -> "Yellow"
-        | Domain.TrafficLight.Green -> "Green"
+        | Domain.TrafficLight.Red -> "TrafficLightRed"
+        | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
+        | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
 """);
         ("""
@@ -63,21 +63,21 @@ record Crossroad = {
     Props: string map
 }
 ""","""
-namespace ProtoConverters.Fable
+namespace Protogen.FableConverters
 open Fable.SimpleJson
 open Helpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
     static member TrafficLightFromString = function
-        | "Red" -> Domain.TrafficLight.Red
-        | "Yellow" -> Domain.TrafficLight.Yellow
-        | "Green" -> Domain.TrafficLight.Green
+        | "TrafficLightRed" -> Domain.TrafficLight.Red
+        | "TrafficLightYellow" -> Domain.TrafficLight.Yellow
+        | "TrafficLightGreen" -> Domain.TrafficLight.Green
         | _ -> Domain.TrafficLight.Unknown
     static member TrafficLightToString = function
-        | Domain.TrafficLight.Red -> "Red"
-        | Domain.TrafficLight.Yellow -> "Yellow"
-        | Domain.TrafficLight.Green -> "Green"
+        | Domain.TrafficLight.Red -> "TrafficLightRed"
+        | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
+        | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
     static member DefaultCrossroad: Lazy<Domain.Crossroad> =
         lazy {
@@ -191,21 +191,21 @@ record Crossroad = {
     Light: TrafficLight
     LightStatus: LightStatus
 }    ""","""
-namespace ProtoConverters.Fable
+namespace Protogen.FableConverters
 open Fable.SimpleJson
 open Helpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
     static member TrafficLightFromString = function
-        | "Red" -> Domain.TrafficLight.Red
-        | "Yellow" -> Domain.TrafficLight.Yellow
-        | "Green" -> Domain.TrafficLight.Green
+        | "TrafficLightRed" -> Domain.TrafficLight.Red
+        | "TrafficLightYellow" -> Domain.TrafficLight.Yellow
+        | "TrafficLightGreen" -> Domain.TrafficLight.Green
         | _ -> Domain.TrafficLight.Unknown
     static member TrafficLightToString = function
-        | Domain.TrafficLight.Red -> "Red"
-        | Domain.TrafficLight.Yellow -> "Yellow"
-        | Domain.TrafficLight.Green -> "Green"
+        | Domain.TrafficLight.Red -> "TrafficLightRed"
+        | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
+        | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
     static member LightStatusCaseOutOfOrderFromJson (json: Json) =
         let mutable since = System.DateTimeOffset.MinValue

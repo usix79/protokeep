@@ -3,7 +3,7 @@
 open Browser
 open Fetch
 open Domain
-open ProtoConverters.Fable
+open Protogen.FableConverters
 open Fable.SimpleJson
 
 promise {

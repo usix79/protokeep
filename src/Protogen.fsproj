@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="Types.fs" />
+    <Compile Include="Parsers.fs" />
     <Compile Include="Codegen.fs" />
     <Compile Include="FableConvertersCmd.fs" />
     <Compile Include="FsharpConvertersCmd.fs" />
@@ -14,7 +15,6 @@
     <Compile Include="ProtoCmd.fs" />
     <Compile Include="LockCmd.fs" />
     <Compile Include="CheckCmd.fs" />
-    <Compile Include="Parsers.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
