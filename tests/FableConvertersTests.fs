@@ -11,7 +11,7 @@ type TestData() =
         ("""module Domain""","""
 namespace Protogen.FableConverters
 open Fable.SimpleJson
-open Helpers
+open Protogen.FableConverterHelpers
 type ConvertDomain () =
 """);
         ("""
@@ -23,7 +23,7 @@ enum TrafficLight =
 ""","""
 namespace Protogen.FableConverters
 open Fable.SimpleJson
-open Helpers
+open Protogen.FableConverterHelpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
@@ -65,7 +65,7 @@ record Crossroad = {
 ""","""
 namespace Protogen.FableConverters
 open Fable.SimpleJson
-open Helpers
+open Protogen.FableConverterHelpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
@@ -193,7 +193,7 @@ record Crossroad = {
 }    ""","""
 namespace Protogen.FableConverters
 open Fable.SimpleJson
-open Helpers
+open Protogen.FableConverterHelpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
