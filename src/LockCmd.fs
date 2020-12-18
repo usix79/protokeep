@@ -7,9 +7,9 @@ open System.Text
 open Types
 open Codegen
 
-let Handler module' locks = function
+let Handler module' locks typesCache = function
     | lockFileName::args ->
-        Types.lock module' locks
+        Types.lock module' locks typesCache
         |> Result.mapError (sprintf "%A")
         |> Result.bind(fun newlocks ->
             if newlocks <> locks then

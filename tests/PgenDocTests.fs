@@ -24,7 +24,7 @@ enum TrafficLight =
     | Yellow
     | Green
 """
-    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
+    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
 
 [<Fact>]
 let ``Test single line enum`` () =
@@ -32,7 +32,7 @@ let ``Test single line enum`` () =
 module Domain
 enum TrafficLight = Red | Yellow | Green
 """
-    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
+    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
 
 [<Fact>]
 let ``Test record`` () =
@@ -61,24 +61,24 @@ record Crossroad = {
         Name = ComplexName ["Domain"]
         Items = [
             Record {
-                Name = "Crossroad";
+                Name = ComplexName ["Crossroad"; "Domain"]
                 Fields = [
-                    { Name = "Id"; Type = Int }
-                    { Name = "LongId"; Type = Long }
-                    { Name = "AltId"; Type = Guid }
-                    { Name = "Street1"; Type = String }
-                    { Name = "Street2"; Type = String }
-                    { Name = "IsMonitored"; Type = Bool }
-                    { Name = "Xpos"; Type = Float }
-                    { Name = "Ypos"; Type = Double }
-                    { Name = "Ratio"; Type = Decimal 2 }
-                    { Name = "LastChecked"; Type = Timestamp }
-                    { Name = "ServiceInterval"; Type = Duration }
-                    { Name = "CurrentLight"; Type = Complex (ComplexName ["TrafficLight"; "Domain"]) }
-                    { Name = "Nickname"; Type = Optional String }
-                    { Name = "Img"; Type = Bytes }
-                    { Name = "Notes"; Type = Array String }
-                    { Name = "Props"; Type = Map String }
+                    { Name = "Id"; Type = Int; IsKey = false }
+                    { Name = "LongId"; Type = Long; IsKey = false }
+                    { Name = "AltId"; Type = Guid; IsKey = false }
+                    { Name = "Street1"; Type = String; IsKey = false }
+                    { Name = "Street2"; Type = String; IsKey = false }
+                    { Name = "IsMonitored"; Type = Bool; IsKey = false }
+                    { Name = "Xpos"; Type = Float; IsKey = false }
+                    { Name = "Ypos"; Type = Double; IsKey = false }
+                    { Name = "Ratio"; Type = Decimal 2; IsKey = false }
+                    { Name = "LastChecked"; Type = Timestamp; IsKey = false }
+                    { Name = "ServiceInterval"; Type = Duration; IsKey = false }
+                    { Name = "CurrentLight"; Type = Complex (ComplexName ["TrafficLight"; "Domain"]); IsKey = false }
+                    { Name = "Nickname"; Type = Optional String; IsKey = false }
+                    { Name = "Img"; Type = Bytes; IsKey = false }
+                    { Name = "Notes"; Type = Array String; IsKey = false }
+                    { Name = "Props"; Type = Map String; IsKey = false }
                 ]}]}
 
 [<Fact>]
@@ -91,11 +91,11 @@ record Crossroad = { Id: int; Street1: string; Street2: string }
         Name = ComplexName ["Domain"]
         Items = [
             Record {
-                Name = "Crossroad";
+                Name = ComplexName ["Crossroad"; "Domain"];
                 Fields = [
-                    { Name = "Id"; Type = Int }
-                    { Name = "Street1"; Type = String }
-                    { Name = "Street2"; Type = String }
+                    { Name = "Id"; Type = Int; IsKey = false }
+                    { Name = "Street1"; Type = String; IsKey = false }
+                    { Name = "Street2"; Type = String; IsKey = false }
                 ]}]}
 
 [<Fact>]
@@ -112,15 +112,15 @@ union ServiceCheck =
         Name = ComplexName ["Domain"]
         Items = [
             Union {
-                Name = "ServiceCheck";
+                Name = ComplexName ["ServiceCheck"; "Domain"];
                 Cases = [
-                    { Name = "Random"; Fields = []}
-                    { Name = "Planned"; Fields = [{Name = "p1"; Type = Timestamp}] }
-                    { Name = "Campaign"; Fields = [
-                        {Name = "name"; Type = String}
-                        {Name = "step"; Type = Int}
+                    { Name = ComplexName ["Random";"ServiceCheck"; "Domain"]; Fields = []}
+                    { Name = ComplexName ["Planned";"ServiceCheck"; "Domain"]; Fields = [{Name = "p1"; Type = Timestamp; IsKey = false}] }
+                    { Name = ComplexName ["Campaign";"ServiceCheck"; "Domain"]; Fields = [
+                        {Name = "name"; Type = String; IsKey = false}
+                        {Name = "step"; Type = Int; IsKey = false}
                         ]}
-                    { Name = "RCA"; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"])}] }
+                    { Name = ComplexName ["RCA";"ServiceCheck"; "Domain"]; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"]); IsKey = false}] }
                 ]}]}
 
 [<Fact>]
@@ -133,15 +133,15 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
         Name = ComplexName ["Domain"]
         Items = [
             Union {
-                Name = "ServiceCheck";
+                Name = ComplexName ["ServiceCheck"; "Domain"];
                 Cases = [
-                    { Name = "Random"; Fields = []}
-                    { Name = "Planned"; Fields = [{Name = "p1"; Type = Timestamp}] }
-                    { Name = "Campaign"; Fields = [
-                        {Name = "name"; Type = String}
-                        {Name = "step"; Type = Int}
+                    { Name = ComplexName ["Random";"ServiceCheck"; "Domain"]; Fields = []}
+                    { Name = ComplexName ["Planned";"ServiceCheck"; "Domain"]; Fields = [{Name = "p1"; Type = Timestamp; IsKey = false}] }
+                    { Name = ComplexName ["Campaign";"ServiceCheck"; "Domain"]; Fields = [
+                        {Name = "name"; Type = String; IsKey = false}
+                        {Name = "step"; Type = Int; IsKey = false}
                         ]}
-                    { Name = "RCA"; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"])}] }
+                    { Name = ComplexName ["RCA";"ServiceCheck"; "Domain"]; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"]); IsKey = false}] }
                 ]}]}
 
 [<Fact>]
@@ -165,26 +165,91 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
     assertOfString input
         {   Name = ComplexName ["Foundation"; "Domain"]
             Items = [
-                Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
+                Enum {Name = ComplexName ["TrafficLight";"Foundation"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}
                 Enum {
-                    Name = "AltTrafficLight";
+                    Name = ComplexName ["AltTrafficLight";"Foundation"; "Domain"]
                     Symbols = ["Red"; "Yellow"; "Blue"] }
-                Record { Name = "Crossroad";
+                Record {
+                    Name = ComplexName ["Crossroad";"Foundation"; "Domain"]
                     Fields =
                     [
-                        { Name = "Id"; Type = Int }
-                        { Name = "Street1"; Type = String }
-                        { Name = "Street2"; Type = String }
+                        { Name = "Id"; Type = Int; IsKey = false }
+                        { Name = "Street1"; Type = String; IsKey = false }
+                        { Name = "Street2"; Type = String; IsKey = false }
                     ]}
                 Union {
-                    Name = "ServiceCheck";
+                    Name = ComplexName ["ServiceCheck";"Foundation"; "Domain"]
                     Cases = [
-                        { Name = "Random"; Fields = []}
-                        { Name = "Planned"; Fields = [{ Name = "p1"; Type = Timestamp }]}
-                        { Name = "Campaign"; Fields = [
-                            {Name = "name"; Type = String}
-                            {Name = "step"; Type = Int}
+                        { Name = ComplexName ["Random";"ServiceCheck";"Foundation"; "Domain"]; Fields = []}
+                        { Name = ComplexName ["Planned";"ServiceCheck";"Foundation"; "Domain"]; Fields = [{ Name = "p1"; Type = Timestamp; IsKey = false }]}
+                        { Name = ComplexName ["Campaign";"ServiceCheck";"Foundation"; "Domain"]; Fields = [
+                            {Name = "name"; Type = String; IsKey = false}
+                            {Name = "step"; Type = Int; IsKey = false}
                             ]}
-                        { Name = "RCA"; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"])}] }
+                        { Name = ComplexName ["RCA";"ServiceCheck";"Foundation"; "Domain"]; Fields = [{Name = "p1"; Type = Complex (ComplexName ["Incident"]); IsKey = false}] }
                     ]}
+                ]}
+
+[<Fact>]
+let KeyInRecordTest () =
+    let input = """
+module Domain.Foundation
+record Crossroad = {
+    Id: int key
+    Street1: string
+    Street2: string key
+}
+"""
+    assertOfString input
+        {   Name = ComplexName ["Foundation"; "Domain"]
+            Items = [
+                Record {
+                    Name = ComplexName ["Crossroad";"Foundation"; "Domain"]
+                    Fields =
+                    [
+                        { Name = "Id"; Type = Int; IsKey = true }
+                        { Name = "Street1"; Type = String; IsKey = false }
+                        { Name = "Street2"; Type = String; IsKey = true }
+                    ]}
+                ]}
+
+[<Fact>]
+let KeyInUnionTest () =
+    let input = """
+module Domain.Foundation
+record Crossroad = {
+    Id: int key
+    Street1: string
+    Street2: string key
+}
+union U1 =
+    | Case1
+    | Case2 of Crossroad
+    | Case3 of Crossroad key
+    | Case4 of int key * s1:string * s2:string key
+"""
+    assertOfString input
+        {   Name = ComplexName ["Foundation"; "Domain"]
+            Items = [
+                Record {
+                    Name = ComplexName ["Crossroad";"Foundation"; "Domain"]
+                    Fields =
+                    [
+                        { Name = "Id"; Type = Int; IsKey = true }
+                        { Name = "Street1"; Type = String; IsKey = false }
+                        { Name = "Street2"; Type = String; IsKey = true }
+                    ]}
+                Union {
+                    Name = ComplexName ["U1";"Foundation"; "Domain"]
+                    Cases = [
+                        { Name = ComplexName ["Case1";"U1";"Foundation"; "Domain"]; Fields = []}
+                        { Name = ComplexName ["Case2";"U1";"Foundation"; "Domain"]; Fields = [{ Name = "p1"; Type = Complex (ComplexName ["Crossroad"]); IsKey = false }]}
+                        { Name = ComplexName ["Case3";"U1";"Foundation"; "Domain"]; Fields = [{ Name = "p1"; Type = Complex (ComplexName ["Crossroad"]); IsKey = true }]}
+                        { Name = ComplexName ["Case4";"U1";"Foundation"; "Domain"]; Fields = [
+                            {Name = "p1"; Type = Int; IsKey = true}
+                            {Name = "s1"; Type = String; IsKey = false}
+                            {Name = "s2"; Type = String; IsKey = true}
+                            ]}
+                    ]}
+
                 ]}

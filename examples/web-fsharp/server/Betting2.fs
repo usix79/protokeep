@@ -1,5 +1,7 @@
-module rec Betting
+module rec Betting2
+
 open Protogen.FsharpTypes
+
 type OutcomeResult =
     | Unknown = 0
     | Win = 1
@@ -11,11 +13,11 @@ type Outcome =
     | Empty
     | Priced of price:decimal
     | PricedWithProb of price:decimal*prob:float32
-    | Resulted of result:Betting.OutcomeResult
+    | Resulted of result:Betting2.OutcomeResult
 type Winner3Way = {
-    Win1 : Betting.Outcome
-    Draw : Betting.Outcome
-    Win2 : Betting.Outcome
+    Win1 : Betting2.Outcome
+    Draw : Betting2.Outcome
+    Win2 : Betting2.Outcome
 }
 with
     member x.OutcomeValues () =
@@ -27,7 +29,7 @@ with
         | Key.Value "2" -> Some x.Draw
         | Key.Value "3" -> Some x.Win2
         | _ -> None
-    member x.WithOutcomes (items:Map<Key,Betting.Outcome>) =
+    member x.WithOutcomes (items:Map<Key,Betting2.Outcome>) =
         {x with
             Win1 = items.TryFind(Key.Value "1") |> Option.defaultValue x.Win1
             Draw = items.TryFind(Key.Value "2") |> Option.defaultValue x.Draw
@@ -36,8 +38,8 @@ with
 
 type Handicap = {
     Value : decimal
-    Win1 : Betting.Outcome
-    Win2 : Betting.Outcome
+    Win1 : Betting2.Outcome
+    Win2 : Betting2.Outcome
 }
 with
     static member MakeKey (value': decimal) =
@@ -51,7 +53,7 @@ with
         | Key.Value "1" -> Some x.Win1
         | Key.Value "2" -> Some x.Win2
         | _ -> None
-    member x.WithOutcomes (items:Map<Key,Betting.Outcome>) =
+    member x.WithOutcomes (items:Map<Key,Betting2.Outcome>) =
         {x with
             Win1 = items.TryFind(Key.Value "1") |> Option.defaultValue x.Win1
             Win2 = items.TryFind(Key.Value "2") |> Option.defaultValue x.Win2
@@ -59,8 +61,8 @@ with
 
 type Total = {
     Value : decimal
-    Over : Betting.Outcome
-    Under : Betting.Outcome
+    Over : Betting2.Outcome
+    Under : Betting2.Outcome
 }
 with
     static member MakeKey (value': decimal) =
@@ -74,7 +76,7 @@ with
         | Key.Value "1" -> Some x.Over
         | Key.Value "2" -> Some x.Under
         | _ -> None
-    member x.WithOutcomes (items:Map<Key,Betting.Outcome>) =
+    member x.WithOutcomes (items:Map<Key,Betting2.Outcome>) =
         {x with
             Over = items.TryFind(Key.Value "1") |> Option.defaultValue x.Over
             Under = items.TryFind(Key.Value "2") |> Option.defaultValue x.Under
@@ -90,8 +92,8 @@ with
     member x.Key = Score.MakeKey (x.S1,x.S2)
 
 type ScoreOutcome = {
-    Score : Betting.Score
-    Outcome : Betting.Outcome
+    Score : Betting2.Score
+    Outcome : Betting2.Outcome
 }
 with
     static member MakeKey (scoreKey:Key) =
@@ -99,7 +101,7 @@ with
     member x.Key = ScoreOutcome.MakeKey (x.Score.Key)
 
 type CorrectScore = {
-    Scores : Betting.ScoreOutcome array
+    Scores : Betting2.ScoreOutcome array
 }
 with
     member x.OutcomeValues() =
@@ -108,17 +110,17 @@ with
         x.Scores |> Array.map (fun v -> v.Score.Key)
     member x.Outcome (key:Key) =
         x.Scores |> Array.tryFind (fun v -> v.Score.Key = key) |> Option.map (fun v -> v.Outcome)
-    member x.WithOutcomes (items:Map<Key,Betting.Outcome>) =
+    member x.WithOutcomes (items:Map<Key,Betting2.Outcome>) =
         {x with
             Scores = x.Scores |> Array.map (fun v -> items.TryFind v.Score.Key |> Option.map (fun i -> {v with Outcome = i}) |> Option.defaultValue v)
         }
 
 type Market =
     | Unknown
-    | Winner3Way of p1:Betting.Winner3Way
-    | Handicap of p1:Betting.Handicap
-    | Total of p1:Betting.Total
-    | CorrectScore of p1:Betting.CorrectScore
+    | Winner3Way of p1:Betting2.Winner3Way
+    | Handicap of p1:Betting2.Handicap
+    | Total of p1:Betting2.Total
+    | CorrectScore of p1:Betting2.CorrectScore
 with
     static member MakeUnknownKey () =  Key.Value "1"
     static member MakeWinner3WayKey () =  Key.Value "2"
@@ -127,39 +129,39 @@ with
     static member MakeCorrectScoreKey () =  Key.Value "5"
     member x.Key =
         match x with
-        | Betting.Market.Unknown -> Market.MakeUnknownKey()
-        | Betting.Market.Winner3Way p1 -> Market.MakeWinner3WayKey ()
-        | Betting.Market.Handicap p1 -> Market.MakeHandicapKey (p1.Key)
-        | Betting.Market.Total p1 -> Market.MakeTotalKey (p1.Key)
-        | Betting.Market.CorrectScore p1 -> Market.MakeCorrectScoreKey ()
+        | Betting2.Market.Unknown -> Market.MakeUnknownKey()
+        | Betting2.Market.Winner3Way p1 -> Market.MakeWinner3WayKey ()
+        | Betting2.Market.Handicap p1 -> Market.MakeHandicapKey (p1.Key)
+        | Betting2.Market.Total p1 -> Market.MakeTotalKey (p1.Key)
+        | Betting2.Market.CorrectScore p1 -> Market.MakeCorrectScoreKey ()
     member x.OutcomeValues() =
         match x with
-        | Betting.Market.Unknown -> Array.empty
-        | Betting.Market.Winner3Way p1 -> p1.OutcomeValues()
-        | Betting.Market.Handicap p1 -> p1.OutcomeValues()
-        | Betting.Market.Total p1 -> p1.OutcomeValues()
-        | Betting.Market.CorrectScore p1 -> p1.OutcomeValues()
+        | Betting2.Market.Unknown -> Array.empty
+        | Betting2.Market.Winner3Way p1 -> p1.OutcomeValues()
+        | Betting2.Market.Handicap p1 -> p1.OutcomeValues()
+        | Betting2.Market.Total p1 -> p1.OutcomeValues()
+        | Betting2.Market.CorrectScore p1 -> p1.OutcomeValues()
     member x.OutcomeIndexes() =
         match x with
-        | Betting.Market.Unknown -> Array.empty
-        | Betting.Market.Winner3Way p1 -> p1.OutcomeIndexes()
-        | Betting.Market.Handicap p1 -> p1.OutcomeIndexes()
-        | Betting.Market.Total p1 -> p1.OutcomeIndexes()
-        | Betting.Market.CorrectScore p1 -> p1.OutcomeIndexes()
+        | Betting2.Market.Unknown -> Array.empty
+        | Betting2.Market.Winner3Way p1 -> p1.OutcomeIndexes()
+        | Betting2.Market.Handicap p1 -> p1.OutcomeIndexes()
+        | Betting2.Market.Total p1 -> p1.OutcomeIndexes()
+        | Betting2.Market.CorrectScore p1 -> p1.OutcomeIndexes()
     member x.Outcome (key:Key) =
         match x with
-        | Betting.Market.Unknown -> None
-        | Betting.Market.Winner3Way p1 -> p1.Outcome key
-        | Betting.Market.Handicap p1 -> p1.Outcome key
-        | Betting.Market.Total p1 -> p1.Outcome key
-        | Betting.Market.CorrectScore p1 -> p1.Outcome key
-    member x.WithOutcomes (items:Map<Key,Betting.Outcome>) =
+        | Betting2.Market.Unknown -> None
+        | Betting2.Market.Winner3Way p1 -> p1.Outcome key
+        | Betting2.Market.Handicap p1 -> p1.Outcome key
+        | Betting2.Market.Total p1 -> p1.Outcome key
+        | Betting2.Market.CorrectScore p1 -> p1.Outcome key
+    member x.WithOutcomes (items:Map<Key,Betting2.Outcome>) =
         match x with
-        | Betting.Market.Unknown -> x
-        | Betting.Market.Winner3Way p1 -> p1.WithOutcomes items |> Betting.Market.Winner3Way
-        | Betting.Market.Handicap p1 -> p1.WithOutcomes items |> Betting.Market.Handicap
-        | Betting.Market.Total p1 -> p1.WithOutcomes items |> Betting.Market.Total
-        | Betting.Market.CorrectScore p1 -> p1.WithOutcomes items |> Betting.Market.CorrectScore
+        | Betting2.Market.Unknown -> x
+        | Betting2.Market.Winner3Way p1 -> p1.WithOutcomes items |> Betting2.Market.Winner3Way
+        | Betting2.Market.Handicap p1 -> p1.WithOutcomes items |> Betting2.Market.Handicap
+        | Betting2.Market.Total p1 -> p1.WithOutcomes items |> Betting2.Market.Total
+        | Betting2.Market.CorrectScore p1 -> p1.WithOutcomes items |> Betting2.Market.CorrectScore
 
 type Period =
     | Unknown = 0
@@ -176,13 +178,13 @@ type Status =
     | Open = 1
     | Closed = 2
 type MarketItem = {
-    Statistic : Betting.Statistic
-    Period : Betting.Period
-    Market : Betting.Market
-    Status : Betting.Status
+    Statistic : Betting2.Statistic
+    Period : Betting2.Period
+    Market : Betting2.Market
+    Status : Betting2.Status
 }
 with
-    static member MakeKey (statistic':Betting.Statistic, period':Betting.Period, marketKey':Key) =
+    static member MakeKey (statistic':Betting2.Statistic, period':Betting2.Period, marketKey':Key) =
         Key.Items [
             Key.Value ((int statistic').ToString())
             Key.Value ((int period').ToString())

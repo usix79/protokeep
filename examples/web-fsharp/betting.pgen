@@ -19,20 +19,20 @@ record Winner3Way = {
 }
 
 record Handicap = {
-    Value:decimal(2)
+    Value:decimal(2) key
     Win1: Outcome
     Win2: Outcome
 }
 
 record Total = {
-    Value:decimal(2)
+    Value:decimal(2) key
     Over: Outcome
     Under: Outcome
 }
 
 record Score = {
-    S1 : int
-    S2 : int
+    S1 : int key
+    S2 : int key
 }
 
 record ScoreOutcome = {
@@ -46,8 +46,8 @@ record CorrectScore = {
 
 union Market =
     | Winner3Way of Winner3Way
-    | Handicap of Handicap
-    | Total of Total
+    | Handicap of Handicap key
+    | Total of Total key
     | CorrectScore of CorrectScore
 
 enum Period =
@@ -65,8 +65,8 @@ enum Status =
     | Closed
 
 record MarketItem = {
-    Statistic : Statistic
-    Period : Period
-    Market : Market
+    Statistic : Statistic key
+    Period : Period key
+    Market : Market key
     Status : Status
 }

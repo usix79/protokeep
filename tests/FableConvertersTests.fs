@@ -272,10 +272,13 @@ type ConvertDomain () =
 [<Theory; MemberData("MyTestData", MemberType=typeof<TestData>)>]
 let testAllCases (input, expectedOutput:string) =
     Parsers.parsePgenDoc input
-    |> Result.bind(fun modules ->
-        Types.lockInternal modules []
-        |> Result.map(fun (locks, typesCache) ->
-            let outputText = FableConvertersCmd.gen modules locks typesCache
-            Assert.Equal(expectedOutput.Trim(), outputText.Trim()))
+    |> Result.bind(fun module' ->
+        Types.resolveReferences module'
+        |> Result.bind (fun module' ->
+            let typesCache = (Types.toTypesCacheItems module' |> Map.ofList)
+            Types.lock module' [] typesCache
+            |> Result.map(fun locks ->
+                let outputText = FableConvertersCmd.gen module' locks typesCache
+                Assert.Equal(expectedOutput.Trim(), outputText.Trim())))
         |> Result.mapError(fun error -> failwithf "%A" error))
     |> Result.mapError(fun error -> failwithf "%A" error)

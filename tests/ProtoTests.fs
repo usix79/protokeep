@@ -124,9 +124,13 @@ message Crossroad {
 let testAllCases (input, expectedOutput:string) =
     Parsers.parsePgenDoc input
     |> Result.bind(fun module' ->
-        Types.lock module' []
-        |> Result.map(fun locks ->
-            let outputText = ProtoCmd.gen module' locks
-            Assert.Equal(expectedOutput.Trim(), outputText.Trim()))
-        |> Result.mapError(fun error -> failwithf "%A" error))
+        let typesCache = (Types.toTypesCacheItems module' |> Map.ofList)
+        Types.resolveReferences module'
+        |> Result.mapError (fun error -> failwithf "%A" error)
+        |> Result.map (fun module' ->
+            Types.lock module' [] typesCache
+            |> Result.map(fun locks ->
+                let outputText = ProtoCmd.gen module' locks
+                Assert.Equal(expectedOutput.Trim(), outputText.Trim()))
+            |> Result.mapError(fun error -> failwithf "%A" error)))
     |> Result.mapError(fun error -> failwithf "%A" error)

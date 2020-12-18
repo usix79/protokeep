@@ -4,8 +4,8 @@ module Protogen.CheckCmd
 open System
 open Types
 
-let Handler module' locks args =
-    Types.lock module' locks
+let Handler module' locks typesCache args =
+    Types.lock module' locks typesCache
     |> Result.mapError (sprintf "%A")
     |> Result.bind(fun newlocks ->
         if newlocks <> locks then Console.WriteLine("Check Ok")

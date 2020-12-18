@@ -22,20 +22,25 @@ let firstCharToUpper (name:string) =
         Char.ToUpper(name.[0]).ToString() + name.Substring(1);
     else name
 
+let firstCharToLower (name:string) =
+    if name.Length > 0 && Char.IsUpper(name.[0]) then
+        Char.ToLower(name.[0]).ToString() + name.Substring(1);
+    else name
+
 module Program =
-    let checkLock module' locks =
-        Types.lockInternal module' locks
+    let checkLock module' locks typesCache =
+        Types.lock module' locks typesCache
         |> Result.mapError (sprintf "When try to check current lock: %A")
-        |> Result.bind(fun (newlocks, typesCache) ->
+        |> Result.bind(fun newlocks ->
             if newlocks <> locks then
                 Error "Lock file is not corresponded to types definition. Run protogen lock first."
             else
-                Ok typesCache )
+                Ok () )
 
     let rec checkArgCore defaultName = function
         | [] -> None
-        | "update-commons" :: _ -> Some defaultName
-        | "update-commons-in" :: fileName :: _ -> Some fileName
+        | "--update-commons" :: _ -> Some defaultName
+        | "--update-commons-in" :: fileName :: _ -> Some fileName
         | _ :: tail -> checkArgCore defaultName tail
 
 module CoreFsharp =

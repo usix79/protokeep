@@ -1,4 +1,5 @@
 module rec Domain
+open Protogen.FsharpTypes
 type Op =
     | Unknown
     | Val of p1:int

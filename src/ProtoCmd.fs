@@ -7,10 +7,10 @@ open System.IO
 open Types
 open Codegen
 
-let Handler module' locks = function
+let Handler module' locks typesCache = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        Program.checkLock module' locks
+        Program.checkLock module' locks typesCache
         |> Result.bind(fun _ ->
             let fileContent = gen module' locks
             let fileName =
@@ -38,29 +38,27 @@ let gen (module':Module) (locks:LockItem list) =
 
     let rec genItem ns = function
     | Enum info ->
-        let fullName = Types.mergeName ns info.Name
-        line txt $"enum {info.Name} {{"
-        line txt $"    {info.Name}Unknown = 0;"
-        for symbol in enumLocksCache.[fullName].Values do
-            line txt $"    {info.Name}{symbol.Name} = {symbol.Num};"
+        let name = firstName info.Name
+        line txt $"enum {name} {{"
+        line txt $"    {name}Unknown = 0;"
+        for symbol in enumLocksCache.[info.Name].Values do
+            line txt $"    {name}{symbol.Name} = {symbol.Num};"
         line txt $"}}"
-    | Record info -> genRecord ns info.Name info
+    | Record info -> genRecord (firstName info.Name) info
     | Union info ->
-        let fullName = Types.mergeName ns info.Name
         for case in info.Cases do
             let needRecord =
-                match messageLockCache.[Types.mergeName fullName case.Name].LockItems with
+                match messageLockCache.[case.Name].LockItems with
                 | Types.EmptyCase -> false
                 | Types.SingleParamCase _ -> false
                 | Types.MultiParamCase -> true
 
             if needRecord then
-                let recordName = info.Name + "__" + case.Name
-                genRecord (Types.mergeName ns info.Name) recordName case
-    and genRecord ns recordName info =
-        let fullName = Types.mergeName ns info.Name
+                let recordName = (firstName info.Name) + "__" + (firstName case.Name)
+                genRecord recordName case
+    and genRecord recordName info =
         line txt $"message {recordName} {{"
-        for item in messageLockCache.[fullName].LockItems do
+        for item in messageLockCache.[info.Name].LockItems do
             match item with
             | Field info ->
                 match info.Type with
@@ -115,24 +113,24 @@ let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module
     let rec typeReference = function
         | Timestamp -> Some <| ComplexName ["google/protobuf/timestamp.proto"]
         | Duration -> Some <| ComplexName ["google/protobuf/duration.proto"]
-        | Complex ns ->  Some <| Types.extractNamespace ns
+        | Complex ns -> Some <| Types.extractNamespace ns
         | Optional v
+        | Map v
         | Array v -> typeReference v
         | _ -> None
 
-    let rec f ns = function
+    let rec f = function
         | Enum _ -> ()
-        | Record info -> fRecord ns info
+        | Record info -> fRecord info
         | Union info ->
-            let ns = Types.mergeName ns info.Name
-            info.Cases |> List.iter (fRecord ns)
-    and fRecord ns info =
-        messageLockCache.[Types.mergeName ns info.Name].LockItems
+            info.Cases |> List.iter fRecord
+    and fRecord info =
+        messageLockCache.[info.Name].LockItems
         |> List.choose (function
             | Field x -> typeReference x.Type
             | OneOf (_,unionName,_) -> Types.extractNamespace unionName |> Some )
         |> List.iter (fun r -> set.Add(r) |> ignore)
 
-    module'.Items |> List.iter (f module'.Name)
+    module'.Items |> List.iter f
 
     seq {for item in set do item}

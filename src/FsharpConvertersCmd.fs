@@ -7,11 +7,11 @@ open System.IO
 open Types
 open Codegen
 
-let Handler module' locks = function
+let Handler module' locks typesCache = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        Program.checkLock module' locks
-        |> Result.bind(fun typesCache ->
+        Program.checkLock module' locks typesCache
+        |> Result.bind(fun _ ->
             let fileContent = gen module' locks typesCache
             let fileName =
                 if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
@@ -46,16 +46,15 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
 
     let rec genItem = function
     | Enum info ->
-        let fullNameTxt = Types.mergeName ns info.Name |> dottedName
+        let fullNameTxt = info.Name |> dottedName
         fromProtobuf fullNameTxt
         line txt $"        enum<{fullNameTxt}>(int x)"
         toProtobuf fullNameTxt
         line txt $"        enum<ProtoClasses.{fullNameTxt}>(int x)"
     | Record info ->
-        let typeName = Types.mergeName ns info.Name
-        let fullNameTxt = typeName |> dottedName
+        let fullNameTxt = info.Name |> dottedName
         let fullNameOfProtoClass = "ProtoClasses." + fullNameTxt
-        let lockItems = messageLockCache.[typeName].LockItems
+        let lockItems = messageLockCache.[info.Name].LockItems
 
 
         fromProtobuf fullNameTxt
@@ -72,13 +71,11 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
             genLockItemToProtobuf $"x.{itemName}" $"y.{itemName}" item)
         line txt $"        y"
     | Union info ->
-        let typeName = Types.mergeName ns info.Name
-        let fullNameTxt = typeName |> dottedName
+        let fullNameTxt = info.Name |> dottedName
         for case in info.Cases do
-            let caseTypeName = Types.mergeName typeName case.Name
             let fullCaseNameTxt = $"ProtoClasses.{fullNameTxt}__{case.Name}"
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
-            let lockItems = messageLockCache.[caseTypeName].LockItems
+            let lockItems = messageLockCache.[case.Name].LockItems
 
             match lockItems with
             | Types.MultiParamCase ->
@@ -88,7 +85,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                     |> List.map(fun lockItem -> $"({genLockItemFromProtobuf fullCaseNameTxt lockItem})")
                     |> String.concat ","
 
-                line txt $"        {caseTypeName |> dottedName}"
+                line txt $"        {case.Name |> dottedName}"
                 line txt $"            ({values})"
 
                 line txt $"    static member {info.Name}Case{case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="

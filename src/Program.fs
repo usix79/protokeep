@@ -43,17 +43,22 @@ Protogen tool
                     File.ReadAllText pgenFileName
                     |> Protogen.Parsers.parsePgenDoc
                     |> Result.bind(fun module' ->
-                        let lockFileName = pgenFileName + ".lock"
-                        if File.Exists lockFileName then
-                            File.ReadAllText lockFileName
-                            |> Protogen.Parsers.parseLockDoc
-                        else
-                            Console.WriteLine "Warning, lock file not found, procceed with empty lock"
-                            Ok []
-                        |> Result.bind(fun locks ->
-                            let args = if cmd.Name = "lock" then lockFileName::args else args // special case for lock cmd
-                            cmd.Run module' locks args
-                            ))))
+                        Types.resolveReferences module'
+                        |> Result.mapError (fun err -> sprintf "%A" err)
+                        |> Result.bind (fun module' ->
+                            let lockFileName = pgenFileName + ".lock"
+                            if File.Exists lockFileName then
+                                File.ReadAllText lockFileName
+                                |> Protogen.Parsers.parseLockDoc
+                            else
+                                Console.WriteLine "Warning, lock file not found, procceed with empty lock"
+                                Ok []
+                            |> Result.bind(fun locks ->
+                                let args = if cmd.Name = "lock" then lockFileName::args else args // special case for lock cmd
+                                let typesCache = Types.toTypesCacheItems module' |> Map.ofList
+                                cmd.Run module' locks typesCache args ))
+                    )
+            ))
         match res with
         | Ok _ -> 0
         | Error txt ->

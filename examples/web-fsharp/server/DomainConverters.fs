@@ -1,28 +1,28 @@
 namespace Protogen.FsharpConverters
 type ConvertDomain () =
-    static member FromProtobuf (x:ProtoClasses.Domain.Op__Sum)  =
+    static member FromProtobuf (x:ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"])  =
         Domain.Op.Sum
             ((
                 match x.P1Case with
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P1OneofCase.P1Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Sum.P2OneofCase.P2Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"].P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member OpCaseSumToProtobuf (p1,p2) : ProtoClasses.Domain.Op__Sum =
-        let y = ProtoClasses.Domain.Op__Sum()
+    static member ComplexName ["Op"; "Domain"]CaseComplexName ["Sum"; "Op"; "Domain"]ToProtobuf (p1,p2) : ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"] =
+        let y = ProtoClasses.Domain.Op__ComplexName ["Sum"; "Op"; "Domain"]()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
@@ -44,29 +44,29 @@ type ConvertDomain () =
         | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.Op__Mul)  =
+    static member FromProtobuf (x:ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"])  =
         Domain.Op.Mul
             ((
                 match x.P1Case with
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P1OneofCase.P1Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Mul.P2OneofCase.P2Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"].P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member OpCaseMulToProtobuf (p1,p2) : ProtoClasses.Domain.Op__Mul =
-        let y = ProtoClasses.Domain.Op__Mul()
+    static member ComplexName ["Op"; "Domain"]CaseComplexName ["Mul"; "Op"; "Domain"]ToProtobuf (p1,p2) : ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"] =
+        let y = ProtoClasses.Domain.Op__ComplexName ["Mul"; "Op"; "Domain"]()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
@@ -88,29 +88,29 @@ type ConvertDomain () =
         | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.Op__Div)  =
+    static member FromProtobuf (x:ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"])  =
         Domain.Op.Div
             ((
                 match x.P1Case with
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P1OneofCase.P1Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Div.P2OneofCase.P2Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"].P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member OpCaseDivToProtobuf (p1,p2) : ProtoClasses.Domain.Op__Div =
-        let y = ProtoClasses.Domain.Op__Div()
+    static member ComplexName ["Op"; "Domain"]CaseComplexName ["Div"; "Op"; "Domain"]ToProtobuf (p1,p2) : ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"] =
+        let y = ProtoClasses.Domain.Op__ComplexName ["Div"; "Op"; "Domain"]()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
@@ -132,20 +132,20 @@ type ConvertDomain () =
         | Domain.Op.Zero -> y.P2Zero <- true
         | Domain.Op.Unknown -> ()
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.Op__Ln)  =
+    static member FromProtobuf (x:ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"])  =
         Domain.Op.Ln
             ((
                 match x.P1Case with
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Ln.P1OneofCase.P1Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"].P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown))
-    static member OpCaseLnToProtobuf (p1) : ProtoClasses.Domain.Op__Ln =
-        let y = ProtoClasses.Domain.Op__Ln()
+    static member ComplexName ["Op"; "Domain"]CaseComplexName ["Ln"; "Op"; "Domain"]ToProtobuf (p1) : ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"] =
+        let y = ProtoClasses.Domain.Op__ComplexName ["Ln"; "Op"; "Domain"]()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
@@ -157,29 +157,29 @@ type ConvertDomain () =
         | Domain.Op.Zero -> y.P1Zero <- true
         | Domain.Op.Unknown -> ()
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.Op__Quantum)  =
+    static member FromProtobuf (x:ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"])  =
         Domain.Op.Quantum
             ((
                 match x.P1Case with
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P1OneofCase.P1Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Val -> Domain.Op.Val(x.P1Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Sum -> x.P1Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Mul -> x.P1Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Div -> x.P1Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Ln -> x.P1Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Quantum -> x.P1Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P1OneofCase.P1Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(
                 match x.P2Case with
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
-                | ProtoClasses.Domain.Op__Quantum.P2OneofCase.P2Zero -> Domain.Op.Zero
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Val -> Domain.Op.Val(x.P2Val)
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Sum -> x.P2Sum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Mul -> x.P2Mul |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Div -> x.P2Div |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Ln -> x.P2Ln |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Quantum -> x.P2Quantum |> ConvertDomain.FromProtobuf
+                | ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"].P2OneofCase.P2Zero -> Domain.Op.Zero
                 | _ -> Domain.Op.Unknown),(x.P3))
-    static member OpCaseQuantumToProtobuf (p1,p2,p3) : ProtoClasses.Domain.Op__Quantum =
-        let y = ProtoClasses.Domain.Op__Quantum()
+    static member ComplexName ["Op"; "Domain"]CaseComplexName ["Quantum"; "Op"; "Domain"]ToProtobuf (p1,p2,p3) : ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"] =
+        let y = ProtoClasses.Domain.Op__ComplexName ["Quantum"; "Op"; "Domain"]()
         match p1 with
         | Domain.Op.Val (p1) ->
             y.P1Val <- p1
@@ -202,16 +202,16 @@ type ConvertDomain () =
         | Domain.Op.Unknown -> ()
         y.P3 <- p3
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.OpResult__Fail)  =
+    static member FromProtobuf (x:ProtoClasses.Domain.OpResult__ComplexName ["Fail"; "OpResult"; "Domain"])  =
         Domain.OpResult.Fail
             ((
                 match x.P1Case with
-                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1General -> Domain.OpError.General(x.P1General)
-                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1DivisionByZero -> Domain.OpError.DivisionByZero
-                | ProtoClasses.Domain.OpResult__Fail.P1OneofCase.P1NotSupported -> Domain.OpError.NotSupported
+                | ProtoClasses.Domain.OpResult__ComplexName ["Fail"; "OpResult"; "Domain"].P1OneofCase.P1General -> Domain.OpError.General(x.P1General)
+                | ProtoClasses.Domain.OpResult__ComplexName ["Fail"; "OpResult"; "Domain"].P1OneofCase.P1DivisionByZero -> Domain.OpError.DivisionByZero
+                | ProtoClasses.Domain.OpResult__ComplexName ["Fail"; "OpResult"; "Domain"].P1OneofCase.P1NotSupported -> Domain.OpError.NotSupported
                 | _ -> Domain.OpError.Unknown))
-    static member OpResultCaseFailToProtobuf (p1) : ProtoClasses.Domain.OpResult__Fail =
-        let y = ProtoClasses.Domain.OpResult__Fail()
+    static member ComplexName ["OpResult"; "Domain"]CaseComplexName ["Fail"; "OpResult"; "Domain"]ToProtobuf (p1) : ProtoClasses.Domain.OpResult__ComplexName ["Fail"; "OpResult"; "Domain"] =
+        let y = ProtoClasses.Domain.OpResult__ComplexName ["Fail"; "OpResult"; "Domain"]()
         match p1 with
         | Domain.OpError.General (p1) ->
             y.P1General <- p1

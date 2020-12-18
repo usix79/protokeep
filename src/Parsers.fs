@@ -26,7 +26,7 @@ module private Impl =
         pipe2
             (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
             (sepBy1 (between spaces spaces identifier) (pchar '|') )
-            (fun name symbols -> Enum {Name = name; Symbols = symbols})
+            (fun name symbols -> {| Name = name; Symbols = symbols |})
 
     let type' =
         choice[
@@ -53,10 +53,11 @@ module private Impl =
             |>> (Option.defaultValue t))
 
     let field' =
-        pipe2
+        pipe3
             ((between spaces ws identifier) .>> pchar ':')
             (between ws ws fullType')
-            (fun name type' -> {Name = name; Type = type'} : FieldInfo)
+            (opt (skipString "key") .>> ws)
+            (fun name type' isKey -> {|Name = name; Type = type'; IsKey = isKey|})
 
     let record' =
         keyword "record" >>.
@@ -64,41 +65,73 @@ module private Impl =
             (identifier .>> ws .>> skipChar '=' .>> spaces)
             (between (pchar '{') (pchar '}' .>> spaces)
                 (sepEndBy field' (pchar ';' <|> newline)))
-            (fun name fields -> Record {Name = name; Fields = fields})
+            (fun name fields -> {| Name = name; Fields = fields |})
 
     let unionCaseField' =
-        pipe2
+        pipe3
             (opt ((between ws ws identifier) .>>? pchar ':'))
             (between ws ws fullType')
-            (fun name type' -> {|Name = name; Type = type'|})
+            (opt (skipString "key") .>> ws)
+            (fun name type' isKey -> {|Name = name; Type = type'; IsKey = isKey|})
 
-    let unionCase' : Parser<RecordInfo,_> =
+    let unionCase' =
         pipe2
             identifier
             (opt (ws1 .>>? (keyword "of") >>. sepBy unionCaseField' (pchar '*')))
-            (fun name fields -> {
-                    Name = name
-                    Fields =
-                        fields
-                        |> Option.defaultValue []
-                        |> List.mapi (fun idx r -> {
-                                    Name = r.Name |> Option.defaultWith (fun () -> $"p{idx+1}")
-                                    Type = r.Type })
-                        })
+            (fun name fields -> {| Name = name; Fields = fields |})
 
     let union' =
         keyword "union" >>.
         pipe2
             (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
             (sepBy1 (between spaces spaces unionCase') (pchar '|') )
-            (fun name cases -> Union {Name = name; Cases = cases})
+            (fun name cases -> {| Name = name; Cases = cases|})
 
     let module' =
         keyword "module" >>.
-        pipe2
             (complexName .>> ts)
-            (many (spaces >>. choice [enum'; record'; union']))
-            (fun name items -> {Name = name; Items = items})
+                >>= (fun moduleName ->
+                    (many (
+                        spaces
+                        >>. choice [
+                            enum' |>> (fun r ->
+                                Enum {
+                                    Name = Types.mergeName moduleName r.Name
+                                    Symbols = r.Symbols
+                                })
+                            record' |>> (fun r ->
+                                Record {
+                                    Name = Types.mergeName moduleName r.Name
+                                    Fields =
+                                        r.Fields
+                                        |> List.map (fun fr ->
+                                            {   Name = fr.Name
+                                                Type = fr.Type
+                                                IsKey = fr.IsKey |> Option.map (fun _ -> true) |> Option.defaultValue false
+                                            })
+                                })
+                            union' |>> (fun r ->
+                                let unionName = Types.mergeName moduleName r.Name
+                                Union {
+                                    Name = unionName
+                                    Cases =
+                                        r.Cases
+                                        |> List.map (fun cr ->
+                                            {   Name = Types.mergeName unionName cr.Name
+                                                Fields =
+                                                    cr.Fields |> Option.map (fun fieldsList ->
+                                                        fieldsList
+                                                        |> List.mapi (fun idx fr ->
+                                                            {   Name = fr.Name |> Option.defaultValue (sprintf "p%d" (idx + 1))
+                                                                Type = fr.Type
+                                                                IsKey = fr.IsKey |> Option.map (fun _ -> true) |> Option.defaultValue false
+                                                            }
+                                                        )
+                                                    ) |> Option.defaultValue []
+                                            })
+                                })]
+                    ) |>> (fun items -> {Name = moduleName; Items = items})
+            ))
 
     let pgenDocument =
         spaces >>. module' .>> spaces .>> eof

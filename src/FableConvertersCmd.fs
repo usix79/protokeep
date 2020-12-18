@@ -7,11 +7,11 @@ open System.IO
 open Types
 open Codegen
 
-let Handler module' locks = function
+let Handler module' locks typesCache = function
     | "-o"::outputFileName::args
     | "--output"::outputFileName::args ->
-        Program.checkLock module' locks
-        |> Result.bind(fun typesCache ->
+        Program.checkLock module' locks typesCache
+        |> Result.bind(fun _ ->
             let fileContent:string = gen module' locks typesCache
             let fileName =
                 if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
@@ -24,7 +24,7 @@ let Handler module' locks = function
                     if (File.Exists coreFileName) then File.ReadAllText(coreFileName) else ""
 
                 let updatedCoreFileText = CoreFsharp.update coreFileText "FableConverterHelpers" helpersBody
-                Console.WriteLine($"Writing fable converters helopers to {coreFileName}")
+                Console.WriteLine($"Writing fable converters helpers to {coreFileName}")
                 File.WriteAllText (coreFileName, updatedCoreFileText)
             )
             Ok () )
@@ -33,7 +33,7 @@ let Handler module' locks = function
 let Instance = {
     Name = "fable-converters"
     Description = """
-generate converters between protobuf's json and fsharp types for fable environment: fable-converters [-o|--output] outputFile
+generate converters between protobuf's json and fsharp types for fable environment: fable-converters [-o|--output] outputFile [--update-commons | --update-commons-in commonsFile]
                 !!! Do not forget to add package Fable.SimpleJson"""
     Run = Handler
 }
@@ -50,33 +50,32 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
 
     let rec genItem = function
     | Enum info ->
-        let fullNameTxt = Types.mergeName ns info.Name |> dottedName
-        line txt $"    static member Default{info.Name} ="
+        let fullNameTxt = info.Name |> dottedName
+        line txt $"    static member Default{firstName info.Name} ="
         line txt $"        lazy {fullNameTxt}.Unknown"
 
-        line txt $"    static member {info.Name}FromString = function"
+        line txt $"    static member {firstName info.Name}FromString = function"
         for symbol in info.Symbols do
-            line txt $"        | \"{info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
+            line txt $"        | \"{firstName info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
         line txt $"        | _ -> {fullNameTxt}.Unknown"
 
-        line txt $"    static member {info.Name}ToString = function"
+        line txt $"    static member {firstName info.Name}ToString = function"
         for symbol in info.Symbols do
-            line txt $"        | {fullNameTxt}.{symbol} -> \"{info.Name}{symbol}\""
+            line txt $"        | {fullNameTxt}.{symbol} -> \"{firstName info.Name}{symbol}\""
         line txt $"        | _ -> \"Unknown\""
 
     | Record info ->
-        let typeName = Types.mergeName ns info.Name
-        let fullNameTxt = typeName |> dottedName
-        let lockItems = messageLockCache.[typeName].LockItems
+        let fullNameTxt = info.Name |> dottedName
+        let lockItems = messageLockCache.[info.Name].LockItems
 
-        line txt $"    static member Default{info.Name}: Lazy<{fullNameTxt}> ="
+        line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
         line txt $"        lazy {{"
         lockItems |> Seq.iter (function
             | Field fieldLock ->  line txt $"            {fieldLock.Name} = {defValue false fieldLock.Type}"
             | OneOf (name,unionName, _) -> line txt $"            {name} = {dottedName unionName}.Unknown" )
         line txt $"        }}"
 
-        line txt $"    static member {info.Name}FromJson (json: Json): {fullNameTxt} ="
+        line txt $"    static member {firstName info.Name}FromJson (json: Json): {fullNameTxt} ="
         readObject "v" lockItems
 
         line txt $"        {{"
@@ -89,15 +88,13 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
             | OneOf (name, _, _) -> line txt $"            {name} = v{name}" )
         line txt $"        }}"
 
-        line txt $"    static member {info.Name}ToJson (x: {fullNameTxt}) ="
+        line txt $"    static member {firstName info.Name}ToJson (x: {fullNameTxt}) ="
         writeObject "x." lockItems
 
     | Union info ->
-        let typeName = Types.mergeName ns info.Name
         for case in info.Cases do
-            let caseTypeName = Types.mergeName typeName case.Name
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
-            let lockItems = messageLockCache.[caseTypeName].LockItems
+            let lockItems = messageLockCache.[case.Name].LockItems
 
             match lockItems with
             | Types.MultiParamCase ->
@@ -106,7 +103,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                     |> List.map Types.messageLockItemName
                     |> String.concat ","
 
-                line txt $"    static member {info.Name}Case{case.Name}FromJson (json: Json) ="
+                line txt $"    static member {firstName info.Name}Case{firstName case.Name}FromJson (json: Json) ="
                 readObject "" lockItems
 
                 let convertedValues =
@@ -120,9 +117,9 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                         | OneOf (name, _, _) -> name)
                     |> String.concat ","
 
-                line txt $"        {caseTypeName |> dottedName} ({convertedValues})"
+                line txt $"        {case.Name |> dottedName} ({convertedValues})"
 
-                line txt $"    static member {info.Name}Case{case.Name}ToJson ({fieldsNames}) ="
+                line txt $"    static member {firstName info.Name}Case{firstName case.Name}ToJson ({fieldsNames}) ="
                 writeObject "" lockItems
             | _ -> ()
     and readObject prefix lockItems =

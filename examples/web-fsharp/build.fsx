@@ -18,6 +18,7 @@ let pgenFile = "domain.pgen"
 let protoClassesDir = "./ProtoClasses/"
 let protoFile = protoClassesDir + "Domain.proto"
 let fsharpTypesFile = "./server/Domain.fs"
+let fsharpCommonsFile = "./server/Protogen.fs"
 let fsharpConvertersFile = "./server/DomainConverters.fs"
 let fsharpTypesFileClient = "./client/Domain.fs"
 let fableConvertersFile = "./client/DomainConverters.fs"
@@ -54,10 +55,10 @@ Target.create "Gen" (fun _ ->
     dotnet "build" protogenDirectory
     dotnetWithArgs [pgenFile; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "proto"; "-o"; protoFile] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFile] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFile; "fsharp-converters"; "-o"; fsharpConvertersFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-converters"; "-o"; fsharpConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFileClient] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFile; "fable-converters"; "-o"; fableConvertersFile; "update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fable-converters"; "-o"; fableConvertersFile; "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
 
     dotnetWithArgs [pgenFileForBetting; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "proto"; "-o"; protoFileForBetting] protogenDll __SOURCE_DIRECTORY__

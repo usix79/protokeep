@@ -1,4 +1,5 @@
 module rec Betting
+open Protogen.FsharpTypes
 type OutcomeResult =
     | Unknown = 0
     | Win = 1
@@ -21,15 +22,27 @@ type Handicap = {
     Win1 : Betting.Outcome
     Win2 : Betting.Outcome
 }
+with
+    static member MakeKey (value': decimal) =
+        Key.Value (value'.ToString())
+    member x.Key = Handicap.MakeKey (x.Value)
 type Total = {
     Value : decimal
     Over : Betting.Outcome
     Under : Betting.Outcome
 }
+with
+    static member MakeKey (value': decimal) =
+        Key.Value (value'.ToString())
+    member x.Key = Total.MakeKey (x.Value)
 type Score = {
     S1 : int
     S2 : int
 }
+with
+    static member MakeKey (s1': int, s2': int) =
+        Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
+    member x.Key = Score.MakeKey (x.S1, x.S2)
 type ScoreOutcome = {
     Score : Betting.Score
     Outcome : Betting.Outcome
@@ -63,3 +76,7 @@ type MarketItem = {
     Market : Betting.Market
     Status : Betting.Status
 }
+with
+    static member MakeKey (statistic': Betting.Statistic, period': Betting.Period, marketKey: Key) =
+        Key.Items [Key.Value ((int statistic').ToString()); Key.Value ((int period').ToString()); Key.Inner marketKey]
+    member x.Key = MarketItem.MakeKey (x.Statistic, x.Period, x.Market.Key)

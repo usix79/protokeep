@@ -10,19 +10,9 @@ let assertEqual expected actual =
         NotEqualException (sprintf "%A" expected, sprintf "%A" actual) |> raise
 
 [<Fact>]
-let ``Duplicate Enums`` () =
-    let input = {Name = ComplexName ["Domain"]; Items = [
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
-    let lock = []
-    let expected = Error [ Types.DuplicateTypeNames (ComplexName ["TrafficLight"; "Domain"])]
-
-    assertEqual expected (Types.lock input lock)
-
-[<Fact>]
 let ``Duplicate Locked Enums`` () =
     let input = {Name = ComplexName ["Domain"]; Items = [
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
+        Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
         ]}
     let lock = [
         EnumLock {
@@ -41,22 +31,22 @@ let ``Duplicate Locked Enums`` () =
             ]}]
     let expected = Error [ Types.DuplicateLockedTypeNames (ComplexName ["TrafficLight"; "Domain"])]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let ``Duplicate Symbols in Enum`` () =
     let input = {Name = ComplexName ["Domain"]; Items = [
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
+        Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
         ]}
     let lock = []
     let expected = Error [ Types.DuplicateSymbolsInEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let ``Duplicate Symbols in Locked Enum`` () =
     let input = {Name = ComplexName ["Domain"]; Items = [
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
+        Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}
         ]}
     let lock = [
         EnumLock {
@@ -69,12 +59,12 @@ let ``Duplicate Symbols in Locked Enum`` () =
             ]}]
     let expected = Error [ Types.DuplicateSymbolsInLockedEnum (ComplexName ["TrafficLight"; "Domain"], "Yellow")]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let ``Missed Symbol in Enum`` () =
     let input = {Name = ComplexName ["Domain"]; Items = [
-        Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}
+        Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}
         ]}
     let lock = [
         EnumLock {
@@ -87,11 +77,11 @@ let ``Missed Symbol in Enum`` () =
             ]}]
     let expected = Error [ Types.MissedSymbolInEnum (ComplexName ["TrafficLight"; "Domain"], "Blue")]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let ``Single Enum`` () =
-    let input = {Name = ComplexName ["Domain"]; Items = [Enum {Name = "TrafficLight"; Symbols = ["Red"; "Yellow"; "Green"]}]}
+    let input = {Name = ComplexName ["Domain"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
     let lock = []
     let expected = Ok [
         EnumLock {
@@ -103,29 +93,17 @@ let ``Single Enum`` () =
             ]}
         ]
 
-    assertEqual expected (Types.lock input lock)
-
-[<Fact>]
-let ``Unknown type of record's field`` () =
-    let input = {
-        Name = ComplexName ["Domain"]
-        Items = [
-            Record {Name = "Simple"; Fields = [{Name= "Id"; Type = Complex (ComplexName ["XXX"])}]}
-        ]}
-    let lock = []
-    let expected = Error [ Types.UnknownFieldType (ComplexName ["Simple"; "Domain"], "Id", ComplexName ["XXX"])]
-
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let ``Simple Record`` () =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Crossroad"; Fields = [
-                {Name= "Id"; Type = Int}
-                {Name= "Street1"; Type = String}
-                {Name= "Street2"; Type = String}
+            Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Int; IsKey = false}
+                {Name= "Street1"; Type = String; IsKey = false}
+                {Name= "Street2"; Type = String; IsKey = false}
                 ]}
         ]}
     let lock = []
@@ -139,7 +117,7 @@ let ``Simple Record`` () =
             ]}
         ]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 
 [<Fact>]
@@ -147,16 +125,16 @@ let ``Union`` () =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Log"; Fields = [
-                {Name= "Id"; Type = Int}
-                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]}
+            Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Int; IsKey = false}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false}
                 ]}
-            Union {Name = "ServiceCheck"; Cases = [
-                {Name = "Random"; Fields = []}
-                {Name = "Planned"; Fields = [
-                    {Name = "What"; Type = String}
-                    {Name = "Where"; Type = String}
-                    {Name = "When"; Type = Timestamp}
+            Union {Name = ComplexName ["ServiceCheck"; "Domain"]; Cases = [
+                {Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]; Fields = []}
+                {Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]; Fields = [
+                    {Name = "What"; Type = String; IsKey = false}
+                    {Name = "Where"; Type = String; IsKey = false}
+                    {Name = "When"; Type = Timestamp; IsKey = false}
                     ]}
             ]}
         ]}
@@ -182,16 +160,16 @@ let ``Union`` () =
                 Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let ``Missed Field Record`` () =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Crossroad"; Fields = [
-                {Name= "Id"; Type = Int}
-                {Name= "Street1"; Type = String}
+            Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Int; IsKey = false}
+                {Name= "Street1"; Type = String; IsKey = false}
                 ]}
         ]}
     let lock = [
@@ -206,7 +184,7 @@ let ``Missed Field Record`` () =
 
     let expected = Error [ Types.MissedFieldInRecord (ComplexName ["Crossroad"; "Domain"], "Street2") ]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 
 [<Fact>]
@@ -214,10 +192,10 @@ let ``Acceptable Evolutionof a Field's Type`` () =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Crossroad"; Fields = [
-                {Name= "Id"; Type = Long}
-                {Name= "Street1"; Type = String}
-                {Name= "Street2"; Type = String}
+            Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Long; IsKey = false}
+                {Name= "Street1"; Type = String; IsKey = false}
+                {Name= "Street2"; Type = String; IsKey = false}
                 ]}
         ]}
     let lock = [
@@ -239,17 +217,17 @@ let ``Acceptable Evolutionof a Field's Type`` () =
                 Field {Name = "Street2"; Type = String; Num = 3}
             ]}
         ]
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let UnacceptableEvolutionOfAFieldType () =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Crossroad"; Fields = [
-                {Name= "Id"; Type = Guid}
-                {Name= "Street1"; Type = String}
-                {Name= "Street2"; Type = String}
+            Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Guid; IsKey = false}
+                {Name= "Street1"; Type = String; IsKey = false}
+                {Name= "Street2"; Type = String; IsKey = false}
                 ]}
         ]}
     let lock = [
@@ -264,7 +242,7 @@ let UnacceptableEvolutionOfAFieldType () =
 
     let expected = Error [ Types.UnacceptableEvolution(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 
 [<Fact>]
@@ -272,12 +250,12 @@ let MissedFieldInUnion() =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Log"; Fields = [
-                {Name= "Id"; Type = Int}
-                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]}
+            Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Int; IsKey = false}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false}
                 ]}
-            ModuleItem.Union {Name = "ServiceCheck"; Cases = [
-                {Name = "Random"; Fields = []}
+            ModuleItem.Union {Name = ComplexName ["ServiceCheck"; "Domain"]; Cases = [
+                {Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]; Fields = []}
             ]}
         ]}
     let lock = [
@@ -303,25 +281,25 @@ let MissedFieldInUnion() =
 
     let expected = Error [ Types.MissedCaseInUnion (ComplexName ["Log"; "Domain"], ComplexName ["ServiceCheck"; "Domain"], "Planned")]
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
 
 [<Fact>]
 let AddFieldInUnion() =
     let input = {
         Name = ComplexName ["Domain"]
         Items = [
-            Record {Name = "Log"; Fields = [
-                {Name= "Id"; Type = Int}
-                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]}
+            Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
+                {Name= "Id"; Type = Int; IsKey = false}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false}
                 ]}
-            ModuleItem.Union {Name = "ServiceCheck"; Cases = [
-                {Name = "Random"; Fields = []}
-                {Name = "Planned"; Fields = [
-                    { Name = "What"; Type = String};
-                    { Name = "Where"; Type = String};
-                    { Name = "When"; Type = Timestamp}
+            ModuleItem.Union {Name = ComplexName ["ServiceCheck"; "Domain"]; Cases = [
+                {Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]; Fields = []}
+                {Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]; Fields = [
+                    { Name = "What"; Type = String; IsKey = false};
+                    { Name = "Where"; Type = String; IsKey = false};
+                    { Name = "When"; Type = Timestamp; IsKey = false}
                 ]}
-                {Name = "NewCase"; Fields = []}
+                {Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]; Fields = []}
             ]}
         ]}
     let lock = [
@@ -371,4 +349,4 @@ let AddFieldInUnion() =
         ]
 
 
-    assertEqual expected (Types.lock input lock)
+    assertEqual expected (Types.lock input lock (input |> Types.toTypesCacheItems |> Map.ofList))
