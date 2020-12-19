@@ -38,11 +38,7 @@ generate converters between protobuf's json and fsharp types for fable environme
     Run = Handler
 }
 
-let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
-    let enumLocksCache =
-        locks |> List.choose(function EnumLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
-    let messageLockCache =
-        locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
+let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
     let txt = StringBuilder()
 
@@ -66,7 +62,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
 
     | Record info ->
         let fullNameTxt = info.Name |> dottedName
-        let lockItems = messageLockCache.[info.Name].LockItems
+        let lockItems = locks.Message(info.Name).LockItems
 
         line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
         line txt $"        lazy {{"
@@ -94,7 +90,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Union info ->
         for case in info.Cases do
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
-            let lockItems = messageLockCache.[case.Name].LockItems
+            let lockItems = locks.Message(case.Name).LockItems
 
             match lockItems with
             | Types.MultiParamCase ->
@@ -133,18 +129,18 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
             | Field fieldLock ->
                 let vName = prefix + fieldLock.Name
                 let suffix = match fieldLock.Type with Optional _ -> "Value" | _ -> ""
-                line txt $"            | \"{firstCharToUpper fieldLock.Name}{suffix}\" -> pair.Value |> {unpackField enumLocksCache vName fieldLock.Type}"
+                line txt $"            | \"{firstCharToUpper fieldLock.Name}{suffix}\" -> pair.Value |> {unpackField locks vName fieldLock.Type}"
             | OneOf (name, unionName, cases) ->
                 let vName = prefix + name
                 for case in cases do
                     let caseMessageType = Types.mergeName unionName case.CaseName
-                    let caseMessageLock = messageLockCache.[caseMessageType]
+                    let caseMessageLock = locks.Message(caseMessageType)
                     let rightValue =
                         match caseMessageLock.LockItems with
                         | Types.EmptyCase -> $"ifBool (fun v -> {vName} <- {dottedName unionName}.{case.CaseName})"
                         | Types.SingleParamCase fieldInfo ->
                             let rightOp = $" |> {dottedName caseMessageType}"
-                            $"{unpackField' rightOp enumLocksCache vName fieldInfo.Type}"
+                            $"{unpackField' rightOp locks vName fieldInfo.Type}"
                         | Types.MultiParamCase  -> $"(fun v -> {vName} <- v |> Convert{lastNames unionName |> solidName}.{firstName unionName}Case{case.CaseName}FromJson)"
                     line txt $"            | \"{firstCharToUpper  name}{case.CaseName}\" -> pair.Value |> {rightValue}"
                 )
@@ -158,14 +154,14 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                 | Optional t ->
                     let inner = "v"
                     line txt $"           match {vName} with"
-                    line txt $"           | Some v -> \"{fieldLock.Name}Value\", {packField enumLocksCache inner t}"
+                    line txt $"           | Some v -> \"{fieldLock.Name}Value\", {packField locks inner t}"
                     line txt $"           | None -> ()"
-                | _ -> line txt $"           \"{firstCharToUpper fieldLock.Name}\", {packField enumLocksCache vName fieldLock.Type}"
+                | _ -> line txt $"           \"{firstCharToUpper fieldLock.Name}\", {packField locks vName fieldLock.Type}"
             | OneOf (name, unionName, cases) ->
                 line txt $"           match {prefix}{name} with"
                 for case in cases do
                     let caseMessageType = Types.mergeName unionName case.CaseName
-                    let caseMessageLock = messageLockCache.[caseMessageType]
+                    let caseMessageLock = locks.Message(caseMessageType)
 
                     let values =
                         caseMessageLock.LockItems
@@ -179,7 +175,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                     let jsonConstructor =
                         match caseMessageLock.LockItems with
                         | Types.EmptyCase -> "JBool (true)"
-                        | Types.SingleParamCase fieldInfo -> $"{packField enumLocksCache values fieldInfo.Type}"
+                        | Types.SingleParamCase fieldInfo -> $"{packField locks values fieldInfo.Type}"
                         | Types.MultiParamCase  -> $"Convert{lastNames unionName |> solidName}.{firstName unionName}Case{case.CaseName}ToJson ({values})"
                     line txt $"{condition} -> \"{firstCharToUpper name}{case.CaseName}\", {jsonConstructor}"
 
@@ -213,7 +209,7 @@ let rec defValue isMutable = function
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
 
-let unpackField' rightOp (enumLockCache:Map<ComplexName,EnumLock>) vName =
+let unpackField' rightOp (locks:LocksCollection) vName =
     let rec f leftOp rightOp = function
         | Bool -> $"ifBool (fun v -> {leftOp}v{rightOp})"
         | String -> $"ifString (fun v -> {leftOp}v{rightOp})"
@@ -231,7 +227,7 @@ let unpackField' rightOp (enumLockCache:Map<ComplexName,EnumLock>) vName =
             let inner = f "" $" |> fun v -> {vName}.Add(key, v)" t
             $"ifObject (Map.iter (fun key -> {inner}))"
         | Complex typeName ->
-            if enumLockCache.ContainsKey typeName then
+            if locks.IsEnum typeName then
                 $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
             else
                 $"ifObject (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
@@ -240,7 +236,7 @@ let unpackField' rightOp (enumLockCache:Map<ComplexName,EnumLock>) vName =
 
 let unpackField = unpackField' ""
 
-let packField (enumLockCache:Map<ComplexName,EnumLock>) (vName:string) type' =
+let packField (locks:LocksCollection) (vName:string) type' =
     let rec f vName = function
         | Bool -> $"JBool ({vName})"
         | String -> $"JString ({vName})"
@@ -258,7 +254,7 @@ let packField (enumLockCache:Map<ComplexName,EnumLock>) (vName:string) type' =
             let inner = f "v" t
             $"JObject ({vName} |> Map.map (fun _ v -> {inner}))"
         | Complex typeName ->
-            if enumLockCache.ContainsKey typeName then
+            if locks.IsEnum typeName then
                 $"JString ({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToString)"
             else
                 $"({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToJson)"

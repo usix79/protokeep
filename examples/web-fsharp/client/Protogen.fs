@@ -37,3 +37,10 @@ module FableConverterHelpers =
     let fromTimeSpan (v:System.TimeSpan) =
         sprintf "%d.%ds" (int64 v.TotalSeconds) v.Milliseconds
 
+module FsharpTypes =
+
+    type Key =
+        | Value of string
+        | Items of Key list
+        | Inner of Key
+

@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <Compile Include="Protogen.fs" />
-    <Compile Include="Betting2.fs" />
     <Compile Include="Betting.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="Logic.fs" />

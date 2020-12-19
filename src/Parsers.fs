@@ -11,6 +11,7 @@ module private Impl =
     let ts<'u> : Parser<_,'u> = ws >>. (skipNewline <|> eof)  // trailing spaces
     let keyword name = pstring name >>. ws1
 
+    let boolOfOpt = Option.map (fun _ -> true) >> Option.defaultValue false
 
     let identifier =
         let isIdentifierFirstChar c = isLetter c || c = '_'
@@ -45,7 +46,7 @@ module private Impl =
 
     let fullType' =
         type' >>= (fun t ->
-            ws >>.
+            ws >>?
             opt (choice[
                     skipString "option" |>> (fun () -> Optional t)
                     skipString "array" |>> (fun () -> Array t)
@@ -107,7 +108,7 @@ module private Impl =
                                         |> List.map (fun fr ->
                                             {   Name = fr.Name
                                                 Type = fr.Type
-                                                IsKey = fr.IsKey |> Option.map (fun _ -> true) |> Option.defaultValue false
+                                                IsKey = boolOfOpt fr.IsKey
                                             })
                                 })
                             union' |>> (fun r ->
@@ -124,7 +125,7 @@ module private Impl =
                                                         |> List.mapi (fun idx fr ->
                                                             {   Name = fr.Name |> Option.defaultValue (sprintf "p%d" (idx + 1))
                                                                 Type = fr.Type
-                                                                IsKey = fr.IsKey |> Option.map (fun _ -> true) |> Option.defaultValue false
+                                                                IsKey = boolOfOpt fr.IsKey
                                                             }
                                                         )
                                                     ) |> Option.defaultValue []
@@ -145,7 +146,7 @@ module private Impl =
                     pipe2
                         identifier
                         ((between ws ws (pchar '=')) >>. pint32 .>> ts )
-                        (fun value' num -> {Name = value'; Num = num}))))
+                        (fun value' num -> {Name = value'; Num = num} : EnumValueLock))))
             (fun name values -> EnumLock {Name = name; Values = values})
 
     let messageField =
@@ -178,8 +179,38 @@ module private Impl =
             (many (ws >>. choice [messageField; messageOneOf]))
             (fun name items -> MessageLock {Name = name; LockItems = items})
 
+    let recordFieldLock =
+        keyword "field" >>.
+        pipe4
+            (identifier .>> ws1)
+            (between ws ws fullType')
+            (opt (skipString "key") .>> ws)
+            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
+            (fun name type' isKey num -> {Name = name; Type = type'; IsKey = boolOfOpt isKey ; Num = num})
+
+    let recordLock =
+        keyword "record" >>.
+        pipe2
+            (complexName .>> ts)
+            (many (ws >>. recordFieldLock))
+            (fun name items -> RecordLock {Name = name; Fields = items})
+
+    let unionCaseLock =
+        keyword "case" >>.
+        pipe2
+            (identifier .>> ws1)
+            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
+            (fun name num -> {Name = name; Num = num} : UnionCaseLock)
+
+    let unionLock =
+        keyword "union" >>.
+        pipe2
+            (complexName .>> ts)
+            (many (ws >>. unionCaseLock))
+            (fun name items -> UnionLock {Name = name; Cases = items})
+
     let lockDocument =
-        spaces >>. many (choice [enumLock; messageLock] .>> spaces) .>> eof
+        spaces >>. many (choice [enumLock; recordLock; unionLock; messageLock] .>> spaces) .>> eof
 
     let fsharpCoreDocument =
         spaces >>. pstring "namespace" >>. ws1 >>. pstring "Protogen" >>. skipRestOfLine true >>.

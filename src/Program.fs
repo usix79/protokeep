@@ -56,7 +56,7 @@ Protogen tool
                             |> Result.bind(fun locks ->
                                 let args = if cmd.Name = "lock" then lockFileName::args else args // special case for lock cmd
                                 let typesCache = Types.toTypesCacheItems module' |> Map.ofList
-                                cmd.Run module' locks typesCache args ))
+                                cmd.Run module' (LocksCollection(locks)) typesCache args ))
                     )
             ))
         match res with

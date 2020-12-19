@@ -57,13 +57,12 @@ Target.create "Gen" (fun _ ->
     dotnetWithArgs [pgenFile; "proto"; "-o"; protoFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fsharp-converters"; "-o"; fsharpConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFileClient] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFileClient;  "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fable-converters"; "-o"; fableConvertersFile; "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
 
     dotnetWithArgs [pgenFileForBetting; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "proto"; "-o"; protoFileForBetting] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "fsharp-types"; "-o"; fsharpTypesFileForBetting] protogenDll __SOURCE_DIRECTORY__
-
 )
 
 Target.create "Build" (fun _ ->

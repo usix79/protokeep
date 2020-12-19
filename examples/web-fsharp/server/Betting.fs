@@ -12,6 +12,19 @@ type Outcome =
     | Priced of price:decimal
     | PricedWithProb of price:decimal*prob:float32
     | Resulted of result:Betting.OutcomeResult
+with
+    static member MakeUnknownKey () = Key.Value "0"
+    static member MakeEmptyKey () = Key.Value "1"
+    static member MakePricedKey () = Key.Value "2"
+    static member MakePricedWithProbKey () = Key.Value "3"
+    static member MakeResultedKey () = Key.Value "4"
+    member x.Key =
+        match x with
+        | Unknown -> Outcome.MakeUnknownKey ()
+        | Empty -> Outcome.MakeEmptyKey ()
+        | Priced (price') -> Outcome.MakePricedKey ()
+        | PricedWithProb (price', prob') -> Outcome.MakePricedWithProbKey ()
+        | Resulted (result') -> Outcome.MakeResultedKey ()
 type Winner3Way = {
     Win1 : Betting.Outcome
     Draw : Betting.Outcome
@@ -56,6 +69,19 @@ type Market =
     | Handicap of p1:Betting.Handicap
     | Total of p1:Betting.Total
     | CorrectScore of p1:Betting.CorrectScore
+with
+    static member MakeUnknownKey () = Key.Value "0"
+    static member MakeWinner3WayKey () = Key.Value "1"
+    static member MakeHandicapKey (p1Key: Key) = Key.Items [Key.Value "2"; Key.Inner p1Key]
+    static member MakeTotalKey (p1Key: Key) = Key.Items [Key.Value "3"; Key.Inner p1Key]
+    static member MakeCorrectScoreKey () = Key.Value "4"
+    member x.Key =
+        match x with
+        | Unknown -> Market.MakeUnknownKey ()
+        | Winner3Way (p1') -> Market.MakeWinner3WayKey ()
+        | Handicap (p1') -> Market.MakeHandicapKey (p1'.Key)
+        | Total (p1') -> Market.MakeTotalKey (p1'.Key)
+        | CorrectScore (p1') -> Market.MakeCorrectScoreKey ()
 type Period =
     | Unknown = 0
     | Half1 = 1

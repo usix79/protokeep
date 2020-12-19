@@ -1,3 +1,29 @@
+union Domain.Op
+    case Val = 1
+    case Sum = 2
+    case Mul = 3
+    case Div = 4
+    case Ln = 5
+    case Quantum = 6
+    case Zero = 7
+record Domain.Op.Val
+    field p1 int = 1
+record Domain.Op.Sum
+    field p1 Domain.Op = 1
+    field p2 Domain.Op = 2
+record Domain.Op.Mul
+    field p1 Domain.Op = 1
+    field p2 Domain.Op = 2
+record Domain.Op.Div
+    field p1 Domain.Op = 1
+    field p2 Domain.Op = 2
+record Domain.Op.Ln
+    field p1 Domain.Op = 1
+record Domain.Op.Quantum
+    field p1 Domain.Op = 1
+    field p2 Domain.Op = 2
+    field p3 string = 3
+record Domain.Op.Zero
 message Domain.Op.Val
     field p1 int = 1
 message Domain.Op.Sum
@@ -79,10 +105,25 @@ message Domain.Op.Quantum
         case Zero = 14
     field p3 string = 15
 message Domain.Op.Zero
+union Domain.OpError
+    case General = 1
+    case DivisionByZero = 2
+    case NotSupported = 3
+record Domain.OpError.General
+    field p1 string = 1
+record Domain.OpError.DivisionByZero
+record Domain.OpError.NotSupported
 message Domain.OpError.General
     field p1 string = 1
 message Domain.OpError.DivisionByZero
 message Domain.OpError.NotSupported
+union Domain.OpResult
+    case Success = 1
+    case Fail = 2
+record Domain.OpResult.Success
+    field p1 int = 1
+record Domain.OpResult.Fail
+    field p1 Domain.OpError = 1
 message Domain.OpResult.Success
     field p1 int = 1
 message Domain.OpResult.Fail
@@ -90,6 +131,9 @@ message Domain.OpResult.Fail
         case General = 1
         case DivisionByZero = 2
         case NotSupported = 3
+record Domain.Request
+    field Token string = 1
+    field Operation Domain.Op = 2
 message Domain.Request
     field Token string = 1
     oneof Operation Domain.Op
@@ -100,6 +144,13 @@ message Domain.Request
         case Ln = 6
         case Quantum = 7
         case Zero = 8
+record Domain.Response
+    field Token string = 1
+    field Result Domain.OpResult = 2
+    field ExecutionTime duration = 3
+    field Extra string option = 4
+    field Since timestamp = 5
+    field Tags string map = 6
 message Domain.Response
     field Token string = 1
     oneof Result Domain.OpResult

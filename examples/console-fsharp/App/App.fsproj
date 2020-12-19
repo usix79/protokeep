@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Protogen.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="DomainConverters.fs" />
     <Compile Include="Program.fs" />

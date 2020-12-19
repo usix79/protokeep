@@ -20,20 +20,13 @@ let Handler module' locks typesCache = function
             Ok () )
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
-
 let Instance = {
     Name = "proto"
     Description = "generate protobuf description: proto [-o|--output] outputFile"
     Run = Handler
 }
 
-let gen (module':Module) (locks:LockItem list) =
-
-    let enumLocksCache =
-        locks |> List.choose(function EnumLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
-    let messageLockCache =
-        locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
-
+let gen (module':Module) (locks:LocksCollection) =
     let txt = StringBuilder()
 
     let rec genItem ns = function
@@ -41,14 +34,14 @@ let gen (module':Module) (locks:LockItem list) =
         let name = firstName info.Name
         line txt $"enum {name} {{"
         line txt $"    {name}Unknown = 0;"
-        for symbol in enumLocksCache.[info.Name].Values do
+        for symbol in locks.Enum(info.Name).Values do
             line txt $"    {name}{symbol.Name} = {symbol.Num};"
         line txt $"}}"
     | Record info -> genRecord (firstName info.Name) info
     | Union info ->
         for case in info.Cases do
             let needRecord =
-                match messageLockCache.[case.Name].LockItems with
+                match locks.Message(case.Name).LockItems with
                 | Types.EmptyCase -> false
                 | Types.SingleParamCase _ -> false
                 | Types.MultiParamCase -> true
@@ -58,7 +51,7 @@ let gen (module':Module) (locks:LockItem list) =
                 genRecord recordName case
     and genRecord recordName info =
         line txt $"message {recordName} {{"
-        for item in messageLockCache.[info.Name].LockItems do
+        for item in locks.Message(info.Name).LockItems do
             match item with
             | Field info ->
                 match info.Type with
@@ -69,7 +62,7 @@ let gen (module':Module) (locks:LockItem list) =
             | OneOf (name,unionName,fields) ->
                 line txt $"    oneof {firstCharToUpper name} {{"
                 for fieldLock in fields do
-                    let fieldMessage = messageLockCache.[Types.mergeName unionName fieldLock.CaseName]
+                    let fieldMessage = locks.Message(Types.mergeName unionName fieldLock.CaseName)
                     let fieldTypeName =
                         match fieldMessage.LockItems with
                         | Types.EmptyCase -> "bool" // empty case would be bool
@@ -82,7 +75,7 @@ let gen (module':Module) (locks:LockItem list) =
     line txt """syntax = "proto3";"""
     line txt $"package {dottedName module'.Name};"
     line txt $"option csharp_namespace = \"ProtoClasses.{dottedName module'.Name}\";";
-    for reference in references messageLockCache module' do
+    for reference in references locks module' do
         if reference <> module'.Name then
             line txt $"import \"{dottedName reference}\";"
 
@@ -107,7 +100,7 @@ let rec typeToString (type':Type) =
     | Map v -> $"map<string,{typeToString v}>"
     | Complex ns -> dottedName ns
 
-let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module) =
+let references (locks : LocksCollection) (module':Module) =
     let set = Collections.Generic.HashSet<ComplexName>()
 
     let rec typeReference = function
@@ -125,7 +118,7 @@ let references (messageLockCache : Map<ComplexName,MessageLock>) (module':Module
         | Union info ->
             info.Cases |> List.iter fRecord
     and fRecord info =
-        messageLockCache.[info.Name].LockItems
+        locks.Message(info.Name).LockItems
         |> List.choose (function
             | Field x -> typeReference x.Type
             | OneOf (_,unionName,_) -> Types.extractNamespace unionName |> Some )

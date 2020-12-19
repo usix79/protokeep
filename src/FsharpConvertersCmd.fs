@@ -26,9 +26,7 @@ let Instance = {
     Run = Handler
 }
 
-let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
-    let messageLockCache =
-        locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
+let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
     let txt = StringBuilder()
 
@@ -54,7 +52,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Record info ->
         let fullNameTxt = info.Name |> dottedName
         let fullNameOfProtoClass = "ProtoClasses." + fullNameTxt
-        let lockItems = messageLockCache.[info.Name].LockItems
+        let lockItems = locks.Message(info.Name).LockItems
 
 
         fromProtobuf fullNameTxt
@@ -73,9 +71,9 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Union info ->
         let fullNameTxt = info.Name |> dottedName
         for case in info.Cases do
-            let fullCaseNameTxt = $"ProtoClasses.{fullNameTxt}__{case.Name}"
+            let fullCaseNameTxt = $"ProtoClasses.{fullNameTxt}__{firstName case.Name}"
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
-            let lockItems = messageLockCache.[case.Name].LockItems
+            let lockItems = locks.Message(case.Name).LockItems
 
             match lockItems with
             | Types.MultiParamCase ->
@@ -88,7 +86,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                 line txt $"        {case.Name |> dottedName}"
                 line txt $"            ({values})"
 
-                line txt $"    static member {info.Name}Case{case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
+                line txt $"    static member {firstName info.Name}Case{firstName case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
                 line txt $"        let y = {fullCaseNameTxt}()"
                 lockItems |> List.iter (fun item ->
                     let itemName = Types.messageLockItemName item
@@ -109,7 +107,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
               $"                match x.{name}Case with"
               for case in cases do
                 let caseTypeName = Types.mergeName unionName case.CaseName
-                let caseMessageLock = messageLockCache.[caseTypeName]
+                let caseMessageLock = locks.Message(caseTypeName)
                 let rightValue =
                     match caseMessageLock.LockItems with
                     | Types.EmptyCase -> $"{dottedName unionName}.{case.CaseName}"
@@ -142,7 +140,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
         | OneOf (_,unionName,cases) ->
             line txt $"        match {xName} with"
             for case in cases do
-                let caseMessageLock = messageLockCache.[Types.mergeName unionName case.CaseName]
+                let caseMessageLock = locks.Message(Types.mergeName unionName case.CaseName)
 
                 let values =
                     caseMessageLock.LockItems

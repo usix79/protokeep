@@ -3,6 +3,19 @@ enum Betting.OutcomeResult
     value Lose = 2
     value Void = 3
     value Canceled = 4
+union Betting.Outcome
+    case Empty = 1
+    case Priced = 2
+    case PricedWithProb = 3
+    case Resulted = 4
+record Betting.Outcome.Empty
+record Betting.Outcome.Priced
+    field price decimal(3) = 1
+record Betting.Outcome.PricedWithProb
+    field price decimal(3) = 1
+    field prob float = 2
+record Betting.Outcome.Resulted
+    field result Betting.OutcomeResult = 1
 message Betting.Outcome.Empty
 message Betting.Outcome.Priced
     field price decimal(3) = 1
@@ -11,6 +24,10 @@ message Betting.Outcome.PricedWithProb
     field prob float = 2
 message Betting.Outcome.Resulted
     field result Betting.OutcomeResult = 1
+record Betting.Winner3Way
+    field Win1 Betting.Outcome = 1
+    field Draw Betting.Outcome = 2
+    field Win2 Betting.Outcome = 3
 message Betting.Winner3Way
     oneof Win1 Betting.Outcome
         case Empty = 1
@@ -27,6 +44,10 @@ message Betting.Winner3Way
         case Priced = 10
         case PricedWithProb = 11
         case Resulted = 12
+record Betting.Handicap
+    field Value decimal(2) key = 1
+    field Win1 Betting.Outcome = 2
+    field Win2 Betting.Outcome = 3
 message Betting.Handicap
     field Value decimal(2) = 1
     oneof Win1 Betting.Outcome
@@ -39,6 +60,10 @@ message Betting.Handicap
         case Priced = 7
         case PricedWithProb = 8
         case Resulted = 9
+record Betting.Total
+    field Value decimal(2) key = 1
+    field Over Betting.Outcome = 2
+    field Under Betting.Outcome = 3
 message Betting.Total
     field Value decimal(2) = 1
     oneof Over Betting.Outcome
@@ -51,9 +76,15 @@ message Betting.Total
         case Priced = 7
         case PricedWithProb = 8
         case Resulted = 9
+record Betting.Score
+    field S1 int key = 1
+    field S2 int key = 2
 message Betting.Score
     field S1 int = 1
     field S2 int = 2
+record Betting.ScoreOutcome
+    field Score Betting.Score = 1
+    field Outcome Betting.Outcome = 2
 message Betting.ScoreOutcome
     field Score Betting.Score = 1
     oneof Outcome Betting.Outcome
@@ -61,8 +92,23 @@ message Betting.ScoreOutcome
         case Priced = 3
         case PricedWithProb = 4
         case Resulted = 5
+record Betting.CorrectScore
+    field Scores Betting.ScoreOutcome array = 1
 message Betting.CorrectScore
     field Scores Betting.ScoreOutcome array = 1
+union Betting.Market
+    case Winner3Way = 1
+    case Handicap = 2
+    case Total = 3
+    case CorrectScore = 4
+record Betting.Market.Winner3Way
+    field p1 Betting.Winner3Way = 1
+record Betting.Market.Handicap
+    field p1 Betting.Handicap key = 1
+record Betting.Market.Total
+    field p1 Betting.Total key = 1
+record Betting.Market.CorrectScore
+    field p1 Betting.CorrectScore = 1
 message Betting.Market.Winner3Way
     field p1 Betting.Winner3Way = 1
 message Betting.Market.Handicap
@@ -82,6 +128,11 @@ enum Betting.Statistic
 enum Betting.Status
     value Open = 1
     value Closed = 2
+record Betting.MarketItem
+    field Statistic Betting.Statistic key = 1
+    field Period Betting.Period key = 2
+    field Market Betting.Market key = 3
+    field Status Betting.Status = 4
 message Betting.MarketItem
     field Statistic Betting.Statistic = 1
     field Period Betting.Period = 2

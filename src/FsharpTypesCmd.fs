@@ -23,7 +23,7 @@ let Handler module' locks typesCache = function
                     if (File.Exists coreFileName) then File.ReadAllText(coreFileName) else ""
 
                 let updatedCoreFileText = CoreFsharp.update coreFileText "FsharpTypes" commonsBody
-                Console.WriteLine($"Writing common fsharp types and helopers to {coreFileName}")
+                Console.WriteLine($"Writing common fsharp types and helpers to {coreFileName}")
                 File.WriteAllText (coreFileName, updatedCoreFileText)
             )
             Ok () )
@@ -35,11 +35,7 @@ let Instance = {
     Run = Handler
 }
 
-let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
-    let enumLocksCache =
-        locks |> List.choose(function EnumLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
-    let messageLockCache =
-        locks |> List.choose(function MessageLock item -> Some(item.Name, item) | _ -> None) |> Map.ofList
+let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
     let txt = StringBuilder()
 
@@ -47,7 +43,7 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
     | Enum info ->
         line txt $"type {firstName info.Name} ="
         line txt "    | Unknown = 0"
-        for symbol in enumLocksCache.[info.Name].Values do
+        for symbol in locks.Enum(info.Name).Values do
             line txt $"    | {symbol.Name} = {symbol.Num}"
     | Record info ->
         line txt $"type {firstName info.Name} = {{"
@@ -68,6 +64,8 @@ let gen (module':Module) (locks:LockItem list) (typesCache:Types.TypesCache) =
                 |> String.concat "*"
                 |> (fun str -> if str <> "" then " of " + str else str)
             line txt $"    | {firstName case.Name}{fieldsStr}"
+        line txt $"with"
+        unionKeyMembers locks typesCache txt info
 
     line txt $"module rec {dottedName module'.Name}"
     line txt "open Protogen.FsharpTypes"
@@ -94,46 +92,72 @@ let rec typeToString (type':Type) =
     | Map v -> $"Map<string,{typeToString v}>"
     | Complex ns -> dottedName ns
 
-let recordKeyMembers (typesCache:TypesCache) txt typeName keyFields =
-    let params' =
-        keyFields
-        |> List.map (fun info ->
-            let pName = info.Name |> firstCharToLower
-            match info.Type with
-            | Types.IsRecord typesCache _
-            | Types.IsUnion typesCache _ -> $"{pName}Key: Key"
-            | _ -> $"{pName}': {typeToString info.Type}" )
+let keyParams (typesCache:TypesCache) (keyFields:FieldInfo list) =
+    keyFields
+    |> List.map (fun info ->
+        let pName = info.Name |> firstCharToLower
+        match info.Type with
+        | Types.IsRecord typesCache _
+        | Types.IsUnion typesCache _ -> $"{pName}Key: Key"
+        | _ -> $"{pName}': {typeToString info.Type}" )
+    |> String.concat ", "
+
+let caseParams (fields:FieldInfo list) =
+    if fields.IsEmpty then ""
+    else
+        fields
+        |> List.map (fun info -> $"{info.Name}'")
         |> String.concat ", "
-    line txt $"    static member MakeKey ({params'}) ="
+        |> (fun txt -> " (" + txt + ")")
 
-    let key =
-        keyFields
-        |> List.map (fun info ->
-            let vName = $"{firstCharToLower info.Name}'"
-            match info.Type with
-            | String -> $"Key.Value ({vName})"
-            | Int | Long | Decimal _ -> $"Key.Value ({vName}.ToString())"
-            | Guid -> $"Key.Value ({vName}.ToString())"
-            | Types.IsRecord typesCache _
-            | Types.IsUnion typesCache _ -> $"Key.Inner {firstCharToLower info.Name}Key"
-            | Types.IsEnum typesCache _ -> $"Key.Value ((int {vName}).ToString())"
-            | wrong -> failwithf "type not supported as key %A" wrong )
-        |> String.concat "; "
+let keyExpression (typesCache:TypesCache) (keyFields:FieldInfo list) =
+    keyFields
+    |> List.map (fun info ->
+        let vName = $"{firstCharToLower info.Name}'"
+        match info.Type with
+        | String -> $"Key.Value ({vName})"
+        | Int | Long | Decimal _ -> $"Key.Value ({vName}.ToString())"
+        | Guid -> $"Key.Value ({vName}.ToString())"
+        | Types.IsRecord typesCache _
+        | Types.IsUnion typesCache _ -> $"Key.Inner {firstCharToLower info.Name}Key"
+        | Types.IsEnum typesCache _ -> $"Key.Value ((int {vName}).ToString())"
+        | wrong -> failwithf "type not supported as key %A" wrong )
+    |> String.concat "; "
 
+let makeKeyArgs (typesCache:TypesCache) (keyFields:FieldInfo list) prefix suffix =
+    keyFields
+    |> List.map (fun info ->
+        match info.Type with
+        | Types.IsRecord typesCache _
+        | Types.IsUnion typesCache _ -> $"{prefix}{info.Name}{suffix}.Key"
+        | _ -> $"{prefix}{info.Name}{suffix}")
+    |> String.concat ", "
+
+let recordKeyMembers (typesCache:TypesCache) txt typeName keyFields =
+    line txt $"    static member MakeKey ({keyParams typesCache keyFields}) ="
     match keyFields with
     | [] -> failwith "empty key fields is not possible"
-    | [_] -> line txt $"        {key}"
-    | _ -> line txt $"        Key.Items [{key}]"
+    | [_] -> line txt $"        {keyExpression typesCache keyFields}"
+    | _ -> line txt $"        Key.Items [{keyExpression typesCache keyFields}]"
+    let keyArgs = makeKeyArgs typesCache keyFields "x." ""
+    line txt $"    member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
 
-    let args =
-        keyFields
-        |> List.map (fun info ->
-            match info.Type with
-            | Types.IsRecord typesCache _
-            | Types.IsUnion typesCache _ -> $"x.{info.Name}.Key"
-            | _ -> $"x.{info.Name}")
-        |> String.concat ", "
-    line txt $"    member x.Key = {firstName typeName}.MakeKey ({args})"
+let unionKeyMembers (locks:LocksCollection) (typesCache:TypesCache) txt (info:UnionInfo) =
+    line txt "    static member MakeUnknownKey () = Key.Value \"0\""
+    for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
+        let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
+        let keyExpression =
+            if keyFields.IsEmpty then $"Key.Value \"{caseLock.Num}\""
+            else $"Key.Items [Key.Value \"{caseLock.Num}\"; {keyExpression typesCache keyFields}]"
+        line txt $"    static member Make{caseLock.Name}Key ({keyParams typesCache keyFields}) = {keyExpression}"
+
+    line txt "    member x.Key ="
+    line txt "        match x with"
+    line txt $"        | Unknown -> {firstName info.Name}.MakeUnknownKey ()"
+    for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
+        let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
+        let keyArgs = makeKeyArgs typesCache keyFields "" "'"
+        line txt $"        | {caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
 
 let commonsBody = """
     type Key =

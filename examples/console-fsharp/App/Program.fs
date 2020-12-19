@@ -2,7 +2,7 @@ open System
 open System.IO
 open Google.Protobuf
 open Domain
-open ProtoConverters.FsharpTypes
+open Protogen.FsharpConverters
 
 [<EntryPoint>]
 let main argv =

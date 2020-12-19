@@ -128,9 +128,9 @@ let testAllCases (input, expectedOutput:string) =
         Types.resolveReferences module'
         |> Result.mapError (fun error -> failwithf "%A" error)
         |> Result.map (fun module' ->
-            Types.lock module' [] typesCache
+            Types.lock module' (LocksCollection []) typesCache
             |> Result.map(fun locks ->
-                let outputText = ProtoCmd.gen module' locks
+                let outputText = ProtoCmd.gen module' (LocksCollection locks)
                 Assert.Equal(expectedOutput.Trim(), outputText.Trim()))
             |> Result.mapError(fun error -> failwithf "%A" error)))
     |> Result.mapError(fun error -> failwithf "%A" error)

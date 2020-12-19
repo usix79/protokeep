@@ -1,5 +1,11 @@
 module Protogen.Utils
 
+type System.Collections.Generic.IDictionary<'TKey, 'TValue> with
+    member x.TryFind (key:'TKey) =
+        match x.TryGetValue key with
+        | true, v -> Some v
+        | _ -> None
+
 let rec traverse f list =
 
     let apply fResult xResult =
@@ -44,3 +50,6 @@ let checkMissedItems keyf duplicateError missedError oldItems newItems =
 
         if missedFields.IsEmpty then Ok newItems
         else missedFields |> List.map missedError |> Error)
+
+let inline getName entity: _ when ^a: (member Name: ^b) =
+    (^a: (member Name: ^b) entity)

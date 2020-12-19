@@ -12,7 +12,7 @@ let Handler module' locks typesCache = function
         Types.lock module' locks typesCache
         |> Result.mapError (sprintf "%A")
         |> Result.bind(fun newlocks ->
-            if newlocks <> locks then
+            if locks.HasChanges newlocks then
                 Console.WriteLine($"Updating {lockFileName}")
                 File.WriteAllText(lockFileName, (gen newlocks))
             else
@@ -52,6 +52,15 @@ let gen (locks:LockItem list) =
             line txt $"enum {dottedName lock.Name}"
             for value' in lock.Values do
                 line txt $"    value {value'.Name} = {value'.Num}"
+        | RecordLock lock ->
+            line txt $"record {dottedName lock.Name}"
+            for field in lock.Fields do
+                let keyTxt = if field.IsKey then "key " else ""
+                line txt $"    field {field.Name} {typeToString field.Type} {keyTxt}= {field.Num}"
+        | UnionLock lock ->
+            line txt $"union {dottedName lock.Name}"
+            for case in lock.Cases do
+                line txt $"    case {case.Name} = {case.Num}"
         | MessageLock lock ->
             line txt $"message {dottedName lock.Name}"
             for item in lock.LockItems do

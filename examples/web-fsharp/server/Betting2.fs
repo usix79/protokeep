@@ -1,7 +1,4 @@
 module rec Betting2
-
-open Protogen.FsharpTypes
-
 type OutcomeResult =
     | Unknown = 0
     | Win = 1

@@ -32,7 +32,7 @@ module Program =
         Types.lock module' locks typesCache
         |> Result.mapError (sprintf "When try to check current lock: %A")
         |> Result.bind(fun newlocks ->
-            if newlocks <> locks then
+            if locks.HasChanges newlocks then
                 Error "Lock file is not corresponded to types definition. Run protogen lock first."
             else
                 Ok () )
@@ -59,8 +59,13 @@ module CoreFsharp =
             | txt ->
                 match Parsers.parseFsharpCoreDoc txt with
                 | Ok modules ->
-                    modules
-                    |> List.map (fun (name, body) -> if name = moduleName then (name, moduleBody) else (name, body))
+                    match modules |> List.tryFind (fun (name,_)-> name = moduleName) with
+                    | Some _ ->
+                        modules
+                        |> List.map (fun (name, body) -> if name = moduleName then (name, moduleBody) else (name, body))
+                    | None ->
+                        modules @ [moduleName, moduleBody]
+
                 | Error err -> failwithf "Parse Core File: %s" err
 
         construct modules
