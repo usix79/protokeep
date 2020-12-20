@@ -53,12 +53,40 @@ module private Impl =
                     skipString "map" |>> (fun () -> Map t)])
             |>> (Option.defaultValue t))
 
+    let indexKey' =
+        choice[
+            skipChar '.' >>. identifier |>> IndexKey.FieldKey
+        ]
+
+    let indexValue' =
+        choice[
+            skipChar '.' >>. identifier |>> IndexValue.Field
+        ]
+
+    let indexDefinition' =
+        pipe2
+            (opt (indexKey' .>>? (between ws ws (skipString "=>"))))
+            indexValue'
+            (fun ikey ival -> (ikey |> Option.defaultValue Num, ival))
+
+    let index' =
+        skipString "idx" >>.
+        pipe2
+            (opt (skipChar ':' >>. identifier))
+            (opt (between (skipChar '[' .>> ws) (ws >>. skipChar ']') indexDefinition'))
+            (fun idxName def ->
+                {
+                    Name = idxName |> Option.defaultValue "item"
+                    Key = def |> Option.map fst |> Option.defaultValue Num
+                    Value = def |> Option.map snd |> Option.defaultValue IndexValue.Self
+                })
     let field' =
-        pipe3
+        pipe4
             ((between spaces ws identifier) .>> pchar ':')
             (between ws ws fullType')
             (opt (skipString "key") .>> ws)
-            (fun name type' isKey -> {|Name = name; Type = type'; IsKey = isKey|})
+            (many (index' .>> ws))
+            (fun name type' isKey idxs -> {|Name = name; Type = type'; IsKey = isKey; Indexes = idxs|})
 
     let record' =
         keyword "record" >>.
@@ -109,6 +137,7 @@ module private Impl =
                                             {   Name = fr.Name
                                                 Type = fr.Type
                                                 IsKey = boolOfOpt fr.IsKey
+                                                Indexes = fr.Indexes |> List.map (fun ir -> {Name = ir.Name; Key = ir.Key; Value = ir.Value})
                                             })
                                 })
                             union' |>> (fun r ->
@@ -126,6 +155,7 @@ module private Impl =
                                                             {   Name = fr.Name |> Option.defaultValue (sprintf "p%d" (idx + 1))
                                                                 Type = fr.Type
                                                                 IsKey = boolOfOpt fr.IsKey
+                                                                Indexes = []
                                                             }
                                                         )
                                                     ) |> Option.defaultValue []
@@ -181,12 +211,11 @@ module private Impl =
 
     let recordFieldLock =
         keyword "field" >>.
-        pipe4
+        pipe3
             (identifier .>> ws1)
             (between ws ws fullType')
-            (opt (skipString "key") .>> ws)
             ((between ws ws (pchar '=')) >>. pint32 .>> ts )
-            (fun name type' isKey num -> {Name = name; Type = type'; IsKey = boolOfOpt isKey ; Num = num})
+            (fun name type' num -> {Name = name; Type = type'; Num = num})
 
     let recordLock =
         keyword "record" >>.

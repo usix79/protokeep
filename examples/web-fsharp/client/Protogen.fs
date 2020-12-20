@@ -44,3 +44,6 @@ module FsharpTypes =
         | Items of Key list
         | Inner of Key
 
+    let (|TryFind|_|) f key = f key
+
+

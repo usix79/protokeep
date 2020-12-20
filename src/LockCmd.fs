@@ -55,8 +55,7 @@ let gen (locks:LockItem list) =
         | RecordLock lock ->
             line txt $"record {dottedName lock.Name}"
             for field in lock.Fields do
-                let keyTxt = if field.IsKey then "key " else ""
-                line txt $"    field {field.Name} {typeToString field.Type} {keyTxt}= {field.Num}"
+                line txt $"    field {field.Name} {typeToString field.Type} = {field.Num}"
         | UnionLock lock ->
             line txt $"union {dottedName lock.Name}"
             for case in lock.Cases do

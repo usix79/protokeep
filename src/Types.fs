@@ -22,8 +22,18 @@ type Type =
     | Map of value: Type
     | Complex of name: ComplexName
 
+
+type IndexKey =
+    | Num
+    | FieldKey of string
+
+type IndexValue =
+    | Self
+    | Field of string
+
+type Index = {Name: string; Key: IndexKey; Value: IndexValue}
 type EnumInfo = { Name: ComplexName; Symbols: string list }
-type FieldInfo = { Name: string;  Type: Type; IsKey: bool }
+type FieldInfo = { Name: string;  Type: Type; IsKey: bool; Indexes: Index list }
 type RecordInfo = { Name: ComplexName;  Fields: FieldInfo list }
 type UnionInfo = { Name: ComplexName;  Cases: RecordInfo list }
 
@@ -45,7 +55,7 @@ type MessageLockItem =
     | Field of MessageFieldLock
     | OneOf of name:string*unionName:ComplexName*fields:OneOfFieldLock list
 type MessageLock = { Name: ComplexName; LockItems: MessageLockItem list }
-type RecordFieldLock = { Name: string; Type: Type; Num: int; IsKey: bool}
+type RecordFieldLock = { Name: string; Type: Type; Num: int }
 type RecordLock = { Name: ComplexName; Fields: RecordFieldLock list}
 type UnionCaseLock = { Name: string; Num: int}
 type UnionLock = { Name: ComplexName; Cases: UnionCaseLock list}
@@ -198,6 +208,15 @@ module Types =
         module'.Items
         |> List.map (fun item -> moduleItemName item, item)
 
+    let referencedIndexes (typesCache:TypesCache) (field:FieldInfo) =
+        match field.Type with
+        | Complex type' ->
+            match typesCache.[type'] with
+            | Record info -> info.Fields |> List.collect (fun iii -> iii.Indexes)
+            | _ -> []
+        | _ -> []
+
+
     let resolveReferences (module': Module): Result<Module, TypeError list> =
         let typesCache = module' |> toTypesCacheItems |> Map.ofList
 
@@ -315,9 +334,9 @@ module Types =
                 | None ->
                     if not fieldsMap.IsEmpty && fieldsAreLocked
                     then Error [AddingFieldIsNotAllowed (recordInfo.Name, field.Name)], nextNum
-                    else Ok ({Name = field.Name; Type = field.Type; IsKey = field.IsKey; Num = nextNum}), (nextNum + 1)
+                    else Ok ({Name = field.Name; Type = field.Type; Num = nextNum}), (nextNum + 1)
                 | Some lockedField when allowedEvolution lockedField.Type field.Type ->
-                    Ok ({Name = field.Name; Type = field.Type; IsKey = field.IsKey; Num = lockedField.Num}), nextNum
+                    Ok ({Name = field.Name; Type = field.Type; Num = lockedField.Num}), nextNum
                 | Some lockedField ->
                     Error [UnacceptableEvolution(recordInfo.Name, field.Name, lockedField.Type, field.Type)], nextNum )
                 (maxNum + 1)

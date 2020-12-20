@@ -51,9 +51,14 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             line txt $"    {field.Name} : {typeToString field.Type}"
         line txt $"}}"
         let keys = info.Fields |> List.filter (fun x -> x.IsKey)
-        if not keys.IsEmpty then
+        let indexes = info.Fields |> List.collect (fun x -> x.Indexes) |> List.map (fun i -> i.Name) |> List.distinct
+        if not keys.IsEmpty || not indexes.IsEmpty then
             line txt $"with"
-            recordKeyMembers typesCache txt info.Name keys
+            if not keys.IsEmpty then
+                recordKeyMembers typesCache txt info.Name keys
+            for indexName in indexes do
+                recordIndexMembers locks txt indexName info
+
     | Union info ->
         line txt $"type {firstName info.Name} ="
         line txt $"    | Unknown"
@@ -66,6 +71,16 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             line txt $"    | {firstName case.Name}{fieldsStr}"
         line txt $"with"
         unionKeyMembers locks typesCache txt info
+        let indexes =
+            info.Cases
+            |> List.collect (fun i ->
+                i.Fields
+                |> List.collect (Types.referencedIndexes typesCache)
+                |> List.map (fun ii -> ii.Name))
+            |> List.distinct
+
+        for indexName in indexes do
+            unionIndexMembers typesCache txt indexName info
 
     line txt $"module rec {dottedName module'.Name}"
     line txt "open Protogen.FsharpTypes"
@@ -159,9 +174,143 @@ let unionKeyMembers (locks:LocksCollection) (typesCache:TypesCache) txt (info:Un
         let keyArgs = makeKeyArgs typesCache keyFields "" "'"
         line txt $"        | {caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
 
+let recordIndexMembers (locks:LocksCollection) txt indexName recordInfo =
+    let indexedFields =
+        recordInfo.Fields
+        |> List.zip (locks.Record(recordInfo.Name).Fields)
+        |> List.choose (fun (fieldLock,fieldInfo) ->
+            fieldInfo.Indexes
+            |> List.tryFind (fun ii -> ii.Name = indexName)
+            |> Option.map (fun ii -> fieldInfo,ii,fieldLock) )
+
+    line txt $"    member x.{firstCharToUpper indexName}Values () ="
+
+    let values' =
+        indexedFields
+        |> List.map (fun (field,idx,_) ->
+            match idx.Value with
+            | Self -> $"x.{field.Name}"
+            | IndexValue.Field name ->
+                match field.Type with
+                | Array _ -> $"yield! x.{field.Name} |> Array.map (fun v -> v.{name})"
+                | _ -> $"x.{field.Name}.{name}" )
+        |> String.concat "; "
+    line txt $"        [| {values'} |]"
+
+    line txt $"    member x.{firstCharToUpper indexName}Indexes () ="
+
+    let indexes' =
+        indexedFields
+        |> List.map (fun (field,idx,fieldLock) ->
+            match idx.Key with
+            | IndexKey.Num -> $"Key.Value \"{fieldLock.Num}\""
+            | IndexKey.FieldKey name ->
+                match field.Type with
+                | Array _ -> $"yield! x.{field.Name} |> Array.map (fun v -> v.{name}.Key)"
+                | _ -> $"x.{field.Name}.{name}")
+        |> String.concat "; "
+
+    line txt $"        [| {indexes'} |]"
+
+    for fieldInfo, idx, fieldLock in indexedFields do
+        match idx.Key with
+        | IndexKey.FieldKey name ->
+            match fieldInfo.Type with
+            | Array _ ->
+                line txt $"    member x.TryFind{firstCharToUpper indexName}In{fieldInfo.Name} (key:Key) ="
+                line txt $"        x.{fieldInfo.Name} |> Array.tryFind (fun i -> i.{name}.Key = key)"
+            | _ -> ()
+        | _ -> ()
+
+    line txt $"    member x.{firstCharToUpper indexName} = function"
+    for fieldInfo, idx, fieldLock in indexedFields do
+        match idx.Key, idx.Value with
+        | (Num, IndexValue.Self) ->
+            line txt $"        | Key.Value \"{fieldLock.Num}\" -> Some x.{fieldInfo.Name}"
+        | (IndexKey.FieldKey _), (IndexValue.Field name) ->
+            line txt $"        | TryFind x.TryFind{firstCharToUpper indexName}In{fieldInfo.Name} v -> Some v.{name}"
+        | wrong -> failwithf "Not supported indexer %A" wrong
+    line txt $"        | _ -> None"
+
+    line txt $"    member x.With{firstCharToUpper indexName}s (items:Map<Key,_>) ="
+    line txt $"        {{x with"
+    for fieldInfo, idx, fieldLock in indexedFields do
+        match idx.Key, idx.Value with
+        | (Num, IndexValue.Self) ->
+            line txt $"            {fieldInfo.Name} = items.TryFind(Key.Value \"{fieldLock.Num}\") |> Option.defaultValue x.{fieldInfo.Name}"
+        | (IndexKey.FieldKey keyName), (IndexValue.Field valueName) ->
+            match fieldInfo.Type with
+            | Array _ ->
+                let mapTxt = $"fun v -> items.TryFind v.{keyName}.Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
+                line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> Array.map ({mapTxt})"
+            | wrong -> failwithf "Not supportes type for indexier %A" wrong
+        | wrong -> failwithf "Not supported indexer %A" wrong
+
+    line txt $"        }}"
+
+let unionIndexMembers (typesCache:TypesCache) txt indexName unionInfo =
+    let hasIndex field =
+        Types.referencedIndexes typesCache field
+        |> List.tryFind (fun i -> i.Name = indexName)
+        |> (fun i -> i.IsSome)
+
+    line txt $"    member x.{firstCharToUpper indexName}Values () ="
+    line txt $"        match x with"
+    line txt $"        | {dottedName unionInfo.Name}.Unknown -> Array.empty"
+    for case in unionInfo.Cases do
+        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let right =
+            match case.Fields |> List.tryFind hasIndex with
+            | Some field -> $"{field.Name}'.{firstCharToUpper indexName}Values()"
+            | None ->  "Array.empty"
+        line txt $"        | {left} -> {right}"
+
+    line txt $"    member x.{firstCharToUpper indexName}Indexes () ="
+    line txt $"        match x with"
+    line txt $"        | {dottedName unionInfo.Name}.Unknown -> Array.empty"
+    for case in unionInfo.Cases do
+        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let right =
+            match case.Fields |> List.tryFind hasIndex with
+            | Some field -> $"{field.Name}'.{firstCharToUpper indexName}Indexes()"
+            | None ->  "Array.empty"
+        line txt $"        | {left} -> {right}"
+
+    line txt $"    member x.{firstCharToUpper indexName} (key: Key) ="
+    line txt $"        match x with"
+    line txt $"        | {dottedName unionInfo.Name}.Unknown -> None"
+    for case in unionInfo.Cases do
+        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let right =
+            match case.Fields |> List.tryFind hasIndex with
+            | Some field -> $"{field.Name}'.{firstCharToUpper indexName} key"
+            | None ->  "None"
+        line txt $"        | {left} -> {right}"
+
+    line txt $"    member x.With{firstCharToUpper indexName}s (items: Map<Key,_>) ="
+    line txt $"        match x with"
+    line txt $"        | {dottedName unionInfo.Name}.Unknown -> x"
+    for case in unionInfo.Cases do
+        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let right =
+            match case.Fields |> List.tryFind hasIndex with
+            | Some field ->
+                let args =
+                    case.Fields
+                    |> List.map (fun i ->
+                        if i = field then $"{i.Name}'.With{firstCharToUpper indexName}s items"
+                        else $"{i.Name}'" )
+                    |> String.concat ", "
+                $"{dottedName unionInfo.Name}.{firstName case.Name} ({args})"
+            | None ->  "x"
+        line txt $"        | {left} -> {right}"
+
 let commonsBody = """
     type Key =
         | Value of string
         | Items of Key list
         | Inner of Key
+
+    let (|TryFind|_|) f key = f key
+
 """

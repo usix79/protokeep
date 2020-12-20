@@ -13,21 +13,21 @@ union Outcome =
     | Resulted of result: OutcomeResult
 
 record Winner3Way = {
-    Win1: Outcome
-    Draw: Outcome
-    Win2: Outcome
+    Win1: Outcome idx
+    Draw: Outcome idx
+    Win2: Outcome idx
 }
 
 record Handicap = {
     Value:decimal(2) key
-    Win1: Outcome
-    Win2: Outcome
+    Win1: Outcome idx
+    Win2: Outcome idx
 }
 
 record Total = {
     Value:decimal(2) key
-    Over: Outcome
-    Under: Outcome
+    Over: Outcome idx
+    Under: Outcome idx
 }
 
 record Score = {
@@ -41,7 +41,7 @@ record ScoreOutcome = {
 }
 
 record CorrectScore = {
-    Scores : ScoreOutcome array
+    Scores : ScoreOutcome array idx[.Score => .Outcome]
 }
 
 union Market =

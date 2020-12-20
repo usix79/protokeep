@@ -78,9 +78,9 @@ let ``Simple Record`` () =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Int; IsKey = false}
-                {Name= "Street1"; Type = String; IsKey = false}
-                {Name= "Street2"; Type = String; IsKey = false}
+                {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
+                {Name= "Street1"; Type = String; IsKey = false; Indexes = []}
+                {Name= "Street2"; Type = String; IsKey = false; Indexes = []}
                 ]}
         ]}
     let lock = []
@@ -88,9 +88,9 @@ let ``Simple Record`` () =
         RecordLock {
             Name= ComplexName ["Crossroad"; "Domain"]
             Fields = [
-                {Name = "Id"; Type = Int; IsKey = false; Num = 1}
-                {Name = "Street1"; Type = String; IsKey = false; Num = 2}
-                {Name = "Street2"; Type = String; IsKey = false; Num = 3}
+                {Name = "Id"; Type = Int; Num = 1}
+                {Name = "Street1"; Type = String; Num = 2}
+                {Name = "Street2"; Type = String; Num = 3}
             ]}
         MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
@@ -110,15 +110,15 @@ let ``Union`` () =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Int; IsKey = false}
-                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false}
+                {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false; Indexes = []}
                 ]}
             Union {Name = ComplexName ["ServiceCheck"; "Domain"]; Cases = [
                 {Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]; Fields = []}
                 {Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]; Fields = [
-                    {Name = "What"; Type = String; IsKey = false}
-                    {Name = "Where"; Type = String; IsKey = false}
-                    {Name = "When"; Type = Timestamp; IsKey = false}
+                    {Name = "What"; Type = String; IsKey = false; Indexes = []}
+                    {Name = "Where"; Type = String; IsKey = false; Indexes = []}
+                    {Name = "When"; Type = Timestamp; IsKey = false; Indexes = []}
                     ]}
             ]}
         ]}
@@ -127,8 +127,8 @@ let ``Union`` () =
         RecordLock {
             Name = ComplexName ["Log"; "Domain"]
             Fields = [
-                {Name = "Id"; Type = Int; IsKey = false; Num = 1}
-                {Name = "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false; Num = 2}
+                {Name = "Id"; Type = Int; Num = 1}
+                {Name = "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; Num = 2}
             ]}
         MessageLock {
             Name = ComplexName ["Log"; "Domain"]
@@ -149,9 +149,9 @@ let ``Union`` () =
         RecordLock {
            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
            Fields = [
-                    { Name = "What"; Type = String; Num = 1; IsKey = false }
-                    { Name = "Where"; Type = String; Num = 2; IsKey = false }
-                    { Name = "When"; Type = Timestamp; Num = 3; IsKey = false }
+                    { Name = "What"; Type = String; Num = 1 }
+                    { Name = "Where"; Type = String; Num = 2 }
+                    { Name = "When"; Type = Timestamp; Num = 3 }
                     ]};
         MessageLock {
             Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
@@ -172,8 +172,8 @@ let ``Missed Field Record`` () =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Int; IsKey = false}
-                {Name= "Street1"; Type = String; IsKey = false}
+                {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
+                {Name= "Street1"; Type = String; IsKey = false; Indexes = []}
                 ]}
         ]}
     let lock = [
@@ -181,14 +181,11 @@ let ``Missed Field Record`` () =
             Name = ComplexName ["Crossroad"; "Domain"];
             Fields = [{ Name = "Id"
                         Type = Int
-                        Num = 1
-                        IsKey = false }; { Name = "Street1"
-                                           Type = String
-                                           Num = 2
-                                           IsKey = false }; { Name = "Street2"
-                                                              Type = String
-                                                              Num = 3
-                                                              IsKey = false }] };
+                        Num = 1 }; { Name = "Street1"
+                                     Type = String
+                                     Num = 2 }; { Name = "Street2"
+                                                  Type = String
+                                                  Num = 3 }] };
         MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
             LockItems = [
@@ -209,9 +206,9 @@ let ``Acceptable Evolutionof a Field's Type`` () =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Long; IsKey = false}
-                {Name= "Street1"; Type = String; IsKey = false}
-                {Name= "Street2"; Type = String; IsKey = false}
+                {Name= "Id"; Type = Long; IsKey = false; Indexes = []}
+                {Name= "Street1"; Type = String; IsKey = false; Indexes = []}
+                {Name= "Street2"; Type = String; IsKey = false; Indexes = []}
                 ]}
         ]}
     let lock = [
@@ -229,14 +226,11 @@ let ``Acceptable Evolutionof a Field's Type`` () =
              { Name = ComplexName ["Crossroad"; "Domain"]
                Fields = [{ Name = "Id"
                            Type = Long
-                           Num = 1
-                           IsKey = false }; { Name = "Street1"
-                                              Type = String
-                                              Num = 2
-                                              IsKey = false }; { Name = "Street2"
-                                                                 Type = String
-                                                                 Num = 3
-                                                                 IsKey = false }] };
+                           Num = 1}; { Name = "Street1"
+                                       Type = String
+                                       Num = 2}; { Name = "Street2"
+                                                   Type = String
+                                                   Num = 3}] };
           MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
             LockItems = [
@@ -253,9 +247,9 @@ let UnacceptableEvolutionOfAFieldType () =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Guid; IsKey = false}
-                {Name= "Street1"; Type = String; IsKey = false}
-                {Name= "Street2"; Type = String; IsKey = false}
+                {Name= "Id"; Type = Guid; IsKey = false; Indexes = []}
+                {Name= "Street1"; Type = String; IsKey = false; Indexes = []}
+                {Name= "Street2"; Type = String; IsKey = false; Indexes = []}
                 ]}
         ]}
     let lock = [
@@ -264,13 +258,13 @@ let UnacceptableEvolutionOfAFieldType () =
                Fields = [{ Name = "Id"
                            Type = Int
                            Num = 1
-                           IsKey = false }; { Name = "Street1"
+                                         }; { Name = "Street1"
                                               Type = String
                                               Num = 2
-                                              IsKey = false }; { Name = "Street2"
+                                                            }; { Name = "Street2"
                                                                  Type = String
                                                                  Num = 3
-                                                                 IsKey = false }] };
+                                                                 }] };
         MessageLock {
             Name= ComplexName ["Crossroad"; "Domain"]
             LockItems = [
@@ -291,8 +285,8 @@ let MissedFieldInUnion() =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Int; IsKey = false}
-                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false}
+                {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false; Indexes = []}
                 ]}
             ModuleItem.Union {Name = ComplexName ["ServiceCheck"; "Domain"]; Cases = [
                 {Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]; Fields = []}
@@ -305,11 +299,11 @@ let MissedFieldInUnion() =
                        [{ Name = "Id"
                           Type = Int
                           Num = 1
-                          IsKey = false };
+                         };
                         { Name = "Check"
                           Type = Complex (ComplexName ["ServiceCheck"; "Domain"])
                           Num = 2
-                          IsKey = false }] };
+                          }] };
         MessageLock {
             Name = ComplexName ["Log"; "Domain"]
             LockItems = [
@@ -346,15 +340,15 @@ let AddFieldInUnion() =
         Name = ComplexName ["Domain"]
         Items = [
             Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
-                {Name= "Id"; Type = Int; IsKey = false}
-                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false}
+                {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
+                {Name= "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; IsKey = false; Indexes = []}
                 ]}
             ModuleItem.Union {Name = ComplexName ["ServiceCheck"; "Domain"]; Cases = [
                 {Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]; Fields = []}
                 {Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]; Fields = [
-                    { Name = "What"; Type = String; IsKey = false};
-                    { Name = "Where"; Type = String; IsKey = false};
-                    { Name = "When"; Type = Timestamp; IsKey = false}
+                    { Name = "What"; Type = String; IsKey = false; Indexes = []};
+                    { Name = "Where"; Type = String; IsKey = false; Indexes = []};
+                    { Name = "When"; Type = Timestamp; IsKey = false; Indexes = []}
                 ]}
                 {Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]; Fields = []}
             ]}
@@ -387,11 +381,11 @@ let AddFieldInUnion() =
                        [{ Name = "Id"
                           Type = Int
                           Num = 1
-                          IsKey = false };
+                        };
                         { Name = "Check"
                           Type = Complex (ComplexName ["ServiceCheck"; "Domain"])
                           Num = 2
-                          IsKey = false }] };
+                        }] };
            MessageLock
              { Name = ComplexName ["Log"; "Domain"]
                LockItems =
@@ -416,13 +410,13 @@ let AddFieldInUnion() =
                Fields = [{ Name = "What"
                            Type = String
                            Num = 1
-                           IsKey = false }; { Name = "Where"
+                                         }; { Name = "Where"
                                               Type = String
                                               Num = 2
-                                              IsKey = false }; { Name = "When"
+                                                            }; { Name = "When"
                                                                  Type = Timestamp
                                                                  Num = 3
-                                                                 IsKey = false }] };
+                                                                 }] };
            RecordLock { Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]
                         Fields = [] };
            MessageLock { Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
