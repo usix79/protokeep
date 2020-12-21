@@ -36,6 +36,7 @@ let Instance = {
 }
 
 let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
+    let ns = module'.Name
 
     let txt = StringBuilder()
 
@@ -48,14 +49,14 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
     | Record info ->
         line txt $"type {firstName info.Name} = {{"
         for field in info.Fields do
-            line txt $"    {field.Name} : {typeToString field.Type}"
+            line txt $"    {field.Name} : {typeToString ns field.Type}"
         line txt $"}}"
         let keys = info.Fields |> List.filter (fun x -> x.IsKey)
         let indexes = info.Fields |> List.collect (fun x -> x.Indexes) |> List.map (fun i -> i.Name) |> List.distinct
         if not keys.IsEmpty || not indexes.IsEmpty then
             line txt $"with"
             if not keys.IsEmpty then
-                recordKeyMembers typesCache txt info.Name keys
+                recordKeyMembers ns typesCache txt info.Name keys
             for indexName in indexes do
                 recordIndexMembers locks txt indexName info
 
@@ -65,12 +66,12 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         for case in info.Cases do
             let fieldsStr =
                 case.Fields
-                |> List.map (fun field -> $"{field.Name}:{typeToString field.Type}")
+                |> List.map (fun field -> $"{field.Name}:{typeToString ns field.Type}")
                 |> String.concat "*"
                 |> (fun str -> if str <> "" then " of " + str else str)
             line txt $"    | {firstName case.Name}{fieldsStr}"
         line txt $"with"
-        unionKeyMembers locks typesCache txt info
+        unionKeyMembers ns locks typesCache txt info
         let indexes =
             info.Cases
             |> List.collect (fun i ->
@@ -82,14 +83,14 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         for indexName in indexes do
             unionIndexMembers typesCache txt indexName info
 
-    line txt $"module rec {dottedName module'.Name}"
+    line txt $"namespace {dottedName module'.Name}"
     line txt "open Protogen.FsharpTypes"
     for item in module'.Items do
         genItem module'.Name item
 
     txt.ToString()
 
-let rec typeToString (type':Type) =
+let rec typeToString (ns:ComplexName) (type':Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
@@ -102,20 +103,20 @@ let rec typeToString (type':Type) =
     | Timestamp -> "System.DateTimeOffset"
     | Duration -> "System.TimeSpan"
     | Guid -> "System.Guid"
-    | Optional v -> typeToString v + " option"
-    | Array v -> typeToString v + " array"
-    | List v -> typeToString v + " list"
-    | Map v -> $"Map<string,{typeToString v}>"
-    | Complex ns -> dottedName ns
+    | Optional v -> typeToString ns v + " option"
+    | Array v -> typeToString ns v + " array"
+    | List v -> typeToString ns v + " list"
+    | Map v -> $"Map<string,{typeToString ns v}>"
+    | Complex typeName ->  if lastNames typeName = ns then firstName typeName else  dottedName typeName
 
-let keyParams (typesCache:TypesCache) (keyFields:FieldInfo list) =
+let keyParams ns (typesCache:TypesCache) (keyFields:FieldInfo list) =
     keyFields
     |> List.map (fun info ->
         let pName = info.Name |> firstCharToLower
         match info.Type with
         | Types.IsRecord typesCache _
         | Types.IsUnion typesCache _ -> $"{pName}Key: Key"
-        | _ -> $"{pName}': {typeToString info.Type}" )
+        | _ -> $"{pName}': {typeToString ns info.Type}" )
     |> String.concat ", "
 
 let caseParams (fields:FieldInfo list) =
@@ -149,8 +150,8 @@ let makeKeyArgs (typesCache:TypesCache) (keyFields:FieldInfo list) prefix suffix
         | _ -> $"{prefix}{info.Name}{suffix}")
     |> String.concat ", "
 
-let recordKeyMembers (typesCache:TypesCache) txt typeName keyFields =
-    line txt $"    static member MakeKey ({keyParams typesCache keyFields}) ="
+let recordKeyMembers ns (typesCache:TypesCache) txt typeName keyFields =
+    line txt $"    static member MakeKey ({keyParams ns typesCache keyFields}) ="
     match keyFields with
     | [] -> failwith "empty key fields is not possible"
     | [_] -> line txt $"        {keyExpression typesCache keyFields}"
@@ -158,22 +159,22 @@ let recordKeyMembers (typesCache:TypesCache) txt typeName keyFields =
     let keyArgs = makeKeyArgs typesCache keyFields "x." ""
     line txt $"    member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
 
-let unionKeyMembers (locks:LocksCollection) (typesCache:TypesCache) txt (info:UnionInfo) =
+let unionKeyMembers ns (locks:LocksCollection) (typesCache:TypesCache) txt (info:UnionInfo) =
     line txt "    static member MakeUnknownKey () = Key.Value \"0\""
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
         let keyExpression =
             if keyFields.IsEmpty then $"Key.Value \"{caseLock.Num}\""
             else $"Key.Items [Key.Value \"{caseLock.Num}\"; {keyExpression typesCache keyFields}]"
-        line txt $"    static member Make{caseLock.Name}Key ({keyParams typesCache keyFields}) = {keyExpression}"
+        line txt $"    static member Make{caseLock.Name}Key ({keyParams ns typesCache keyFields}) = {keyExpression}"
 
     line txt "    member x.Key ="
     line txt "        match x with"
-    line txt $"        | Unknown -> {firstName info.Name}.MakeUnknownKey ()"
+    line txt $"        | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
         let keyArgs = makeKeyArgs typesCache keyFields "" "'"
-        line txt $"        | {caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+        line txt $"        | {firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
 
 let recordIndexMembers (locks:LocksCollection) txt indexName recordInfo =
     let indexedFields =
@@ -260,9 +261,9 @@ let unionIndexMembers (typesCache:TypesCache) txt indexName unionInfo =
 
     line txt $"    member x.{firstCharToUpper indexName}Values () ="
     line txt $"        match x with"
-    line txt $"        | {dottedName unionInfo.Name}.Unknown -> Array.empty"
+    line txt $"        | {firstName unionInfo.Name}.Unknown -> Array.empty"
     for case in unionInfo.Cases do
-        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let left = $"{firstName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
         let right =
             match case.Fields |> List.tryFind hasIndex with
             | Some field -> $"{field.Name}'.{firstCharToUpper indexName}Values()"
@@ -271,9 +272,9 @@ let unionIndexMembers (typesCache:TypesCache) txt indexName unionInfo =
 
     line txt $"    member x.{firstCharToUpper indexName}Indexes () ="
     line txt $"        match x with"
-    line txt $"        | {dottedName unionInfo.Name}.Unknown -> Array.empty"
+    line txt $"        | {firstName unionInfo.Name}.Unknown -> Array.empty"
     for case in unionInfo.Cases do
-        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let left = $"{firstName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
         let right =
             match case.Fields |> List.tryFind hasIndex with
             | Some field -> $"{field.Name}'.{firstCharToUpper indexName}Indexes()"
@@ -282,9 +283,9 @@ let unionIndexMembers (typesCache:TypesCache) txt indexName unionInfo =
 
     line txt $"    member x.{firstCharToUpper indexName} (key: Key) ="
     line txt $"        match x with"
-    line txt $"        | {dottedName unionInfo.Name}.Unknown -> None"
+    line txt $"        | {firstName unionInfo.Name}.Unknown -> None"
     for case in unionInfo.Cases do
-        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let left = $"{firstName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
         let right =
             match case.Fields |> List.tryFind hasIndex with
             | Some field -> $"{field.Name}'.{firstCharToUpper indexName} key"
@@ -293,9 +294,9 @@ let unionIndexMembers (typesCache:TypesCache) txt indexName unionInfo =
 
     line txt $"    member x.With{firstCharToUpper indexName}s (items: Map<Key,_>) ="
     line txt $"        match x with"
-    line txt $"        | {dottedName unionInfo.Name}.Unknown -> x"
+    line txt $"        | {firstName unionInfo.Name}.Unknown -> x"
     for case in unionInfo.Cases do
-        let left = $"{dottedName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
+        let left = $"{firstName unionInfo.Name}.{firstName case.Name}{caseParams case.Fields}"
         let right =
             match case.Fields |> List.tryFind hasIndex with
             | Some field ->
@@ -305,7 +306,7 @@ let unionIndexMembers (typesCache:TypesCache) txt indexName unionInfo =
                         if i = field then $"{i.Name}'.With{firstCharToUpper indexName}s items"
                         else $"{i.Name}'" )
                     |> String.concat ", "
-                $"{dottedName unionInfo.Name}.{firstName case.Name} ({args})"
+                $"{firstName unionInfo.Name}.{firstName case.Name} ({args})"
             | None ->  "x"
         line txt $"        | {left} -> {right}"
 

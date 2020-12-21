@@ -1,4 +1,4 @@
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type TrafficLight =
     | Unknown = 0
@@ -17,17 +17,17 @@ with
     static member MakeOutOfOrderKey () = Key.Value "3"
     member x.Key =
         match x with
-        | Unknown -> LightStatus.MakeUnknownKey ()
-        | Normal -> LightStatus.MakeNormalKey ()
-        | Warning (errorsCount') -> LightStatus.MakeWarningKey ()
-        | OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
+        | LightStatus.Unknown -> LightStatus.MakeUnknownKey ()
+        | LightStatus.Normal -> LightStatus.MakeNormalKey ()
+        | LightStatus.Warning (errorsCount') -> LightStatus.MakeWarningKey ()
+        | LightStatus.OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
 type Crossroad = {
     Id : int
     Street1 : string
     Street2 : string
-    Light : Domain.TrafficLight
-    LightStatus : Domain.LightStatus
-    History : Domain.LightStatus list
+    Light : TrafficLight
+    LightStatus : LightStatus
+    History : LightStatus list
 }
 type Crossroad2 = {
     Id : int
@@ -41,7 +41,7 @@ type Crossroad2 = {
     Ratio : decimal
     LastChecked : System.DateTimeOffset
     ServiceInterval : System.TimeSpan
-    CurrentLight : Domain.TrafficLight
+    CurrentLight : TrafficLight
     Nickname : string option
     Img : byte array
     Notes : string array

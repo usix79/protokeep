@@ -7,6 +7,7 @@
   <ItemGroup>
     <Protobuf Include="Domain.proto" GrpcServices="None" />
     <Protobuf Include="Betting.proto" GrpcServices="None" />
+    <Protobuf Include="BettingFootball.proto" GrpcServices="None" />
   </ItemGroup>
 
   <ItemGroup>

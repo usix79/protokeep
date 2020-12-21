@@ -12,7 +12,7 @@ let assertEqual expected actual =
 
 [<Fact>]
 let ``Duplicate Symbols in Enum`` () =
-    let input = {Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Imports = []; Items = [
         Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"; "Yellow"]}
         ]}
     let lock = []
@@ -22,7 +22,7 @@ let ``Duplicate Symbols in Enum`` () =
 
 [<Fact>]
 let ``Duplicate Symbols in Locked Enum`` () =
-    let input = {Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Imports = []; Items = [
         Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}
         ]}
     let lock = [
@@ -40,7 +40,7 @@ let ``Duplicate Symbols in Locked Enum`` () =
 
 [<Fact>]
 let ``Missed Symbol in Enum`` () =
-    let input = {Name = ComplexName ["Domain"]; Items = [
+    let input = {Name = ComplexName ["Domain"]; Imports = []; Items = [
         Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}
         ]}
     let lock = [
@@ -58,7 +58,7 @@ let ``Missed Symbol in Enum`` () =
 
 [<Fact>]
 let ``Single Enum`` () =
-    let input = {Name = ComplexName ["Domain"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
+    let input = {Name = ComplexName ["Domain"]; Imports = []; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
     let lock = []
     let expected = Ok [
         EnumLock {
@@ -76,6 +76,7 @@ let ``Single Enum`` () =
 let ``Simple Record`` () =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
@@ -101,6 +102,7 @@ let ``Simple Record`` () =
 let ``Union`` () =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
@@ -145,6 +147,7 @@ let ``Union`` () =
 let ``Missed Field Record`` () =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
@@ -172,6 +175,7 @@ let ``Missed Field Record`` () =
 let ``Acceptable Evolutionof a Field's Type`` () =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Long; IsKey = false; Indexes = []}
@@ -199,6 +203,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
 let UnacceptableEvolutionOfAFieldType () =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Crossroad"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Guid; IsKey = false; Indexes = []}
@@ -230,6 +235,7 @@ let UnacceptableEvolutionOfAFieldType () =
 let MissedFieldInUnion() =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Int; IsKey = false; Indexes = []}
@@ -267,6 +273,7 @@ let MissedFieldInUnion() =
 let AddFieldInUnion() =
     let input = {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {Name = ComplexName ["Log"; "Domain"]; Fields = [
                 {Name= "Id"; Type = Int; IsKey = false; Indexes = []}

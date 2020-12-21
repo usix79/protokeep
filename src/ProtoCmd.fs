@@ -77,7 +77,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:TypesCache) =
     line txt $"option csharp_namespace = \"ProtoClasses.{dottedName module'.Name}\";";
     for reference in references locks module' do
         if reference <> module'.Name then
-            line txt $"import \"{dottedName reference}\";"
+            line txt $"import \"{dottedName reference}.proto\";"
 
     module'.Items |> List.iter (genItem module'.Name)
     txt.ToString()
@@ -104,8 +104,8 @@ let references (locks : LocksCollection) (module':Module) =
     let set = Collections.Generic.HashSet<ComplexName>()
 
     let rec typeReference = function
-        | Timestamp -> Some <| ComplexName ["google/protobuf/timestamp.proto"]
-        | Duration -> Some <| ComplexName ["google/protobuf/duration.proto"]
+        | Timestamp -> Some <| ComplexName ["google/protobuf/timestamp"]
+        | Duration -> Some <| ComplexName ["google/protobuf/duration"]
         | Complex ns -> Some <| Types.extractNamespace ns
         | Optional v
         | Map v

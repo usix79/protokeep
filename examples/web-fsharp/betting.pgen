@@ -43,30 +43,3 @@ record ScoreOutcome = {
 record CorrectScore = {
     Scores : ScoreOutcome list idx[.Score => .Outcome]
 }
-
-union Market =
-    | Winner3Way of Winner3Way
-    | Handicap of Handicap key
-    | Total of Total key
-    | CorrectScore of CorrectScore
-
-enum Period =
-    | Half1
-    | Half2
-    | MainTime
-
-enum Statistic =
-    | Goals
-    | YellowCards
-    | Corners
-
-enum Status =
-    | Open
-    | Closed
-
-record MarketItem = {
-    Statistic : Statistic key
-    Period : Period key
-    Market : Market key
-    Status : Status
-}

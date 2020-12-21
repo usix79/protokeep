@@ -117,53 +117,60 @@ module private Impl =
             (sepBy1 (between spaces spaces unionCase') (pchar '|') )
             (fun name cases -> {| Name = name; Cases = cases|})
 
+    let imports' =
+        let normalCharSnippet  = manySatisfy (fun c -> c <> '"' && c <> '\n')
+        many (keyword "import" >>. ws >>. (between (pchar '"')(pchar '"') normalCharSnippet ) .>> many ts)
+
     let module' =
         keyword "module" >>.
             (complexName .>> ts)
                 >>= (fun moduleName ->
-                    (many (
-                        spaces
-                        >>. choice [
-                            enum' |>> (fun r ->
-                                Enum {
-                                    Name = Types.mergeName moduleName r.Name
-                                    Symbols = r.Symbols
-                                })
-                            record' |>> (fun r ->
-                                Record {
-                                    Name = Types.mergeName moduleName r.Name
-                                    Fields =
-                                        r.Fields
-                                        |> List.map (fun fr ->
-                                            {   Name = fr.Name
-                                                Type = fr.Type
-                                                IsKey = boolOfOpt fr.IsKey
-                                                Indexes = fr.Indexes |> List.map (fun ir -> {Name = ir.Name; Key = ir.Key; Value = ir.Value})
-                                            })
-                                })
-                            union' |>> (fun r ->
-                                let unionName = Types.mergeName moduleName r.Name
-                                Union {
-                                    Name = unionName
-                                    Cases =
-                                        r.Cases
-                                        |> List.map (fun cr ->
-                                            {   Name = Types.mergeName unionName cr.Name
-                                                Fields =
-                                                    cr.Fields |> Option.map (fun fieldsList ->
-                                                        fieldsList
-                                                        |> List.mapi (fun idx fr ->
-                                                            {   Name = fr.Name |> Option.defaultValue (sprintf "p%d" (idx + 1))
-                                                                Type = fr.Type
-                                                                IsKey = boolOfOpt fr.IsKey
-                                                                Indexes = []
-                                                            }
-                                                        )
-                                                    ) |> Option.defaultValue []
-                                            })
-                                })]
-                    ) |>> (fun items -> {Name = moduleName; Items = items})
-            ))
+                    pipe2
+                        imports'
+                        (many (
+                            spaces
+                            >>. choice [
+                                enum' |>> (fun r ->
+                                    Enum {
+                                        Name = Types.mergeName moduleName r.Name
+                                        Symbols = r.Symbols
+                                    })
+                                record' |>> (fun r ->
+                                    Record {
+                                        Name = Types.mergeName moduleName r.Name
+                                        Fields =
+                                            r.Fields
+                                            |> List.map (fun fr ->
+                                                {   Name = fr.Name
+                                                    Type = fr.Type
+                                                    IsKey = boolOfOpt fr.IsKey
+                                                    Indexes = fr.Indexes |> List.map (fun ir -> {Name = ir.Name; Key = ir.Key; Value = ir.Value})
+                                                })
+                                    })
+                                union' |>> (fun r ->
+                                    let unionName = Types.mergeName moduleName r.Name
+                                    Union {
+                                        Name = unionName
+                                        Cases =
+                                            r.Cases
+                                            |> List.map (fun cr ->
+                                                {   Name = Types.mergeName unionName cr.Name
+                                                    Fields =
+                                                        cr.Fields |> Option.map (fun fieldsList ->
+                                                            fieldsList
+                                                            |> List.mapi (fun idx fr ->
+                                                                {   Name = fr.Name |> Option.defaultValue (sprintf "p%d" (idx + 1))
+                                                                    Type = fr.Type
+                                                                    IsKey = boolOfOpt fr.IsKey
+                                                                    Indexes = []
+                                                                }
+                                                            )
+                                                        ) |> Option.defaultValue []
+                                                })
+                                    })]
+                        ))
+                        (fun imports items -> {Name = moduleName; Imports = imports; Items = items})
+            )
 
     let pgenDocument =
         spaces >>. module' .>> spaces .>> eof

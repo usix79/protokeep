@@ -27,6 +27,9 @@ let fableCommonsFile = "./client/Protogen.fs"
 let pgenFileForBetting = "betting.pgen"
 let protoFileForBetting = protoClassesDir + "Betting.proto"
 let fsharpTypesFileForBetting = "./server/Betting.fs"
+let pgenFileForBettingFootball = "betting-football.pgen"
+let protoFileForBettingFootball = protoClassesDir + "BettingFootball.proto"
+let fsharpTypesFileForBettingFootball = "./server/BettingFootball.fs"
 
 let runTool cmd args workingDir =
     let arguments = args |> String.split ' ' |> Arguments.OfArgs
@@ -63,6 +66,9 @@ Target.create "Gen" (fun _ ->
     dotnetWithArgs [pgenFileForBetting; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "proto"; "-o"; protoFileForBetting] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "fsharp-types"; "-o"; fsharpTypesFileForBetting] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFileForBettingFootball; "lock"] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFileForBettingFootball; "proto"; "-o"; protoFileForBettingFootball] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFileForBettingFootball; "fsharp-types"; "-o"; fsharpTypesFileForBettingFootball] protogenDll __SOURCE_DIRECTORY__
 )
 
 Target.create "Build" (fun _ ->

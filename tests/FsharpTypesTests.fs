@@ -14,7 +14,7 @@ enum TrafficLight =
     | Red
     | Yellow
     | Green ""","""
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type TrafficLight =
     | Unknown = 0
@@ -47,7 +47,7 @@ record Crossroad = {
     Siblings: int list
     Props: string map
 }""","""
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type TrafficLight =
     | Unknown = 0
@@ -66,7 +66,7 @@ type Crossroad = {
     Ratio : decimal
     LastChecked : System.DateTimeOffset
     ServiceInterval : System.TimeSpan
-    CurrentLight : Domain.TrafficLight
+    CurrentLight : TrafficLight
     Nickname : string option
     Img : byte array
     Notes : string array
@@ -90,7 +90,7 @@ record Crossroad = {
     Light: TrafficLight
     LightStatus: LightStatus
 }""", """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type TrafficLight =
     | Unknown = 0
@@ -109,16 +109,16 @@ with
     static member MakeOutOfOrderKey () = Key.Value "3"
     member x.Key =
         match x with
-        | Unknown -> LightStatus.MakeUnknownKey ()
-        | Normal -> LightStatus.MakeNormalKey ()
-        | Warning (errorsCount') -> LightStatus.MakeWarningKey ()
-        | OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
+        | LightStatus.Unknown -> LightStatus.MakeUnknownKey ()
+        | LightStatus.Normal -> LightStatus.MakeNormalKey ()
+        | LightStatus.Warning (errorsCount') -> LightStatus.MakeWarningKey ()
+        | LightStatus.OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
 type Crossroad = {
     Id : int
     Street1 : string
     Street2 : string
-    Light : Domain.TrafficLight
-    LightStatus : Domain.LightStatus
+    Light : TrafficLight
+    LightStatus : LightStatus
 }
 """); ("""
 module Domain
@@ -127,7 +127,7 @@ record Score = {
     S2 : int
 }
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type Score = {
     S1 : int
@@ -144,7 +144,7 @@ record Score = {
     S2 : int key
 }
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type Score = {
     S1 : int
@@ -164,7 +164,7 @@ record Crossroad = {
     Street2: string
 }
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type TrafficLight =
     | Unknown = 0
@@ -173,12 +173,12 @@ type TrafficLight =
     | Green = 3
 type Crossroad = {
     Id : int
-    Light : Domain.TrafficLight
+    Light : TrafficLight
     Street1 : string
     Street2 : string
 }
 with
-    static member MakeKey (id': int, light': Domain.TrafficLight) =
+    static member MakeKey (id': int, light': TrafficLight) =
         Key.Items [Key.Value (id'.ToString()); Key.Value ((int light').ToString())]
     member x.Key = Crossroad.MakeKey (x.Id, x.Light)
 """); ("""
@@ -192,7 +192,7 @@ record Incident = {
     Details: string
 }
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type Score = {
     S1 : int
@@ -203,7 +203,7 @@ with
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
     member x.Key = Score.MakeKey (x.S1, x.S2)
 type Incident = {
-    Score : Domain.Score
+    Score : Score
     Details : string
 }
 with
@@ -221,7 +221,7 @@ union Incident =
     | TeamScored of int key
     | MatchFinished of Score key
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type Score = {
     S1 : int
@@ -235,7 +235,7 @@ type Incident =
     | Unknown
     | MatchStarted
     | TeamScored of p1:int
-    | MatchFinished of p1:Domain.Score
+    | MatchFinished of p1:Score
 with
     static member MakeUnknownKey () = Key.Value "0"
     static member MakeMatchStartedKey () = Key.Value "1"
@@ -243,10 +243,10 @@ with
     static member MakeMatchFinishedKey (p1Key: Key) = Key.Items [Key.Value "3"; Key.Inner p1Key]
     member x.Key =
         match x with
-        | Unknown -> Incident.MakeUnknownKey ()
-        | MatchStarted -> Incident.MakeMatchStartedKey ()
-        | TeamScored (p1') -> Incident.MakeTeamScoredKey (p1')
-        | MatchFinished (p1') -> Incident.MakeMatchFinishedKey (p1'.Key)
+        | Incident.Unknown -> Incident.MakeUnknownKey ()
+        | Incident.MatchStarted -> Incident.MakeMatchStartedKey ()
+        | Incident.TeamScored (p1') -> Incident.MakeTeamScoredKey (p1')
+        | Incident.MatchFinished (p1') -> Incident.MakeMatchFinishedKey (p1'.Key)
 """);("""
 module Domain
 record Score = {
@@ -254,7 +254,7 @@ record Score = {
     S2 : int idx
 }
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type Score = {
     S1 : int
@@ -296,7 +296,7 @@ union Market =
     | Triple of Triple
     | Multiple of CorrectScore
 """, """
-module rec Domain
+namespace Domain
 open Protogen.FsharpTypes
 type Triple = {
     Comment1 : string
@@ -328,11 +328,11 @@ with
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
     member x.Key = Score.MakeKey (x.S1, x.S2)
 type ScoreOutcome = {
-    Score : Domain.Score
+    Score : Score
     Comment : string
 }
 type CorrectScore = {
-    Scores : Domain.ScoreOutcome list
+    Scores : ScoreOutcome list
 }
 with
     member x.ItemValues () =
@@ -350,37 +350,37 @@ with
         }
 type Market =
     | Unknown
-    | Triple of p1:Domain.Triple
-    | Multiple of p1:Domain.CorrectScore
+    | Triple of p1:Triple
+    | Multiple of p1:CorrectScore
 with
     static member MakeUnknownKey () = Key.Value "0"
     static member MakeTripleKey () = Key.Value "1"
     static member MakeMultipleKey () = Key.Value "2"
     member x.Key =
         match x with
-        | Unknown -> Market.MakeUnknownKey ()
-        | Triple (p1') -> Market.MakeTripleKey ()
-        | Multiple (p1') -> Market.MakeMultipleKey ()
+        | Market.Unknown -> Market.MakeUnknownKey ()
+        | Market.Triple (p1') -> Market.MakeTripleKey ()
+        | Market.Multiple (p1') -> Market.MakeMultipleKey ()
     member x.ItemValues () =
         match x with
-        | Domain.Market.Unknown -> Array.empty
-        | Domain.Market.Triple (p1') -> p1'.ItemValues()
-        | Domain.Market.Multiple (p1') -> p1'.ItemValues()
+        | Market.Unknown -> Array.empty
+        | Market.Triple (p1') -> p1'.ItemValues()
+        | Market.Multiple (p1') -> p1'.ItemValues()
     member x.ItemIndexes () =
         match x with
-        | Domain.Market.Unknown -> Array.empty
-        | Domain.Market.Triple (p1') -> p1'.ItemIndexes()
-        | Domain.Market.Multiple (p1') -> p1'.ItemIndexes()
+        | Market.Unknown -> Array.empty
+        | Market.Triple (p1') -> p1'.ItemIndexes()
+        | Market.Multiple (p1') -> p1'.ItemIndexes()
     member x.Item (key: Key) =
         match x with
-        | Domain.Market.Unknown -> None
-        | Domain.Market.Triple (p1') -> p1'.Item key
-        | Domain.Market.Multiple (p1') -> p1'.Item key
+        | Market.Unknown -> None
+        | Market.Triple (p1') -> p1'.Item key
+        | Market.Multiple (p1') -> p1'.Item key
     member x.WithItems (items: Map<Key,_>) =
         match x with
-        | Domain.Market.Unknown -> x
-        | Domain.Market.Triple (p1') -> Domain.Market.Triple (p1'.WithItems items)
-        | Domain.Market.Multiple (p1') -> Domain.Market.Multiple (p1'.WithItems items)
+        | Market.Unknown -> x
+        | Market.Triple (p1') -> Market.Triple (p1'.WithItems items)
+        | Market.Multiple (p1') -> Market.Multiple (p1'.WithItems items)
 """);
     ] |> Seq.map FSharpValue.GetTupleFields
 
@@ -388,10 +388,9 @@ with
 let testAllCases (input, expectedOutput:string) =
     Parsers.parsePgenDoc input
     |> Result.bind(fun module' ->
-        Types.resolveReferences module'
+        Types.resolveReferences module' []
         |> Result.mapError(fun error -> failwithf "%A" error)
-        |> Result.bind (fun module' ->
-            let typesCache = (Types.toTypesCacheItems module' |> Map.ofList)
+        |> Result.bind (fun (module',typesCache) ->
             Types.lock module' (LocksCollection []) typesCache
             |> Result.map(fun locks ->
                 let outputText = FsharpTypesCmd.gen module' (LocksCollection locks) typesCache

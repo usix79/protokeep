@@ -11,6 +11,38 @@ let commands: Command list = [
     Protogen.FableConvertersCmd.Instance
 ]
 
+let processImports rootPath (module':Module) : Result<Module*TypesCache,string> =
+    let prosessedFiles = Collections.Generic.HashSet<string>()
+
+    let rec loadAllModules (module':Module) : Result<Module list,string list> =
+        module'.Imports
+        |> Protogen.Utils.traverse (fun fileName ->
+            let fileName = Path.Combine(rootPath, fileName)
+            if File.Exists fileName then Ok fileName
+            else if File.Exists (fileName + ".pgen") then Ok (fileName + ".pgen")
+            else Error [$"Import file not found: {fileName}"] )
+        |> Result.bind (fun pgenFileNames ->
+            pgenFileNames
+            |> List.filter (prosessedFiles.Contains >> not)
+            |> Protogen.Utils.traverse (fun fileName ->
+                prosessedFiles.Add fileName |> ignore
+                File.ReadAllText fileName
+                |> Protogen.Parsers.parsePgenDoc
+                |> Result.mapError List.singleton) )
+        |> Result.bind (fun newModules ->
+            newModules
+            |> Protogen.Utils.traverse loadAllModules
+            |> Result.map (List.concat >> ((@) newModules)) )
+
+    let res =
+        loadAllModules module'
+        |> Result.bind (fun imports ->
+            Types.resolveReferences module' imports
+            |> Result.mapError (fun err -> err |> List.map (sprintf "%A")))
+        |> Result.mapError (String.concat "\n")
+
+    res
+
 [<EntryPoint>]
 let main argv =
     match argv |> List.ofArray with
@@ -43,9 +75,8 @@ Protogen tool
                     File.ReadAllText pgenFileName
                     |> Protogen.Parsers.parsePgenDoc
                     |> Result.bind(fun module' ->
-                        Types.resolveReferences module'
-                        |> Result.mapError (fun err -> sprintf "%A" err)
-                        |> Result.bind (fun module' ->
+                        processImports (Path.GetDirectoryName pgenFileName) module'
+                        |> Result.bind (fun (module',typesCache) ->
                             let lockFileName = pgenFileName + ".lock"
                             if File.Exists lockFileName then
                                 File.ReadAllText lockFileName
@@ -55,7 +86,6 @@ Protogen tool
                                 Ok []
                             |> Result.bind(fun locks ->
                                 let args = if cmd.Name = "lock" then lockFileName::args else args // special case for lock cmd
-                                let typesCache = Types.toTypesCacheItems module' |> Map.ofList
                                 cmd.Run module' (LocksCollection(locks)) typesCache args ))
                     )
             ))

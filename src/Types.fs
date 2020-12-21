@@ -45,6 +45,7 @@ type ModuleItem =
 
 type Module = {
     Name: ComplexName
+    Imports: string list
     Items: ModuleItem list
 }
 
@@ -198,9 +199,8 @@ module Types =
             | _ -> []
         | _ -> []
 
-
-    let resolveReferences (module': Module): Result<Module, TypeError list> =
-        let typesCache = module' |> toTypesCacheItems |> Map.ofList
+    let resolveReferences (module': Module) (imports: Module list) : Result<Module*TypesCache, TypeError list> =
+        let typesCache = module' :: imports |> List.collect toTypesCacheItems |> Map.ofList
 
         let (ComplexName ns) = module'.Name
         let getFullName typeName =
@@ -228,16 +228,24 @@ module Types =
                 |> Option.defaultWith (fun () -> Error [UnresolvedType fieldInfo.Type]) )
             |> Result.map (fun fields -> {info with Fields = fields})
 
-        module'.Items
-        |> traverse (fun item ->
-            match item with
-            | Enum _ -> Ok item
-            | Record info -> resolveRecord info |> Result.map Record
-            | Union info ->
-                info.Cases
-                |> traverse resolveRecord
-                |> Result.map (fun cases -> Union {info with Cases = cases}) )
-        |> Result.map (fun items -> {module' with Items = items})
+        let updateModule module' =
+            module'.Items
+            |> traverse (fun item ->
+                match item with
+                | Enum _ -> Ok item
+                | Record info -> resolveRecord info |> Result.map Record
+                | Union info ->
+                    info.Cases
+                    |> traverse resolveRecord
+                    |> Result.map (fun cases -> Union {info with Cases = cases}) )
+            |> Result.map (fun items -> {module' with Items = items})
+
+        updateModule module'
+        |> Result.bind (fun module' ->
+            imports
+            |> traverse updateModule
+            |> Result.map (fun imports ->
+                module', module' :: imports |> List.collect toTypesCacheItems |> Map.ofList ))
 
     let lock (module': Module) (lockCache: LocksCollection) (typesCache:TypesCache) : Result<LockItem list, TypeError list> =
         module'.Items

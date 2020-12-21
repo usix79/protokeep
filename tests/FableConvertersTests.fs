@@ -290,9 +290,8 @@ type ConvertDomain () =
 let testAllCases (input, expectedOutput:string) =
     Parsers.parsePgenDoc input
     |> Result.bind(fun module' ->
-        Types.resolveReferences module'
-        |> Result.bind (fun module' ->
-            let typesCache = (Types.toTypesCacheItems module' |> Map.ofList)
+        Types.resolveReferences module' []
+        |> Result.bind (fun (module',typesCache) ->
             Types.lock module' (LocksCollection []) typesCache
             |> Result.map(fun locks ->
                 let outputText = FableConvertersCmd.gen module' (LocksCollection locks) typesCache

@@ -46,34 +46,3 @@ message ScoreOutcome {
 message CorrectScore {
     repeated Betting.ScoreOutcome Scores = 1;
 }
-message Market {
-    oneof Union {
-        Betting.Winner3Way Winner3Way = 1;
-        Betting.Handicap Handicap = 2;
-        Betting.Total Total = 3;
-        Betting.CorrectScore CorrectScore = 4;
-    }
-}
-enum Period {
-    PeriodUnknown = 0;
-    PeriodHalf1 = 1;
-    PeriodHalf2 = 2;
-    PeriodMainTime = 3;
-}
-enum Statistic {
-    StatisticUnknown = 0;
-    StatisticGoals = 1;
-    StatisticYellowCards = 2;
-    StatisticCorners = 3;
-}
-enum Status {
-    StatusUnknown = 0;
-    StatusOpen = 1;
-    StatusClosed = 2;
-}
-message MarketItem {
-    Betting.Statistic Statistic = 1;
-    Betting.Period Period = 2;
-    Betting.Market Market = 3;
-    Betting.Status Status = 4;
-}

@@ -13,7 +13,7 @@ let private assertOfString input expected =
 [<Fact>]
 let ``Test single empty module`` () =
     let input = "module Domain.Foundation"
-    assertOfString input {Name = ComplexName ["Foundation"; "Domain"]; Items = []}
+    assertOfString input {Name = ComplexName ["Foundation"; "Domain"]; Imports = []; Items = []}
 
 [<Fact>]
 let ``Test enum`` () =
@@ -24,7 +24,7 @@ enum TrafficLight =
     | Yellow
     | Green
 """
-    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
+    assertOfString input {Name = ComplexName ["Domain"]; Imports = []; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
 
 [<Fact>]
 let ``Test single line enum`` () =
@@ -32,7 +32,7 @@ let ``Test single line enum`` () =
 module Domain
 enum TrafficLight = Red | Yellow | Green
 """
-    assertOfString input {Name = ComplexName ["Domain"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
+    assertOfString input {Name = ComplexName ["Domain"]; Imports = []; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}
 
 [<Fact>]
 let ``Test record`` () =
@@ -60,6 +60,7 @@ record Crossroad = {
 """
     assertOfString input {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {
                 Name = ComplexName ["Crossroad"; "Domain"]
@@ -91,6 +92,7 @@ record Crossroad = { Id: int; Street1: string; Street2: string }
 """
     assertOfString input {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Record {
                 Name = ComplexName ["Crossroad"; "Domain"];
@@ -112,6 +114,7 @@ union ServiceCheck =
 """
     assertOfString input {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Union {
                 Name = ComplexName ["ServiceCheck"; "Domain"];
@@ -133,6 +136,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
 """
     assertOfString input {
         Name = ComplexName ["Domain"]
+        Imports = []
         Items = [
             Union {
                 Name = ComplexName ["ServiceCheck"; "Domain"];
@@ -166,6 +170,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
 """
     assertOfString input
         {   Name = ComplexName ["Foundation"; "Domain"]
+            Imports = []
             Items = [
                 Enum {Name = ComplexName ["TrafficLight";"Foundation"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}
                 Enum {
@@ -204,6 +209,7 @@ record Crossroad = {
 """
     assertOfString input
         {   Name = ComplexName ["Foundation"; "Domain"]
+            Imports = []
             Items = [
                 Record {
                     Name = ComplexName ["Crossroad";"Foundation"; "Domain"]
@@ -232,6 +238,7 @@ union U1 =
 """
     assertOfString input
         {   Name = ComplexName ["Foundation"; "Domain"]
+            Imports = []
             Items = [
                 Record {
                     Name = ComplexName ["Crossroad";"Foundation"; "Domain"]
@@ -256,7 +263,6 @@ union U1 =
 
                 ]}
 
-
 [<Fact>]
 let IndexInRecordTest () =
     let input = """
@@ -270,10 +276,10 @@ record Crossroad = {
     Street6: string idx[.Field1 => .Field2]
 }
 """
-
     assertOfString input
         {
             Name = ComplexName ["Foundation"; "Domain"]
+            Imports = []
             Items = [
                 Record {
                     Name = ComplexName ["Crossroad";"Foundation"; "Domain"]
@@ -288,3 +294,14 @@ record Crossroad = {
                     ]}
             ]
         }
+
+
+    let input = """
+module Domain
+import "common.pgen"
+enum TrafficLight =
+    | Red
+    | Yellow
+    | Green
+"""
+    assertOfString input {Name = ComplexName ["Domain"]; Imports = ["common.pgen"]; Items = [Enum {Name = ComplexName ["TrafficLight"; "Domain"]; Symbols = ["Red"; "Yellow"; "Green"]}]}

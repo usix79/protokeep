@@ -128,9 +128,9 @@ let testAllCases (input, expectedOutput:string) =
     Parsers.parsePgenDoc input
     |> Result.bind(fun module' ->
         let typesCache = (Types.toTypesCacheItems module' |> Map.ofList)
-        Types.resolveReferences module'
+        Types.resolveReferences module' []
         |> Result.mapError (fun error -> failwithf "%A" error)
-        |> Result.map (fun module' ->
+        |> Result.map (fun (module', typesCache) ->
             Types.lock module' (LocksCollection []) typesCache
             |> Result.map(fun locks ->
                 let outputText = ProtoCmd.gen module' (LocksCollection locks) typesCache
