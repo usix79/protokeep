@@ -104,6 +104,7 @@ let rec typeToString (type':Type) =
     | Guid -> "System.Guid"
     | Optional v -> typeToString v + " option"
     | Array v -> typeToString v + " array"
+    | List v -> typeToString v + " list"
     | Map v -> $"Map<string,{typeToString v}>"
     | Complex ns -> dottedName ns
 
@@ -192,7 +193,7 @@ let recordIndexMembers (locks:LocksCollection) txt indexName recordInfo =
             | Self -> $"x.{field.Name}"
             | IndexValue.Field name ->
                 match field.Type with
-                | Array _ -> $"yield! x.{field.Name} |> Array.map (fun v -> v.{name})"
+                | Array _ | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name})"
                 | _ -> $"x.{field.Name}.{name}" )
         |> String.concat "; "
     line txt $"        [| {values'} |]"
@@ -206,7 +207,7 @@ let recordIndexMembers (locks:LocksCollection) txt indexName recordInfo =
             | IndexKey.Num -> $"Key.Value \"{fieldLock.Num}\""
             | IndexKey.FieldKey name ->
                 match field.Type with
-                | Array _ -> $"yield! x.{field.Name} |> Array.map (fun v -> v.{name}.Key)"
+                | Array _ | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name}.Key)"
                 | _ -> $"x.{field.Name}.{name}")
         |> String.concat "; "
 
@@ -216,9 +217,9 @@ let recordIndexMembers (locks:LocksCollection) txt indexName recordInfo =
         match idx.Key with
         | IndexKey.FieldKey name ->
             match fieldInfo.Type with
-            | Array _ ->
+            | Array _  | List _ ->
                 line txt $"    member x.TryFind{firstCharToUpper indexName}In{fieldInfo.Name} (key:Key) ="
-                line txt $"        x.{fieldInfo.Name} |> Array.tryFind (fun i -> i.{name}.Key = key)"
+                line txt $"        x.{fieldInfo.Name} |> Seq.tryFind (fun i -> i.{name}.Key = key)"
             | _ -> ()
         | _ -> ()
 
@@ -243,6 +244,9 @@ let recordIndexMembers (locks:LocksCollection) txt indexName recordInfo =
             | Array _ ->
                 let mapTxt = $"fun v -> items.TryFind v.{keyName}.Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
                 line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> Array.map ({mapTxt})"
+            | List _ ->
+                let mapTxt = $"fun v -> items.TryFind v.{keyName}.Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
+                line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> List.map ({mapTxt})"
             | wrong -> failwithf "Not supportes type for indexier %A" wrong
         | wrong -> failwithf "Not supported indexer %A" wrong
 

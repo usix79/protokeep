@@ -79,6 +79,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             | Field fieldLock ->
                 match fieldLock.Type with
                 | Array _ -> line txt $"            {fieldLock.Name} = unbox v{fieldLock.Name}"
+                | List _ -> line txt $"            {fieldLock.Name} = v{fieldLock.Name} |> List.ofSeq"
                 | Map _ -> line txt $"            {fieldLock.Name} = v{fieldLock.Name} |> Map.ofSeq"
                 | _ -> line txt $"            {fieldLock.Name} = v{fieldLock.Name}"
             | OneOf (name, _, _) -> line txt $"            {name} = v{name}" )
@@ -108,6 +109,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                         | Field fieldLock ->
                             match fieldLock.Type with
                             | Array _ -> $"unbox {fieldLock.Name}"
+                            | List _ -> $"{fieldLock.Name} |> List.ofSeq"
                             | Map _ -> $"{fieldLock.Name} |> Map.ofSeq"
                             | _ ->  fieldLock.Name
                         | OneOf (name, _, _) -> name)
@@ -206,6 +208,7 @@ let rec defValue isMutable = function
     | Guid  -> "System.Guid.Empty"
     | Optional _ -> "None"
     | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
+    | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
 
@@ -220,7 +223,7 @@ let unpackField' rightOp (locks:LocksCollection) vName =
         | Duration -> $"ifString (fun v -> {leftOp}v |> toTimeSpan{rightOp})"
         | Guid  -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
         | Optional t -> f $"{vName} <- " " |> Some" t
-        | Array t ->
+        | Array t | List t ->
             let inner = f "" $" |> {vName}.Add" t
             $"ifArray (Seq.iter ({inner}))"
         | Map t ->
@@ -247,9 +250,9 @@ let packField (locks:LocksCollection) (vName:string) type' =
         | Duration -> $"JString ({vName} |> fromTimeSpan)"
         | Guid  -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"
         | Optional _ -> failwith "cannot upack optional field"
-        | Array t ->
+        | Array t | List t ->
             let inner = f "v" t
-            $"JArray ({vName} |> Array.map (fun v -> {inner}) |> List.ofSeq)"
+            $"JArray ({vName} |> Seq.map (fun v -> {inner}) |> List.ofSeq)"
         | Map t ->
             let inner = f "v" t
             $"JObject ({vName} |> Map.map (fun _ v -> {inner}))"

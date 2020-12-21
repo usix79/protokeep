@@ -93,9 +93,9 @@ message Betting.ScoreOutcome
         case PricedWithProb = 4
         case Resulted = 5
 record Betting.CorrectScore
-    field Scores Betting.ScoreOutcome array = 1
+    field Scores Betting.ScoreOutcome list = 1
 message Betting.CorrectScore
-    field Scores Betting.ScoreOutcome array = 1
+    field Scores Betting.ScoreOutcome list = 1
 union Betting.Market
     case Winner3Way = 1
     case Handicap = 2

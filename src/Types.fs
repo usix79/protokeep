@@ -19,6 +19,7 @@ type Type =
     | Guid
     | Optional of value: Type
     | Array of value: Type
+    | List of value: Type
     | Map of value: Type
     | Complex of name: ComplexName
 
@@ -238,6 +239,7 @@ module Types =
                 match fieldInfo.Type with
                 | Optional (Complex typeName) -> getFullName typeName |> Option.map (Complex >> Optional)
                 | Array (Complex typeName) -> getFullName typeName |> Option.map (Complex >> Array)
+                | List (Complex typeName) -> getFullName typeName |> Option.map (Complex >> List)
                 | Map (Complex typeName) -> getFullName typeName |> Option.map (Complex >> Map)
                 | Complex typeName  -> getFullName typeName |> Option.map Complex
                 | t -> Some t

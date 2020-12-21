@@ -103,21 +103,21 @@ type ScoreOutcome = {
     Outcome : Betting.Outcome
 }
 type CorrectScore = {
-    Scores : Betting.ScoreOutcome array
+    Scores : Betting.ScoreOutcome list
 }
 with
     member x.ItemValues () =
-        [| yield! x.Scores |> Array.map (fun v -> v.Outcome) |]
+        [| yield! x.Scores |> Seq.map (fun v -> v.Outcome) |]
     member x.ItemIndexes () =
-        [| yield! x.Scores |> Array.map (fun v -> v.Score.Key) |]
+        [| yield! x.Scores |> Seq.map (fun v -> v.Score.Key) |]
     member x.TryFindItemInScores (key:Key) =
-        x.Scores |> Array.tryFind (fun i -> i.Score.Key = key)
+        x.Scores |> Seq.tryFind (fun i -> i.Score.Key = key)
     member x.Item = function
         | TryFind x.TryFindItemInScores v -> Some v.Outcome
         | _ -> None
     member x.WithItems (items:Map<Key,_>) =
         {x with
-            Scores = x.Scores |> Array.map (fun v -> items.TryFind v.Score.Key |> Option.map (fun i -> {v with Outcome = i}) |> Option.defaultValue v)
+            Scores = x.Scores |> List.map (fun v -> items.TryFind v.Score.Key |> Option.map (fun i -> {v with Outcome = i}) |> Option.defaultValue v)
         }
 type Market =
     | Unknown

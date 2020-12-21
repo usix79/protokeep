@@ -41,7 +41,7 @@ record ScoreOutcome = {
 }
 
 record CorrectScore = {
-    Scores : ScoreOutcome array idx[.Score => .Outcome]
+    Scores : ScoreOutcome list idx[.Score => .Outcome]
 }
 
 union Market =

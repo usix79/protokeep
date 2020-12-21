@@ -96,7 +96,7 @@ let rec typeToString (type':Type) =
     | Duration -> "google.protobuf.Duration"
     | Guid -> "bytes"
     | Optional v -> typeToString v
-    | Array v -> "repeated " + (typeToString v)
+    | Array v | List v -> "repeated " + (typeToString v)
     | Map v -> $"map<string,{typeToString v}>"
     | Complex ns -> dottedName ns
 

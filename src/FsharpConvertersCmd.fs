@@ -125,7 +125,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                 line txt $"        match {xName} with"
                 line txt $"        | Some v -> {yName}Value <- v{convertionTo t}"
                 line txt $"        | None -> ()"
-            | Array t ->
+            | Array t | List t ->
                 match fieldToProtobuf t with
                 | Some cnv -> line txt $"        {yName}.AddRange({xName} |> Seq.map({cnv}))"
                 | None -> line txt $"        {yName}.AddRange({xName})"
@@ -189,6 +189,11 @@ let rec fieldFromProtobuf type' =
         | Some convertion -> $"Seq.map({convertion}) |> Array.ofSeq"
         | None -> "Array.ofSeq"
         |> Some
+    | List t ->
+        match fieldFromProtobuf t with
+        | Some convertion -> $"Seq.map({convertion}) |> List.ofSeq"
+        | None -> "List.ofSeq"
+        |> Some
     | Map t ->
         match fieldFromProtobuf t with
         | Some convertion -> $"x.Props |> Seq.map(fun pair -> pair.Key,pair.Value |> {convertion}) |> Map.ofSeq"
@@ -210,6 +215,6 @@ let rec fieldToProtobuf type' =
     | Duration -> Some "Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan"
     | Guid -> Some "fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())"
     | Optional _ -> failwith "direct convertion is not possible"
-    | Array _ -> failwith "direct convertion is supported, use AddRange"
+    | Array _ | List _ -> failwith "direct convertion is supported, use AddRange"
     | Map _ -> failwith "direct convertion is supported, use Add"
     | Complex typeName -> Some $"Convert{lastNames typeName |> solidName}.ToProtobuf"

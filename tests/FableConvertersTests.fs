@@ -60,6 +60,7 @@ record Crossroad = {
     Nickname: string option
     Img: bytes
     Notes: string array
+    Siblings: int list
     Props: string map
 }
 ""","""
@@ -96,6 +97,7 @@ type ConvertDomain () =
             Nickname = None
             Img = Array.empty
             Notes = Array.empty
+            Siblings = List.empty
             Props = Map.empty
         }
     static member CrossroadFromJson (json: Json): Domain.Crossroad =
@@ -114,6 +116,7 @@ type ConvertDomain () =
         let mutable vNickname = None
         let mutable vImg = Array.empty
         let mutable vNotes = ResizeArray()
+        let mutable vSiblings = ResizeArray()
         let mutable vProps = ResizeArray()
         getProps json
         |> Seq.iter(fun pair ->
@@ -133,6 +136,7 @@ type ConvertDomain () =
             | "NicknameValue" -> pair.Value |> ifString (fun v -> vNickname <- v |> Some)
             | "Img" -> pair.Value |> ifString (fun v -> vImg <- v |> System.Convert.FromBase64String)
             | "Notes" -> pair.Value |> ifArray (Seq.iter (ifString (fun v -> v |> vNotes.Add)))
+            | "Siblings" -> pair.Value |> ifArray (Seq.iter (ifNumber (fun v -> v |> unbox |> vSiblings.Add)))
             | "Props" -> pair.Value |> ifObject (Map.iter (fun key -> ifString (fun v -> v |> fun v -> vProps.Add(key, v))))
             | _ -> () )
         {
@@ -151,6 +155,7 @@ type ConvertDomain () =
             Nickname = vNickname
             Img = vImg
             Notes = unbox vNotes
+            Siblings = vSiblings |> List.ofSeq
             Props = vProps |> Map.ofSeq
         }
     static member CrossroadToJson (x: Domain.Crossroad) =
@@ -171,7 +176,8 @@ type ConvertDomain () =
            | Some v -> "NicknameValue", JString (v)
            | None -> ()
            "Img", JString (x.Img |> System.Convert.ToBase64String)
-           "Notes", JArray (x.Notes |> Array.map (fun v -> JString (v)) |> List.ofSeq)
+           "Notes", JArray (x.Notes |> Seq.map (fun v -> JString (v)) |> List.ofSeq)
+           "Siblings", JArray (x.Siblings |> Seq.map (fun v -> JNumber (unbox v)) |> List.ofSeq)
            "Props", JObject (x.Props |> Map.map (fun _ v -> JString (v)))
         ] |> Map.ofList |> JObject
 """); ("""

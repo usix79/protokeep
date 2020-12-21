@@ -54,6 +54,7 @@ record Crossroad = {
     Nickname: string option
     Img: bytes
     Notes: string array
+    Siblings: int list
     Props: string map
 }
 """
@@ -78,6 +79,7 @@ record Crossroad = {
                     { Name = "Nickname"; Type = Optional String; IsKey = false; Indexes = [] }
                     { Name = "Img"; Type = Bytes; IsKey = false; Indexes = [] }
                     { Name = "Notes"; Type = Array String; IsKey = false; Indexes = [] }
+                    { Name = "Siblings"; Type = List Int; IsKey = false; Indexes = [] }
                     { Name = "Props"; Type = Map String; IsKey = false; Indexes = [] }
                 ]}]}
 

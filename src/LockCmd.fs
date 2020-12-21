@@ -41,6 +41,7 @@ let rec typeToString (type':Type) =
     | Guid -> "guid"
     | Optional v -> typeToString v + " option"
     | Array v -> typeToString v + " array"
+    | List v -> typeToString v + " list"
     | Map v -> typeToString v + " map"
     | Complex ns -> dottedName ns
 

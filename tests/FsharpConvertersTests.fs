@@ -43,6 +43,7 @@ record Crossroad = {
     Nickname: string option
     Img: bytes
     Notes: string array
+    Siblings: int list
     Props: string map
 }
 ""","""
@@ -64,6 +65,7 @@ type ConvertDomain () =
             Nickname = if x.NicknameCase = ProtoClasses.Domain.Crossroad.NicknameOneofCase.NicknameValue then Some (x.NicknameValue) else None
             Img = x.Img |> fun v -> v.ToByteArray()
             Notes = x.Notes |> Array.ofSeq
+            Siblings = x.Siblings |> List.ofSeq
             Props = x.Props |> Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq
         }
     static member ToProtobuf (x:Domain.Crossroad) : ProtoClasses.Domain.Crossroad =
@@ -84,6 +86,7 @@ type ConvertDomain () =
         | None -> ()
         y.Img <- x.Img |> Google.Protobuf.ByteString.CopyFrom
         y.Notes.AddRange(x.Notes)
+        y.Siblings.AddRange(x.Siblings)
         y.Props.Add(x.Props)
         y
 """);

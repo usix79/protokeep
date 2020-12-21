@@ -44,6 +44,7 @@ record Crossroad = {
     Nickname: string option
     Img: bytes
     Notes: string array
+    Siblings: int list
     Props: string map
 }""","""
 module rec Domain
@@ -69,6 +70,7 @@ type Crossroad = {
     Nickname : string option
     Img : byte array
     Notes : string array
+    Siblings : int list
     Props : Map<string,string>
 }""");
     ("""
@@ -288,7 +290,7 @@ record ScoreOutcome = {
     Comment: string
 }
 record CorrectScore = {
-    Scores : ScoreOutcome array idx[.Score => .Comment]
+    Scores : ScoreOutcome list idx[.Score => .Comment]
 }
 union Market =
     | Triple of Triple
@@ -330,21 +332,21 @@ type ScoreOutcome = {
     Comment : string
 }
 type CorrectScore = {
-    Scores : Domain.ScoreOutcome array
+    Scores : Domain.ScoreOutcome list
 }
 with
     member x.ItemValues () =
-        [| yield! x.Scores |> Array.map (fun v -> v.Comment) |]
+        [| yield! x.Scores |> Seq.map (fun v -> v.Comment) |]
     member x.ItemIndexes () =
-        [| yield! x.Scores |> Array.map (fun v -> v.Score.Key) |]
+        [| yield! x.Scores |> Seq.map (fun v -> v.Score.Key) |]
     member x.TryFindItemInScores (key:Key) =
-        x.Scores |> Array.tryFind (fun i -> i.Score.Key = key)
+        x.Scores |> Seq.tryFind (fun i -> i.Score.Key = key)
     member x.Item = function
         | TryFind x.TryFindItemInScores v -> Some v.Comment
         | _ -> None
     member x.WithItems (items:Map<Key,_>) =
         {x with
-            Scores = x.Scores |> Array.map (fun v -> items.TryFind v.Score.Key |> Option.map (fun i -> {v with Comment = i}) |> Option.defaultValue v)
+            Scores = x.Scores |> List.map (fun v -> items.TryFind v.Score.Key |> Option.map (fun i -> {v with Comment = i}) |> Option.defaultValue v)
         }
 type Market =
     | Unknown

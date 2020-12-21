@@ -50,6 +50,7 @@ module private Impl =
             opt (choice[
                     skipString "option" |>> (fun () -> Optional t)
                     skipString "array" |>> (fun () -> Array t)
+                    skipString "list" |>> (fun () -> List t)
                     skipString "map" |>> (fun () -> Map t)])
             |>> (Option.defaultValue t))
 
