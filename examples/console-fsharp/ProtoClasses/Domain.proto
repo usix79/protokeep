@@ -9,16 +9,20 @@ enum TrafficLight {
     TrafficLightYellow = 2;
     TrafficLightGreen = 3;
 }
+message LightStatus {
+    oneof Union {
+        bool Normal = 1;
+        int32 Warning = 2;
+        google.protobuf.Timestamp OutOfOrder = 3;
+    }
+}
 message Crossroad {
     int32 Id = 1;
     string Street1 = 2;
     string Street2 = 3;
     Domain.TrafficLight Light = 4;
-    oneof LightStatus {
-        bool LightStatusNormal = 5;
-        int32 LightStatusWarning = 6;
-        google.protobuf.Timestamp LightStatusOutOfOrder = 7;
-    }
+    Domain.LightStatus LightStatus = 5;
+    repeated Domain.LightStatus History = 6;
 }
 message Crossroad2 {
     int32 Id = 1;

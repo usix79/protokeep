@@ -3,125 +3,62 @@ package Domain;
 option csharp_namespace = "ProtoClasses.Domain";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+message Op {
+    oneof Union {
+        int32 Val = 1;
+        Domain.Op__Sum Sum = 2;
+        Domain.Op__Mul Mul = 3;
+        Domain.Op__Div Div = 4;
+        Domain.Op Ln = 5;
+        Domain.Op__Quantum Quantum = 6;
+        bool Zero = 7;
+    }
+}
 message Op__Sum {
-    oneof P1 {
-        int32 P1Val = 1;
-        Domain.Op__Sum P1Sum = 2;
-        Domain.Op__Mul P1Mul = 3;
-        Domain.Op__Div P1Div = 4;
-        Domain.Op__Ln P1Ln = 5;
-        Domain.Op__Quantum P1Quantum = 6;
-        bool P1Zero = 7;
-    }
-    oneof P2 {
-        int32 P2Val = 8;
-        Domain.Op__Sum P2Sum = 9;
-        Domain.Op__Mul P2Mul = 10;
-        Domain.Op__Div P2Div = 11;
-        Domain.Op__Ln P2Ln = 12;
-        Domain.Op__Quantum P2Quantum = 13;
-        bool P2Zero = 14;
-    }
+    Domain.Op P1 = 1;
+    Domain.Op P2 = 2;
 }
 message Op__Mul {
-    oneof P1 {
-        int32 P1Val = 1;
-        Domain.Op__Sum P1Sum = 2;
-        Domain.Op__Mul P1Mul = 3;
-        Domain.Op__Div P1Div = 4;
-        Domain.Op__Ln P1Ln = 5;
-        Domain.Op__Quantum P1Quantum = 6;
-        bool P1Zero = 7;
-    }
-    oneof P2 {
-        int32 P2Val = 8;
-        Domain.Op__Sum P2Sum = 9;
-        Domain.Op__Mul P2Mul = 10;
-        Domain.Op__Div P2Div = 11;
-        Domain.Op__Ln P2Ln = 12;
-        Domain.Op__Quantum P2Quantum = 13;
-        bool P2Zero = 14;
-    }
+    Domain.Op P1 = 1;
+    Domain.Op P2 = 2;
 }
 message Op__Div {
-    oneof P1 {
-        int32 P1Val = 1;
-        Domain.Op__Sum P1Sum = 2;
-        Domain.Op__Mul P1Mul = 3;
-        Domain.Op__Div P1Div = 4;
-        Domain.Op__Ln P1Ln = 5;
-        Domain.Op__Quantum P1Quantum = 6;
-        bool P1Zero = 7;
-    }
-    oneof P2 {
-        int32 P2Val = 8;
-        Domain.Op__Sum P2Sum = 9;
-        Domain.Op__Mul P2Mul = 10;
-        Domain.Op__Div P2Div = 11;
-        Domain.Op__Ln P2Ln = 12;
-        Domain.Op__Quantum P2Quantum = 13;
-        bool P2Zero = 14;
-    }
+    Domain.Op P1 = 1;
+    Domain.Op P2 = 2;
 }
 message Op__Ln {
-    oneof P1 {
-        int32 P1Val = 1;
-        Domain.Op__Sum P1Sum = 2;
-        Domain.Op__Mul P1Mul = 3;
-        Domain.Op__Div P1Div = 4;
-        Domain.Op__Ln P1Ln = 5;
-        Domain.Op__Quantum P1Quantum = 6;
-        bool P1Zero = 7;
-    }
+    Domain.Op P1 = 1;
 }
 message Op__Quantum {
-    oneof P1 {
-        int32 P1Val = 1;
-        Domain.Op__Sum P1Sum = 2;
-        Domain.Op__Mul P1Mul = 3;
-        Domain.Op__Div P1Div = 4;
-        Domain.Op__Ln P1Ln = 5;
-        Domain.Op__Quantum P1Quantum = 6;
-        bool P1Zero = 7;
+    Domain.Op P1 = 1;
+    Domain.Op P2 = 2;
+    string P3 = 3;
+}
+message OpError {
+    oneof Union {
+        string General = 1;
+        bool DivisionByZero = 2;
+        bool NotSupported = 3;
     }
-    oneof P2 {
-        int32 P2Val = 8;
-        Domain.Op__Sum P2Sum = 9;
-        Domain.Op__Mul P2Mul = 10;
-        Domain.Op__Div P2Div = 11;
-        Domain.Op__Ln P2Ln = 12;
-        Domain.Op__Quantum P2Quantum = 13;
-        bool P2Zero = 14;
+}
+message OpResult {
+    oneof Union {
+        int32 Success = 1;
+        Domain.OpError Fail = 2;
     }
-    string P3 = 15;
 }
 message OpResult__Fail {
-    oneof P1 {
-        string P1General = 1;
-        bool P1DivisionByZero = 2;
-        bool P1NotSupported = 3;
-    }
+    Domain.OpError P1 = 1;
 }
 message Request {
     string Token = 1;
-    oneof Operation {
-        int32 OperationVal = 2;
-        Domain.Op__Sum OperationSum = 3;
-        Domain.Op__Mul OperationMul = 4;
-        Domain.Op__Div OperationDiv = 5;
-        Domain.Op__Ln OperationLn = 6;
-        Domain.Op__Quantum OperationQuantum = 7;
-        bool OperationZero = 8;
-    }
+    Domain.Op Operation = 2;
 }
 message Response {
     string Token = 1;
-    oneof Result {
-        int32 ResultSuccess = 2;
-        Domain.OpResult__Fail ResultFail = 3;
-    }
-    google.protobuf.Duration ExecutionTime = 4;
-    oneof Extra {string ExtraValue = 5;}
-    google.protobuf.Timestamp Since = 6;
-    map<string,string> Tags = 7;
+    Domain.OpResult Result = 2;
+    google.protobuf.Duration ExecutionTime = 3;
+    oneof Extra {string ExtraValue = 4;}
+    google.protobuf.Timestamp Since = 5;
+    map<string,string> Tags = 6;
 }

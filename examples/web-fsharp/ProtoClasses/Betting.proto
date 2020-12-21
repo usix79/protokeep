@@ -8,59 +8,32 @@ enum OutcomeResult {
     OutcomeResultVoid = 3;
     OutcomeResultCanceled = 4;
 }
+message Outcome {
+    oneof Union {
+        bool Empty = 1;
+        int64 Priced = 2;
+        Betting.Outcome__PricedWithProb PricedWithProb = 3;
+        Betting.OutcomeResult Resulted = 4;
+    }
+}
 message Outcome__PricedWithProb {
     int64 Price = 1;
     float Prob = 2;
 }
 message Winner3Way {
-    oneof Win1 {
-        bool Win1Empty = 1;
-        int64 Win1Priced = 2;
-        Betting.Outcome__PricedWithProb Win1PricedWithProb = 3;
-        Betting.OutcomeResult Win1Resulted = 4;
-    }
-    oneof Draw {
-        bool DrawEmpty = 5;
-        int64 DrawPriced = 6;
-        Betting.Outcome__PricedWithProb DrawPricedWithProb = 7;
-        Betting.OutcomeResult DrawResulted = 8;
-    }
-    oneof Win2 {
-        bool Win2Empty = 9;
-        int64 Win2Priced = 10;
-        Betting.Outcome__PricedWithProb Win2PricedWithProb = 11;
-        Betting.OutcomeResult Win2Resulted = 12;
-    }
+    Betting.Outcome Win1 = 1;
+    Betting.Outcome Draw = 2;
+    Betting.Outcome Win2 = 3;
 }
 message Handicap {
     int64 Value = 1;
-    oneof Win1 {
-        bool Win1Empty = 2;
-        int64 Win1Priced = 3;
-        Betting.Outcome__PricedWithProb Win1PricedWithProb = 4;
-        Betting.OutcomeResult Win1Resulted = 5;
-    }
-    oneof Win2 {
-        bool Win2Empty = 6;
-        int64 Win2Priced = 7;
-        Betting.Outcome__PricedWithProb Win2PricedWithProb = 8;
-        Betting.OutcomeResult Win2Resulted = 9;
-    }
+    Betting.Outcome Win1 = 2;
+    Betting.Outcome Win2 = 3;
 }
 message Total {
     int64 Value = 1;
-    oneof Over {
-        bool OverEmpty = 2;
-        int64 OverPriced = 3;
-        Betting.Outcome__PricedWithProb OverPricedWithProb = 4;
-        Betting.OutcomeResult OverResulted = 5;
-    }
-    oneof Under {
-        bool UnderEmpty = 6;
-        int64 UnderPriced = 7;
-        Betting.Outcome__PricedWithProb UnderPricedWithProb = 8;
-        Betting.OutcomeResult UnderResulted = 9;
-    }
+    Betting.Outcome Over = 2;
+    Betting.Outcome Under = 3;
 }
 message Score {
     int32 S1 = 1;
@@ -68,15 +41,18 @@ message Score {
 }
 message ScoreOutcome {
     Betting.Score Score = 1;
-    oneof Outcome {
-        bool OutcomeEmpty = 2;
-        int64 OutcomePriced = 3;
-        Betting.Outcome__PricedWithProb OutcomePricedWithProb = 4;
-        Betting.OutcomeResult OutcomeResulted = 5;
-    }
+    Betting.Outcome Outcome = 2;
 }
 message CorrectScore {
     repeated Betting.ScoreOutcome Scores = 1;
+}
+message Market {
+    oneof Union {
+        Betting.Winner3Way Winner3Way = 1;
+        Betting.Handicap Handicap = 2;
+        Betting.Total Total = 3;
+        Betting.CorrectScore CorrectScore = 4;
+    }
 }
 enum Period {
     PeriodUnknown = 0;
@@ -98,11 +74,6 @@ enum Status {
 message MarketItem {
     Betting.Statistic Statistic = 1;
     Betting.Period Period = 2;
-    oneof Market {
-        Betting.Winner3Way MarketWinner3Way = 3;
-        Betting.Handicap MarketHandicap = 4;
-        Betting.Total MarketTotal = 5;
-        Betting.CorrectScore MarketCorrectScore = 6;
-    }
-    Betting.Status Status = 7;
+    Betting.Market Market = 3;
+    Betting.Status Status = 4;
 }

@@ -13,6 +13,7 @@ let main argv =
         Street2 = "Oxford st"
         Light = TrafficLight.Green
         LightStatus = LightStatus.OutOfOrder DateTimeOffset.UtcNow
+        History = [LightStatus.Normal; LightStatus.Warning 1; LightStatus.Warning 3; LightStatus.OutOfOrder DateTimeOffset.UtcNow]
     }
 
     printfn "Orig: %A" crossroad

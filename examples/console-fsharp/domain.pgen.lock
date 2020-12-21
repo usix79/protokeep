@@ -22,6 +22,7 @@ record Domain.Crossroad
     field Street2 string = 3
     field Light Domain.TrafficLight = 4
     field LightStatus Domain.LightStatus = 5
+    field History Domain.LightStatus list = 6
 message Domain.Crossroad
     field Id int = 1
     field Street1 string = 2
@@ -31,6 +32,7 @@ message Domain.Crossroad
         case Normal = 5
         case Warning = 6
         case OutOfOrder = 7
+    field History Domain.LightStatus list = 8
 record Domain.Crossroad2
     field Id int = 1
     field LongId long = 2

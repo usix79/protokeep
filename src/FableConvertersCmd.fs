@@ -72,7 +72,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         line txt $"        }}"
 
         line txt $"    static member {firstName info.Name}FromJson (json: Json): {fullNameTxt} ="
-        readObject "v" lockItems
+        readObject "v" info
 
         line txt $"        {{"
         lockItems |> Seq.iter (function
@@ -86,10 +86,46 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         line txt $"        }}"
 
         line txt $"    static member {firstName info.Name}ToJson (x: {fullNameTxt}) ="
-        writeObject "x." lockItems
+        writeObject "x." info
 
-    | Union info ->
-        for case in info.Cases do
+    | Union union ->
+
+        line txt $"    static member {firstName union.Name}FromJson (json: Json): {dottedName union.Name} ="
+        line txt $"        let mutable y = {dottedName union.Name}.Unknown"
+        line txt $"        getProps json"
+        line txt $"        |> Seq.iter(fun pair ->"
+        line txt $"            match pair.Key with"
+        for case in union.Cases do
+            let rightValue =
+                match case with
+                | Types.EmptyRecord ->
+                    $"ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
+                | Types.SingleFieldRecord fieldInfo ->
+                    unpackField' $" |> {dottedName case.Name}" locks "y" fieldInfo.Type
+                | Types.MultiFieldsRecord ->
+                    $"(fun v -> y <- v |> Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson)"
+            line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
+        line txt $"            | _ -> () )"
+        line txt $"        y"
+
+        line txt $"    static member {firstName union.Name}ToJson (x:{dottedName union.Name}) ="
+        line txt $"        match x with"
+        for case in union.Cases do
+            let values = case.Fields |> List.map Utils.getName |> String.concat ","
+
+            let condition =
+                $"        | {dottedName case.Name}" + if values <> "" then $" ({values})" else ""
+
+            let jsonConstructor =
+                match case with
+                | Types.EmptyRecord -> "JBool (true)"
+                | Types.SingleFieldRecord fieldInfo -> $"{packField locks values fieldInfo.Type}"
+                | Types.MultiFieldsRecord  -> $"Convert{lastNames union.Name |> solidName}.{firstName union.Name}Case{firstName case.Name}ToJson ({values})"
+            line txt $"{condition} -> \"{firstName case.Name}\", {jsonConstructor}"
+        line txt $"        | _ -> \"Unknown\", JBool (true)"
+        line txt $"        |> List.singleton |> Map.ofList |> JObject"
+
+        for case in union.Cases do
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
             let lockItems = locks.Message(case.Name).LockItems
 
@@ -100,8 +136,8 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                     |> List.map Types.messageLockItemName
                     |> String.concat ","
 
-                line txt $"    static member {firstName info.Name}Case{firstName case.Name}FromJson (json: Json) ="
-                readObject "" lockItems
+                line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (json: Json) ="
+                readObject "" case
 
                 let convertedValues =
                     lockItems
@@ -117,73 +153,35 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
                 line txt $"        {case.Name |> dottedName} ({convertedValues})"
 
-                line txt $"    static member {firstName info.Name}Case{firstName case.Name}ToJson ({fieldsNames}) ="
-                writeObject "" lockItems
+                line txt $"    static member {firstName union.Name}Case{firstName case.Name}ToJson ({fieldsNames}) ="
+                writeObject "" case
             | _ -> ()
-    and readObject prefix lockItems =
-        lockItems |> Seq.iter (function
-            | Field fieldLock ->  line txt $"        let mutable {prefix}{fieldLock.Name} = {defValue true fieldLock.Type}"
-            | OneOf (name,unionName, _) -> line txt $"        let mutable {prefix}{name} = {dottedName unionName}.Unknown" )
+    and readObject prefix recordInfo =
+        for fieldInfo in recordInfo.Fields do
+            match fieldInfo.Type with
+            | Types.IsUnion typesCache unionInfo -> line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
+            | _ ->  line txt $"        let mutable {prefix}{fieldInfo.Name} = {defValue true fieldInfo.Type}"
+
         line txt $"        getProps json"
         line txt $"        |> Seq.iter(fun pair ->"
         line txt $"            match pair.Key with"
-        lockItems |> Seq.iter (function
-            | Field fieldLock ->
-                let vName = prefix + fieldLock.Name
-                let suffix = match fieldLock.Type with Optional _ -> "Value" | _ -> ""
-                line txt $"            | \"{firstCharToUpper fieldLock.Name}{suffix}\" -> pair.Value |> {unpackField locks vName fieldLock.Type}"
-            | OneOf (name, unionName, cases) ->
-                let vName = prefix + name
-                for case in cases do
-                    let caseMessageType = Types.mergeName unionName case.CaseName
-                    let caseMessageLock = locks.Message(caseMessageType)
-                    let rightValue =
-                        match caseMessageLock.LockItems with
-                        | Types.EmptyCase -> $"ifBool (fun v -> {vName} <- {dottedName unionName}.{case.CaseName})"
-                        | Types.SingleParamCase fieldInfo ->
-                            let rightOp = $" |> {dottedName caseMessageType}"
-                            $"{unpackField' rightOp locks vName fieldInfo.Type}"
-                        | Types.MultiParamCase  -> $"(fun v -> {vName} <- v |> Convert{lastNames unionName |> solidName}.{firstName unionName}Case{case.CaseName}FromJson)"
-                    line txt $"            | \"{firstCharToUpper  name}{case.CaseName}\" -> pair.Value |> {rightValue}"
-                )
+        for fieldInfo in recordInfo.Fields do
+            let vName = prefix + fieldInfo.Name
+            let suffix = match fieldInfo.Type with Optional _ -> "Value" | _ -> ""
+            line txt $"            | \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackField locks vName fieldInfo.Type}"
         line txt $"            | _ -> () )"
-    and writeObject prefix lockItems =
+    and writeObject prefix recordInfo =
         line txt $"        ["
-        lockItems |> Seq.iter (function
-            | Field fieldLock ->
-                let vName = $"{prefix}{fieldLock.Name}"
-                match fieldLock.Type with
-                | Optional t ->
-                    let inner = "v"
-                    line txt $"           match {vName} with"
-                    line txt $"           | Some v -> \"{fieldLock.Name}Value\", {packField locks inner t}"
-                    line txt $"           | None -> ()"
-                | _ -> line txt $"           \"{firstCharToUpper fieldLock.Name}\", {packField locks vName fieldLock.Type}"
-            | OneOf (name, unionName, cases) ->
-                line txt $"           match {prefix}{name} with"
-                for case in cases do
-                    let caseMessageType = Types.mergeName unionName case.CaseName
-                    let caseMessageLock = locks.Message(caseMessageType)
-
-                    let values =
-                        caseMessageLock.LockItems
-                        |> List.map Types.messageLockItemName
-                        |> String.concat ","
-
-                    let condition =
-                        $"           | {dottedName caseMessageType}"
-                        + if values <> "" then $" ({values})" else ""
-
-                    let jsonConstructor =
-                        match caseMessageLock.LockItems with
-                        | Types.EmptyCase -> "JBool (true)"
-                        | Types.SingleParamCase fieldInfo -> $"{packField locks values fieldInfo.Type}"
-                        | Types.MultiParamCase  -> $"Convert{lastNames unionName |> solidName}.{firstName unionName}Case{case.CaseName}ToJson ({values})"
-                    line txt $"{condition} -> \"{firstCharToUpper name}{case.CaseName}\", {jsonConstructor}"
-
-                line txt "           | _ -> ()" )
+        for fieldInfo in recordInfo.Fields do
+            let vName = $"{prefix}{fieldInfo.Name}"
+            match fieldInfo.Type with
+            | Optional t ->
+                let inner = "v"
+                line txt $"           match {vName} with"
+                line txt $"           | Some v -> \"{fieldInfo.Name}Value\", {packField locks inner t}"
+                line txt $"           | None -> ()"
+            | _ -> line txt $"           \"{firstCharToUpper fieldInfo.Name}\", {packField locks vName fieldInfo.Type}"
         line txt $"        ] |> Map.ofList |> JObject"
-
 
     line txt $"namespace Protogen.FableConverters"
     line txt $"open Fable.SimpleJson"
@@ -233,7 +231,7 @@ let unpackField' rightOp (locks:LocksCollection) vName =
             if locks.IsEnum typeName then
                 $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
             else
-                $"ifObject (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
+                $"(fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
 
     f $"{vName} <- " rightOp
 

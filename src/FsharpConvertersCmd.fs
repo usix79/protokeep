@@ -52,115 +52,98 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
     | Record info ->
         let fullNameTxt = info.Name |> dottedName
         let fullNameOfProtoClass = "ProtoClasses." + fullNameTxt
-        let lockItems = locks.Message(info.Name).LockItems
-
 
         fromProtobuf fullNameTxt
         line txt "        {"
-        lockItems |> List.iter(fun lockItem ->
-            line txt $"            {Types.messageLockItemName lockItem} = {genLockItemFromProtobuf fullNameOfProtoClass lockItem}")
+        for fieldInfo in info.Fields do
+            line txt $"            {fieldInfo.Name} = {genFieldFromProtobuf fullNameOfProtoClass fieldInfo}"
         line txt "        }"
 
         toProtobuf fullNameTxt
         line txt $"        let y = ProtoClasses.{fullNameTxt}()"
-        lockItems
-        |> List.iter (fun item ->
-            let itemName = Types.messageLockItemName item
-            genLockItemToProtobuf $"x.{itemName}" $"y.{itemName}" item)
+        for fieldInfo in info.Fields do
+            genFieldToProtobuf $"x.{fieldInfo.Name}" $"y.{fieldInfo.Name}" fieldInfo
         line txt $"        y"
-    | Union info ->
-        let fullNameTxt = info.Name |> dottedName
-        for case in info.Cases do
-            let fullCaseNameTxt = $"ProtoClasses.{fullNameTxt}__{firstName case.Name}"
-            let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
-            let lockItems = locks.Message(case.Name).LockItems
+    | Union union ->
+        fromProtobuf (dottedName union.Name)
+        line txt "        match x.UnionCase with"
+        for case in union.Cases do
+            let rightValue =
+                match case with
+                | Types.EmptyRecord -> $"{dottedName case.Name}"
+                | Types.SingleFieldRecord fieldInfo -> $"{dottedName case.Name}(x.{firstName case.Name}{convertionFrom fieldInfo.Type})"
+                | Types.MultiFieldsRecord  -> $"x.{firstName case.Name} |> Convert{solidName ns}.FromProtobuf"
+            line txt $"        | ProtoClasses.{dottedName union.Name}.UnionOneofCase.{firstName case.Name} -> {rightValue}"
+        line txt $"        | _ -> {dottedName union.Name}.Unknown"
 
-            match lockItems with
-            | Types.MultiParamCase ->
+        toProtobuf (dottedName union.Name)
+        line txt $"        let y = ProtoClasses.{dottedName union.Name}()"
+        line txt "        match x with"
+        for case in union.Cases do
+            let values = case.Fields |> List.map Utils.getName |> String.concat ","
+            let condition =
+                $"        | {dottedName case.Name}" + if values <> "" then $" ({values})" else ""
+
+            match case with
+            | Types.EmptyRecord ->
+                line txt $"{condition} -> y.{firstName case.Name} <- true"
+            | Types.SingleFieldRecord fieldInfo ->
+                line txt $"{condition} ->"
+                genFieldToProtobuf fieldInfo.Name $"    y.{firstName case.Name}" fieldInfo
+            | Types.MultiFieldsRecord ->
+                line txt ($"{condition} -> y.{firstName case.Name} <- " +
+                    $"Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}ToProtobuf({values})")
+
+        line txt $"        | {dottedName union.Name}.Unknown -> ()"
+        line txt "        y"
+
+        for case in union.Cases do
+            let fullCaseNameTxt = $"ProtoClasses.{dottedName union.Name}__{firstName case.Name}"
+            let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
+
+            match case with
+            | Types.MultiFieldsRecord ->
                 line txt $"    static member FromProtobuf (x:{fullCaseNameTxt})  ="
                 let values =
-                    lockItems
-                    |> List.map(fun lockItem -> $"({genLockItemFromProtobuf fullCaseNameTxt lockItem})")
+                    case.Fields
+                    |> List.map(fun fieldInfo -> $"({genFieldFromProtobuf fullCaseNameTxt fieldInfo})")
                     |> String.concat ","
 
                 line txt $"        {case.Name |> dottedName}"
                 line txt $"            ({values})"
 
-                line txt $"    static member {firstName info.Name}Case{firstName case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
+                line txt $"    static member {firstName union.Name}Case{firstName case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
                 line txt $"        let y = {fullCaseNameTxt}()"
-                lockItems |> List.iter (fun item ->
-                    let itemName = Types.messageLockItemName item
-                    genLockItemToProtobuf $"{itemName}" $"y.{firstCharToUpper itemName}" item)
+                for fieldInfo in case.Fields do
+                    genFieldToProtobuf $"{fieldInfo.Name}" $"y.{firstCharToUpper fieldInfo.Name}" fieldInfo
                 line txt $"        y"
             | _ -> ()
 
-    and genLockItemFromProtobuf fullNameTxt = function
-        | Field item ->
-            match item.Type with
-            | Optional t ->
-                let caseValue = $"{fullNameTxt}.{item.Name}OneofCase.{item.Name}Value"
-                $"if x.{firstCharToUpper item.Name}Case = {caseValue} then Some (x.{item.Name}Value{convertionFrom t}) else None"
-            | t -> $"x.{firstCharToUpper item.Name}{convertionFrom t}"
-        | OneOf (name,unionName,cases) ->
-            let name = firstCharToUpper name
-            [ ""
-              $"                match x.{name}Case with"
-              for case in cases do
-                let caseTypeName = Types.mergeName unionName case.CaseName
-                let caseMessageLock = locks.Message(caseTypeName)
-                let rightValue =
-                    match caseMessageLock.LockItems with
-                    | Types.EmptyCase -> $"{dottedName unionName}.{case.CaseName}"
-                    | Types.SingleParamCase fieldInfo -> $"{dottedName caseTypeName}(x.{name}{case.CaseName}{convertionFrom fieldInfo.Type})"
-                    | Types.MultiParamCase  -> $"x.{name}{case.CaseName} |> Convert{lastNames unionName |> solidName }.FromProtobuf"
-                $"                | {fullNameTxt}.{name}OneofCase.{name}{case.CaseName} -> {rightValue}"
-              $"                | _ -> {dottedName unionName}.Unknown"
-            ]
-            |> String.concat "\n"
+    and genFieldFromProtobuf fullNameTxt fieldInfo =
+        match fieldInfo.Type with
+        | Optional t ->
+            let caseValue = $"{fullNameTxt}.{fieldInfo.Name}OneofCase.{fieldInfo.Name}Value"
+            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then Some (x.{fieldInfo.Name}Value{convertionFrom t}) else None"
+        | t -> $"x.{firstCharToUpper fieldInfo.Name}{convertionFrom t}"
 
-    and genLockItemToProtobuf xName yName = function
-        | Field item ->
-            match item.Type with
-            | Optional t ->
-                line txt $"        match {xName} with"
-                line txt $"        | Some v -> {yName}Value <- v{convertionTo t}"
-                line txt $"        | None -> ()"
-            | Array t | List t ->
-                match fieldToProtobuf t with
-                | Some cnv -> line txt $"        {yName}.AddRange({xName} |> Seq.map({cnv}))"
-                | None -> line txt $"        {yName}.AddRange({xName})"
-            | Map t ->
-                match fieldToProtobuf t with
-                | Some cnv ->
-                    line txt $"    for pair in {xName} do"
-                    line txt $"        {yName}.[pair.Key] <- pair.Value{cnv}"
-                | None -> line txt $"        {yName}.Add({xName})"
-            | t ->
-                line txt $"        {yName} <- {xName}{convertionTo t}"
-        | OneOf (_,unionName,cases) ->
+    and genFieldToProtobuf xName yName fieldInfo =
+        match fieldInfo.Type with
+        | Optional t ->
             line txt $"        match {xName} with"
-            for case in cases do
-                let caseMessageLock = locks.Message(Types.mergeName unionName case.CaseName)
-
-                let values =
-                    caseMessageLock.LockItems
-                    |> List.map Types.messageLockItemName
-                    |> String.concat ","
-                let condition =
-                    $"        | {dottedName unionName}.{case.CaseName}"
-                    + if values <> "" then $" ({values})" else ""
-
-                match caseMessageLock.LockItems with
-                | Types.EmptyCase ->
-                    line txt $"{condition} -> {yName}{case.CaseName} <- true"
-                | Types.SingleParamCase paramInfo ->
-                    line txt $"{condition} ->"
-                    genLockItemToProtobuf paramInfo.Name $"    {yName}{case.CaseName}" (Field paramInfo)
-                | Types.MultiParamCase ->
-                    line txt ($"{condition} -> {yName}{case.CaseName} <- " +
-                        $"Convert{lastNames unionName |> solidName}.{firstName unionName}Case{case.CaseName}ToProtobuf({values})")
-
-            line txt $"        | {dottedName unionName}.Unknown -> ()"
+            line txt $"        | Some v -> {yName}Value <- v{convertionTo t}"
+            line txt $"        | None -> ()"
+        | Array t | List t ->
+            match fieldToProtobuf t with
+            | Some cnv -> line txt $"        {yName}.AddRange({xName} |> Seq.map({cnv}))"
+            | None -> line txt $"        {yName}.AddRange({xName})"
+        | Map t ->
+            match fieldToProtobuf t with
+            | Some cnv ->
+                line txt $"    for pair in {xName} do"
+                line txt $"        {yName}.[pair.Key] <- pair.Value{cnv}"
+            | None -> line txt $"        {yName}.Add({xName})"
+        | t ->
+            line txt $"        {yName} <- {xName}{convertionTo t}"
 
     line txt $"namespace Protogen.FsharpConverters"
     line txt $"type Convert{solidName module'.Name} () ="
@@ -168,7 +151,6 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         genItem item
 
     txt.ToString()
-
 
 let rec fieldFromProtobuf type' =
     match type' with

@@ -134,6 +134,13 @@ module Types =
         | UnionNameIsChanged of recordName:ComplexName*fieldName:string*oldName:ComplexName*newName:ComplexName
         | AddingFieldIsNotAllowed of recordName:ComplexName*fieldName:string
 
+    let (|EmptyRecord| SingleFieldRecord|MultiFieldsRecord|) (info:RecordInfo) =
+        match info.Fields with
+        | [] -> EmptyRecord
+        | [{Type = Optional (_)}] -> MultiFieldsRecord
+        | [field] -> SingleFieldRecord field
+        | _ -> MultiFieldsRecord
+
     let (|EmptyCase|SingleParamCase|MultiParamCase|) = function
         | [] -> EmptyCase
         | [Field {Type = Optional (_)}] -> MultiParamCase

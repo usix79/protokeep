@@ -12,7 +12,7 @@ let Handler module' locks typesCache = function
     | "--output"::outputFileName::args ->
         Program.checkLock module' locks typesCache
         |> Result.bind(fun _ ->
-            let fileContent = gen module' locks
+            let fileContent = gen module' locks typesCache
             let fileName =
                 if Path.GetExtension(outputFileName) <> ".proto" then outputFileName + ".proto" else outputFileName
             Console.WriteLine($"Writing .proto definition to {fileName}")
@@ -26,7 +26,7 @@ let Instance = {
     Run = Handler
 }
 
-let gen (module':Module) (locks:LocksCollection) =
+let gen (module':Module) (locks:LocksCollection) (typesCache:TypesCache) =
     let txt = StringBuilder()
 
     let rec genItem ns = function
@@ -39,6 +39,18 @@ let gen (module':Module) (locks:LocksCollection) =
         line txt $"}}"
     | Record info -> genRecord (firstName info.Name) info
     | Union info ->
+        line txt $"message {firstName info.Name} {{"
+        line txt $"    oneof Union {{"
+        for caseInfo,caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
+            let fieldTypeName =
+                match caseInfo with
+                | Types.EmptyRecord -> "bool" // empty case would be bool
+                | Types.SingleFieldRecord fieldInfo -> $"{typeToString fieldInfo.Type}"
+                | Types.MultiFieldsRecord -> $"{dottedName info.Name}__{firstName caseInfo.Name}"
+            line txt $"        {fieldTypeName} {caseLock.Name} = {caseLock.Num};"
+        line txt $"    }}"
+        line txt $"}}"
+
         for case in info.Cases do
             let needRecord =
                 match locks.Message(case.Name).LockItems with
@@ -49,27 +61,15 @@ let gen (module':Module) (locks:LocksCollection) =
             if needRecord then
                 let recordName = (firstName info.Name) + "__" + (firstName case.Name)
                 genRecord recordName case
+
     and genRecord recordName info =
         line txt $"message {recordName} {{"
-        for item in locks.Message(info.Name).LockItems do
-            match item with
-            | Field info ->
-                match info.Type with
-                | Optional v ->
-                    line txt $"    oneof {firstCharToUpper info.Name} {{{typeToString v} {firstCharToUpper info.Name}Value = {info.Num};}}"
-                | _ ->
-                    line txt $"    {typeToString info.Type} {firstCharToUpper info.Name} = {info.Num};"
-            | OneOf (name,unionName,fields) ->
-                line txt $"    oneof {firstCharToUpper name} {{"
-                for fieldLock in fields do
-                    let fieldMessage = locks.Message(Types.mergeName unionName fieldLock.CaseName)
-                    let fieldTypeName =
-                        match fieldMessage.LockItems with
-                        | Types.EmptyCase -> "bool" // empty case would be bool
-                        | Types.SingleParamCase fieldLock -> $"{typeToString fieldLock.Type}"
-                        | Types.MultiParamCase -> $"{dottedName unionName}__{fieldLock.CaseName}"
-                    line txt $"        {fieldTypeName} {firstCharToUpper name}{fieldLock.CaseName} = {fieldLock.Num};"
-                line txt $"    }}"
+        for item in locks.Record(info.Name).Fields do
+            match item.Type with
+            | Optional v ->
+                line txt $"    oneof {firstCharToUpper item.Name} {{{typeToString v} {firstCharToUpper item.Name}Value = {item.Num};}}"
+            | _ ->
+                line txt $"    {typeToString item.Type} {firstCharToUpper item.Name} = {item.Num};"
         line txt $"}}"
 
     line txt """syntax = "proto3";"""

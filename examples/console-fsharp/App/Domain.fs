@@ -27,6 +27,7 @@ type Crossroad = {
     Street2 : string
     Light : Domain.TrafficLight
     LightStatus : Domain.LightStatus
+    History : Domain.LightStatus list
 }
 type Crossroad2 = {
     Id : int

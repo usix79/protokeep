@@ -106,16 +106,19 @@ enum TrafficLight {
     TrafficLightYellow = 2;
     TrafficLightGreen = 3;
 }
+message LightStatus {
+    oneof Union {
+        bool Normal = 1;
+        int32 Warning = 2;
+        google.protobuf.Timestamp OutOfOrder = 3;
+    }
+}
 message Crossroad {
     int32 Id = 1;
     string Street1 = 2;
     string Street2 = 3;
     Domain.TrafficLight Light = 4;
-    oneof LightStatus {
-        bool LightStatusNormal = 5;
-        int32 LightStatusWarning = 6;
-        google.protobuf.Timestamp LightStatusOutOfOrder = 7;
-    }
+    Domain.LightStatus LightStatus = 5;
 }
 """)
     ] |> Seq.map FSharpValue.GetTupleFields
@@ -130,7 +133,7 @@ let testAllCases (input, expectedOutput:string) =
         |> Result.map (fun module' ->
             Types.lock module' (LocksCollection []) typesCache
             |> Result.map(fun locks ->
-                let outputText = ProtoCmd.gen module' (LocksCollection locks)
+                let outputText = ProtoCmd.gen module' (LocksCollection locks) typesCache
                 Assert.Equal(expectedOutput.Trim(), outputText.Trim()))
             |> Result.mapError(fun error -> failwithf "%A" error)))
     |> Result.mapError(fun error -> failwithf "%A" error)

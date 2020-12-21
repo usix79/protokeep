@@ -13,6 +13,7 @@ record Crossroad = {
     Street2: string
     Light: TrafficLight
     LightStatus: LightStatus
+    History: LightStatus list
 }
 
 record Crossroad2 = {

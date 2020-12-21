@@ -213,6 +213,23 @@ type ConvertDomain () =
         | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
         | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
+    static member LightStatusFromJson (json: Json): Domain.LightStatus =
+        let mutable y = Domain.LightStatus.Unknown
+        getProps json
+        |> Seq.iter(fun pair ->
+            match pair.Key with
+            | "Normal" -> pair.Value |> ifBool (fun v -> y <- Domain.LightStatus.Normal)
+            | "Warning" -> pair.Value |> ifNumber (fun v -> y <- v |> unbox |> Domain.LightStatus.Warning)
+            | "OutOfOrder" -> pair.Value |> (fun v -> y <- v |> ConvertDomain.LightStatusCaseOutOfOrderFromJson)
+            | _ -> () )
+        y
+    static member LightStatusToJson (x:Domain.LightStatus) =
+        match x with
+        | Domain.LightStatus.Normal -> "Normal", JBool (true)
+        | Domain.LightStatus.Warning (errorsCount) -> "Warning", JNumber (unbox errorsCount)
+        | Domain.LightStatus.OutOfOrder (since,period) -> "OutOfOrder", ConvertDomain.LightStatusCaseOutOfOrderToJson (since,period)
+        | _ -> "Unknown", JBool (true)
+        |> List.singleton |> Map.ofList |> JObject
     static member LightStatusCaseOutOfOrderFromJson (json: Json) =
         let mutable since = System.DateTimeOffset.MinValue
         let mutable period = System.TimeSpan.Zero
@@ -249,9 +266,7 @@ type ConvertDomain () =
             | "Street1" -> pair.Value |> ifString (fun v -> vStreet1 <- v)
             | "Street2" -> pair.Value |> ifString (fun v -> vStreet2 <- v)
             | "Light" -> pair.Value |> ifString (fun v -> vLight <- v |> ConvertDomain.TrafficLightFromString)
-            | "LightStatusNormal" -> pair.Value |> ifBool (fun v -> vLightStatus <- Domain.LightStatus.Normal)
-            | "LightStatusWarning" -> pair.Value |> ifNumber (fun v -> vLightStatus <- v |> unbox |> Domain.LightStatus.Warning)
-            | "LightStatusOutOfOrder" -> pair.Value |> (fun v -> vLightStatus <- v |> ConvertDomain.LightStatusCaseOutOfOrderFromJson)
+            | "LightStatus" -> pair.Value |> (fun v -> vLightStatus <- v |> ConvertDomain.LightStatusFromJson)
             | _ -> () )
         {
             Id = vId
@@ -266,11 +281,7 @@ type ConvertDomain () =
            "Street1", JString (x.Street1)
            "Street2", JString (x.Street2)
            "Light", JString (x.Light |> ConvertDomain.TrafficLightToString)
-           match x.LightStatus with
-           | Domain.LightStatus.Normal -> "LightStatusNormal", JBool (true)
-           | Domain.LightStatus.Warning (errorsCount) -> "LightStatusWarning", JNumber (unbox errorsCount)
-           | Domain.LightStatus.OutOfOrder (since,period) -> "LightStatusOutOfOrder", ConvertDomain.LightStatusCaseOutOfOrderToJson (since,period)
-           | _ -> ()
+           "LightStatus", (x.LightStatus |> ConvertDomain.LightStatusToJson)
         ] |> Map.ofList |> JObject
     """)
     ] |> Seq.map FSharpValue.GetTupleFields
