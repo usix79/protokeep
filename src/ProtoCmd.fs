@@ -53,10 +53,10 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:TypesCache) =
 
         for case in info.Cases do
             let needRecord =
-                match locks.Message(case.Name).LockItems with
-                | Types.EmptyCase -> false
-                | Types.SingleParamCase _ -> false
-                | Types.MultiParamCase -> true
+                match case with
+                | Types.EmptyRecord -> false
+                | Types.SingleFieldRecord _ -> false
+                | Types.MultiFieldsRecord -> true
 
             if needRecord then
                 let recordName = (firstName info.Name) + "__" + (firstName case.Name)
@@ -115,13 +115,10 @@ let references (locks : LocksCollection) (module':Module) =
     let rec f = function
         | Enum _ -> ()
         | Record info -> fRecord info
-        | Union info ->
-            info.Cases |> List.iter fRecord
+        | Union info -> info.Cases |> List.iter fRecord
     and fRecord info =
-        locks.Message(info.Name).LockItems
-        |> List.choose (function
-            | Field x -> typeReference x.Type
-            | OneOf (_,unionName,_) -> Types.extractNamespace unionName |> Some )
+        info.Fields
+        |> List.choose (fun fieldInfo -> typeReference fieldInfo.Type)
         |> List.iter (fun r -> set.Add(r) |> ignore)
 
     module'.Items |> List.iter f

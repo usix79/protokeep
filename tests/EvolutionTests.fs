@@ -92,13 +92,6 @@ let ``Simple Record`` () =
                 {Name = "Street1"; Type = String; Num = 2}
                 {Name = "Street2"; Type = String; Num = 3}
             ]}
-        MessageLock {
-            Name= ComplexName ["Crossroad"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                Field {Name = "Street1"; Type = String; Num = 2}
-                Field {Name = "Street2"; Type = String; Num = 3}
-            ]}
         ]
 
     assertEqual expected (Types.lock input (LocksCollection lock) (input |> Types.toTypesCacheItems |> Map.ofList))
@@ -130,15 +123,6 @@ let ``Union`` () =
                 {Name = "Id"; Type = Int; Num = 1}
                 {Name = "Check"; Type = Complex <| ComplexName ["ServiceCheck"; "Domain"]; Num = 2}
             ]}
-        MessageLock {
-            Name = ComplexName ["Log"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
-                    {CaseName = "Random"; Num = 2}
-                    {CaseName = "Planned"; Num = 3}
-                ])
-            ]}
         UnionLock {
             Name = ComplexName ["ServiceCheck"; "Domain"]
             Cases = [
@@ -153,15 +137,6 @@ let ``Union`` () =
                     { Name = "Where"; Type = String; Num = 2 }
                     { Name = "When"; Type = Timestamp; Num = 3 }
                     ]};
-        MessageLock {
-            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
-            LockItems = [] }
-        MessageLock {
-            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
-            LockItems = [
-                Field { Name = "What"; Type = String; Num = 1 };
-                Field { Name = "Where"; Type = String;  Num = 2 };
-                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ]
 
     assertEqual expected (Types.lock input (LocksCollection lock) (input |> Types.toTypesCacheItems |> Map.ofList))
@@ -186,13 +161,6 @@ let ``Missed Field Record`` () =
                                      Num = 2 }; { Name = "Street2"
                                                   Type = String
                                                   Num = 3 }] };
-        MessageLock {
-            Name= ComplexName ["Crossroad"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                Field {Name = "Street1"; Type = String; Num = 2}
-                Field {Name = "Street2"; Type = String; Num = 3}
-            ]}
         ]
 
     let expected = Error [ Types.MissedFieldInRecord (ComplexName ["Crossroad"; "Domain"], "Street2") ]
@@ -212,13 +180,6 @@ let ``Acceptable Evolutionof a Field's Type`` () =
                 ]}
         ]}
     let lock = [
-        MessageLock {
-            Name= ComplexName ["Crossroad"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                Field {Name = "Street1"; Type = String; Num = 2}
-                Field {Name = "Street2"; Type = String; Num = 3}
-            ]}
         ]
 
     let expected = Ok [
@@ -231,13 +192,6 @@ let ``Acceptable Evolutionof a Field's Type`` () =
                                        Num = 2}; { Name = "Street2"
                                                    Type = String
                                                    Num = 3}] };
-          MessageLock {
-            Name= ComplexName ["Crossroad"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Long; Num = 1}
-                Field {Name = "Street1"; Type = String; Num = 2}
-                Field {Name = "Street2"; Type = String; Num = 3}
-            ]}
         ]
     assertEqual expected (Types.lock input (LocksCollection lock) (input |> Types.toTypesCacheItems |> Map.ofList))
 
@@ -265,13 +219,6 @@ let UnacceptableEvolutionOfAFieldType () =
                                                                  Type = String
                                                                  Num = 3
                                                                  }] };
-        MessageLock {
-            Name= ComplexName ["Crossroad"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                Field {Name = "Street1"; Type = String; Num = 2}
-                Field {Name = "Street2"; Type = String; Num = 3}
-            ]}
         ]
 
     let expected = Error [ Types.UnacceptableEvolution(ComplexName ["Crossroad"; "Domain"], "Id", Int, Guid)]
@@ -304,30 +251,12 @@ let MissedFieldInUnion() =
                           Type = Complex (ComplexName ["ServiceCheck"; "Domain"])
                           Num = 2
                           }] };
-        MessageLock {
-            Name = ComplexName ["Log"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
-                    {CaseName = "Random"; Num = 2}
-                    {CaseName = "Planned"; Num = 3}
-                ])
-            ]}
         UnionLock {
             Name = ComplexName ["ServiceCheck"; "Domain"]
             Cases = [
                 { Name = "Random"; Num = 1 }
                 { Name = "Planned"; Num = 2 }
             ] };
-        MessageLock {
-            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
-            LockItems = [] }
-        MessageLock {
-            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
-            LockItems = [
-                Field { Name = "What"; Type = String; Num = 1 };
-                Field { Name = "Where"; Type = String;  Num = 2 };
-                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
         ]
 
     let expected = Error [ Types.MissedCaseInUnion (ComplexName ["ServiceCheck"; "Domain"], "Planned")]
@@ -353,26 +282,7 @@ let AddFieldInUnion() =
                 {Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]; Fields = []}
             ]}
         ]}
-    let lock = [
-        MessageLock {
-            Name = ComplexName ["Log"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
-                    {CaseName = "Random"; Num = 2}
-                    {CaseName = "Planned"; Num = 3}
-                ])
-            ]}
-        MessageLock {
-            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
-            LockItems = [] }
-        MessageLock {
-            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
-            LockItems = [
-                Field { Name = "What"; Type = String; Num = 1 }
-                Field { Name = "Where"; Type = String;  Num = 2 }
-                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
-        ]
+    let lock = []
 
     let expected = Ok [
            RecordLock
@@ -386,18 +296,6 @@ let AddFieldInUnion() =
                           Type = Complex (ComplexName ["ServiceCheck"; "Domain"])
                           Num = 2
                         }] };
-           MessageLock
-             { Name = ComplexName ["Log"; "Domain"]
-               LockItems =
-                          [Field { Name = "Id"
-                                   Type = Int
-                                   Num = 1 };
-                           OneOf
-                             ("Check", ComplexName ["ServiceCheck"; "Domain"],
-                              [{ CaseName = "Random"
-                                 Num = 2 }; { CaseName = "Planned"
-                                              Num = 3 }; { CaseName = "NewCase"
-                                                           Num = 4 }])] };
            UnionLock { Name = ComplexName ["ServiceCheck"; "Domain"]
                        Cases = [{ Name = "Random"
                                   Num = 1 }; { Name = "Planned"
@@ -419,20 +317,6 @@ let AddFieldInUnion() =
                                                                  }] };
            RecordLock { Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]
                         Fields = [] };
-           MessageLock { Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
-                         LockItems = [] };
-           MessageLock
-             { Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
-               LockItems =
-                          [Field { Name = "What"
-                                   Type = String
-                                   Num = 1 }; Field { Name = "Where"
-                                                      Type = String
-                                                      Num = 2 };
-                           Field { Name = "When"
-                                   Type = Timestamp
-                                   Num = 3 }] };
-           MessageLock { Name = ComplexName ["NewCase"; "ServiceCheck"; "Domain"]
-                         LockItems = [] }]
+    ]
 
     assertEqual expected (Types.lock input (LocksCollection lock) (input |> Types.toTypesCacheItems |> Map.ofList))

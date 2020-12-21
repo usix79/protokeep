@@ -72,18 +72,6 @@ type ConvertDomain () =
            "P1", (p1 |> ConvertDomain.OpToJson)
            "P2", (p2 |> ConvertDomain.OpToJson)
         ] |> Map.ofList |> JObject
-    static member OpCaseLnFromJson (json: Json) =
-        let mutable p1 = Domain.Op.Unknown
-        getProps json
-        |> Seq.iter(fun pair ->
-            match pair.Key with
-            | "P1" -> pair.Value |> (fun v -> p1 <- v |> ConvertDomain.OpFromJson)
-            | _ -> () )
-        Domain.Op.Ln (p1)
-    static member OpCaseLnToJson (p1) =
-        [
-           "P1", (p1 |> ConvertDomain.OpToJson)
-        ] |> Map.ofList |> JObject
     static member OpCaseQuantumFromJson (json: Json) =
         let mutable p1 = Domain.Op.Unknown
         let mutable p2 = Domain.Op.Unknown
@@ -134,18 +122,6 @@ type ConvertDomain () =
         | Domain.OpResult.Fail (p1) -> "Fail", (p1 |> ConvertDomain.OpErrorToJson)
         | _ -> "Unknown", JBool (true)
         |> List.singleton |> Map.ofList |> JObject
-    static member OpResultCaseFailFromJson (json: Json) =
-        let mutable p1 = Domain.OpError.Unknown
-        getProps json
-        |> Seq.iter(fun pair ->
-            match pair.Key with
-            | "P1" -> pair.Value |> (fun v -> p1 <- v |> ConvertDomain.OpErrorFromJson)
-            | _ -> () )
-        Domain.OpResult.Fail (p1)
-    static member OpResultCaseFailToJson (p1) =
-        [
-           "P1", (p1 |> ConvertDomain.OpErrorToJson)
-        ] |> Map.ofList |> JObject
     static member DefaultRequest: Lazy<Domain.Request> =
         lazy {
             Token = ""

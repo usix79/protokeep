@@ -61,16 +61,6 @@ let gen (locks:LockItem list) =
             line txt $"union {dottedName lock.Name}"
             for case in lock.Cases do
                 line txt $"    case {case.Name} = {case.Num}"
-        | MessageLock lock ->
-            line txt $"message {dottedName lock.Name}"
-            for item in lock.LockItems do
-                match item with
-                | Field lock ->
-                    line txt $"    field {lock.Name} {typeToString lock.Type} = {lock.Num}"
-                | OneOf (name, unionName, locks) ->
-                    line txt $"    oneof {name} {dottedName unionName}"
-                    for case in locks do
-                    line txt $"        case {case.CaseName} = {case.Num}"
 
     locks |> List.map f |> ignore
     txt.ToString()

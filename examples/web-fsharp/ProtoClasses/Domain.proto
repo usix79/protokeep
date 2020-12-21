@@ -26,9 +26,6 @@ message Op__Div {
     Domain.Op P1 = 1;
     Domain.Op P2 = 2;
 }
-message Op__Ln {
-    Domain.Op P1 = 1;
-}
 message Op__Quantum {
     Domain.Op P1 = 1;
     Domain.Op P2 = 2;
@@ -46,9 +43,6 @@ message OpResult {
         int32 Success = 1;
         Domain.OpError Fail = 2;
     }
-}
-message OpResult__Fail {
-    Domain.OpError P1 = 1;
 }
 message Request {
     string Token = 1;

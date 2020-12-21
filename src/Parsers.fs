@@ -180,35 +180,6 @@ module private Impl =
                         (fun value' num -> {Name = value'; Num = num} : EnumValueLock))))
             (fun name values -> EnumLock {Name = name; Values = values})
 
-    let messageField =
-        keyword "field" >>.
-        pipe3
-            (identifier .>> ws1)
-            (fullType')
-            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
-            (fun name type' num -> Field {Name = name; Type = type'; Num = num})
-
-    let messageOneOfCase =
-        keyword "case" >>.
-        pipe2
-            (identifier .>> ws1)
-            ((between ws ws (pchar '=')) >>. pint32 .>> ts )
-            (fun name num -> {CaseName = name; Num = num})
-
-    let messageOneOf =
-        keyword "oneof" >>.
-        pipe3
-            (identifier .>> ws1)
-            (complexName .>> ts)
-            (many1 (spaces >>. messageOneOfCase .>> spaces))
-            (fun name unionName cases -> OneOf (name, unionName, cases))
-
-    let messageLock =
-        keyword "message" >>.
-        pipe2
-            (complexName .>> ts)
-            (many (ws >>. choice [messageField; messageOneOf]))
-            (fun name items -> MessageLock {Name = name; LockItems = items})
 
     let recordFieldLock =
         keyword "field" >>.
@@ -240,7 +211,7 @@ module private Impl =
             (fun name items -> UnionLock {Name = name; Cases = items})
 
     let lockDocument =
-        spaces >>. many (choice [enumLock; recordLock; unionLock; messageLock] .>> spaces) .>> eof
+        spaces >>. many (choice [enumLock; recordLock; unionLock] .>> spaces) .>> eof
 
     let fsharpCoreDocument =
         spaces >>. pstring "namespace" >>. ws1 >>. pstring "Protogen" >>. skipRestOfLine true >>.

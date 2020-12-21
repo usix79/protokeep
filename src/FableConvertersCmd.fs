@@ -62,27 +62,29 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
     | Record info ->
         let fullNameTxt = info.Name |> dottedName
-        let lockItems = locks.Message(info.Name).LockItems
 
         line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
         line txt $"        lazy {{"
-        lockItems |> Seq.iter (function
-            | Field fieldLock ->  line txt $"            {fieldLock.Name} = {defValue false fieldLock.Type}"
-            | OneOf (name,unionName, _) -> line txt $"            {name} = {dottedName unionName}.Unknown" )
+        for fieldInfo in info.Fields do
+            match fieldInfo.Type with
+            | Types.IsUnion typesCache unionInfo ->
+                line txt $"            {fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
+            | _ ->
+                line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
         line txt $"        }}"
 
         line txt $"    static member {firstName info.Name}FromJson (json: Json): {fullNameTxt} ="
         readObject "v" info
 
         line txt $"        {{"
-        lockItems |> Seq.iter (function
-            | Field fieldLock ->
-                match fieldLock.Type with
-                | Array _ -> line txt $"            {fieldLock.Name} = unbox v{fieldLock.Name}"
-                | List _ -> line txt $"            {fieldLock.Name} = v{fieldLock.Name} |> List.ofSeq"
-                | Map _ -> line txt $"            {fieldLock.Name} = v{fieldLock.Name} |> Map.ofSeq"
-                | _ -> line txt $"            {fieldLock.Name} = v{fieldLock.Name}"
-            | OneOf (name, _, _) -> line txt $"            {name} = v{name}" )
+        for fieldInfo in info.Fields do
+            match fieldInfo.Type with
+            | Types.IsUnion typesCache _ ->
+                line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
+            | Array _ -> line txt $"            {fieldInfo.Name} = unbox v{fieldInfo.Name}"
+            | List _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> List.ofSeq"
+            | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
+            | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
         line txt $"        }}"
 
         line txt $"    static member {firstName info.Name}ToJson (x: {fullNameTxt}) ="
@@ -127,28 +129,22 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
         for case in union.Cases do
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
-            let lockItems = locks.Message(case.Name).LockItems
 
-            match lockItems with
-            | Types.MultiParamCase ->
-                let values =
-                    lockItems
-                    |> List.map Types.messageLockItemName
-                    |> String.concat ","
+            match case with
+            | Types.MultiFieldsRecord ->
+                let values = case.Fields |> List.map Utils.getName |> String.concat ","
 
                 line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (json: Json) ="
                 readObject "" case
 
                 let convertedValues =
-                    lockItems
-                    |> Seq.map (function
-                        | Field fieldLock ->
-                            match fieldLock.Type with
-                            | Array _ -> $"unbox {fieldLock.Name}"
-                            | List _ -> $"{fieldLock.Name} |> List.ofSeq"
-                            | Map _ -> $"{fieldLock.Name} |> Map.ofSeq"
-                            | _ ->  fieldLock.Name
-                        | OneOf (name, _, _) -> name)
+                    case.Fields
+                    |> Seq.map (fun fieldInfo ->
+                        match fieldInfo.Type with
+                        | Array _ -> $"unbox {fieldInfo.Name}"
+                        | List _ -> $"{fieldInfo.Name} |> List.ofSeq"
+                        | Map _ -> $"{fieldInfo.Name} |> Map.ofSeq"
+                        | _ ->  fieldInfo.Name)
                     |> String.concat ","
 
                 line txt $"        {case.Name |> dottedName} ({convertedValues})"

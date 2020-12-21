@@ -29,48 +29,18 @@ type TestData() =
     value Green = 3
 """);
         ([
-        MessageLock {
+        RecordLock {
             Name= ComplexName ["Crossroad"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                Field {Name = "Street1"; Type = String; Num = 2}
-                Field {Name = "Street2"; Type = String; Num = 3}
+            Fields = [
+                {Name = "Id"; Type = Int; Num = 1}
+                {Name = "Street1"; Type = String; Num = 2}
+                {Name = "Street2"; Type = String; Num = 3}
             ]}
-        ], """message Domain.Crossroad
+        ], """record Domain.Crossroad
     field Id int = 1
     field Street1 string = 2
     field Street2 string = 3
 """);
-        ([
-        MessageLock {
-            Name = ComplexName ["Log"; "Domain"]
-            LockItems = [
-                Field {Name = "Id"; Type = Int; Num = 1}
-                OneOf ("Check",ComplexName ["ServiceCheck"; "Domain"],[
-                    {CaseName = "Random"; Num = 2}
-                    {CaseName = "Planned"; Num = 3}
-                ])
-            ]}
-        MessageLock {
-            Name = ComplexName ["Random"; "ServiceCheck"; "Domain"]
-            LockItems = [] }
-        MessageLock {
-            Name = ComplexName ["Planned"; "ServiceCheck"; "Domain"]
-            LockItems = [
-                Field { Name = "What"; Type = String; Num = 1 };
-                Field { Name = "Where"; Type = String;  Num = 2 };
-                Field { Name = "When"; Type = Timestamp; Num = 3 }] }
-        ], """message Domain.Log
-    field Id int = 1
-    oneof Check Domain.ServiceCheck
-        case Random = 2
-        case Planned = 3
-message Domain.ServiceCheck.Random
-message Domain.ServiceCheck.Planned
-    field What string = 1
-    field Where string = 2
-    field When timestamp = 3
-""")
     ] |> Seq.map FSharpValue.GetTupleFields
 
 

@@ -52,10 +52,6 @@ type EnumValueLock = { Name: string; Num: int }
 type EnumLock = { Name: ComplexName; Values: EnumValueLock list }
 type MessageFieldLock = { Name: string;  Type: Type; Num: int }
 type OneOfFieldLock = { CaseName: string;  Num: int }
-type MessageLockItem =
-    | Field of MessageFieldLock
-    | OneOf of name:string*unionName:ComplexName*fields:OneOfFieldLock list
-type MessageLock = { Name: ComplexName; LockItems: MessageLockItem list }
 type RecordFieldLock = { Name: string; Type: Type; Num: int }
 type RecordLock = { Name: ComplexName; Fields: RecordFieldLock list}
 type UnionCaseLock = { Name: string; Num: int}
@@ -65,7 +61,6 @@ type LockItem =
     | EnumLock of EnumLock
     | RecordLock of RecordLock
     | UnionLock of UnionLock
-    | MessageLock of MessageLock
 
 type TypesCache = Map<ComplexName,ModuleItem>
 
@@ -73,26 +68,21 @@ type LocksCollection (items:LockItem list) =
     let enums = System.Collections.Generic.Dictionary<ComplexName, EnumLock>()
     let records = System.Collections.Generic.Dictionary<ComplexName, RecordLock>()
     let unions = System.Collections.Generic.Dictionary<ComplexName, UnionLock>()
-    let messages = System.Collections.Generic.Dictionary<ComplexName, MessageLock>()
     do items |> List.iter (function
         | EnumLock lock -> enums.[lock.Name] <- lock
         | RecordLock lock -> records.[lock.Name] <- lock
-        | UnionLock lock -> unions.[lock.Name] <- lock
-        | MessageLock lock -> messages.[lock.Name] <- lock )
+        | UnionLock lock -> unions.[lock.Name] <- lock)
 
     member _.TryFind (cn:ComplexName) =
         enums.TryFind cn |> Option.map EnumLock
         |> Option.orElseWith(fun () -> records.TryFind cn |> Option.map RecordLock)
         |> Option.orElseWith(fun () -> unions.TryFind cn |> Option.map UnionLock)
-        |> Option.orElseWith(fun () -> messages.TryFind cn |> Option.map MessageLock)
 
     member _.Enum cn = enums.[cn]
     member _.Record cn = records.[cn]
     member _.Union cn = unions.[cn]
-    member _.Message cn = messages.[cn]
 
     member _.IsEnum cn = enums.ContainsKey cn
-    member _.IsMessage cn = messages.ContainsKey cn
     member _.IsRecord cn = records.ContainsKey cn
     member _.IsUnion cn = unions.ContainsKey cn
 
@@ -103,7 +93,6 @@ type LocksCollection (items:LockItem list) =
             | EnumLock lock -> enums.TryFind lock.Name |> Option.map ((<>) lock)
             | RecordLock lock -> records.TryFind lock.Name |> Option.map ((<>) lock)
             | UnionLock lock -> unions.TryFind lock.Name |> Option.map ((<>) lock)
-            | MessageLock lock -> messages.TryFind lock.Name |> Option.map ((<>) lock)
             |> Option.defaultValue true)
         |> Option.map (fun _ -> true)
         |> Option.defaultValue false
@@ -141,12 +130,6 @@ module Types =
         | [field] -> SingleFieldRecord field
         | _ -> MultiFieldsRecord
 
-    let (|EmptyCase|SingleParamCase|MultiParamCase|) = function
-        | [] -> EmptyCase
-        | [Field {Type = Optional (_)}] -> MultiParamCase
-        | [Field fieldLock] -> SingleParamCase fieldLock
-        | _ -> MultiParamCase
-
     let mergeName (ComplexName ns) name = ComplexName (name::ns)
 
     let firstName = function
@@ -165,17 +148,8 @@ module Types =
 
     let lockItemName = function
         | EnumLock lock -> lock.Name
-        | MessageLock lock -> lock.Name
         | RecordLock lock -> lock.Name
         | UnionLock lock -> lock.Name
-
-    let messageLockItemName = function
-        | Field x -> x.Name
-        | OneOf (name, _, _) -> name
-
-    let lockItemMaxNum = function
-        | Field x -> x.Num
-        | OneOf (_, _, cases) -> (cases |> List.maxBy (fun c -> c.Num)).Num
 
     let (|IsEnum|_|) (typesCache:TypesCache) type' =
         match type' with
@@ -273,18 +247,13 @@ module Types =
                 |> Result.map List.singleton
             | Record info ->
                 lockRecord lockCache typesCache false info
-                |> Result.bind (fun item1 ->
-                    lockMessage lockCache typesCache info
-                    |> Result.map (fun item2 -> [item1; item2]))
+                |> Result.map List.singleton
             | Union info ->
                 lockUnion lockCache typesCache info
                 |> Result.bind (fun unionItem ->
                     info.Cases
                     |> traverse (lockRecord lockCache typesCache true)
-                    |> Result.bind(fun recordItems ->
-                        info.Cases
-                        |> traverse (lockMessage lockCache typesCache)
-                        |> Result.map (fun messageItems -> [unionItem; yield! recordItems; yield! messageItems]) ))
+                    |> Result.map(fun recordItems -> [unionItem; yield! recordItems ]) )
         ) |> Result.map List.concat
 
     let lockEnum (lockCache:LocksCollection) info =
@@ -386,52 +355,3 @@ module Types =
                     (fun fieldName -> MissedCaseInUnion (unionInfo.Name, fieldName))
                     caseLocks )
             |> Result.map (fun items -> UnionLock {Name = unionInfo.Name; Cases = items}))
-
-    let lockMessage (lockCache:LocksCollection) (typesCache:TypesCache) info : Result<LockItem, TypeError list> =
-        let messageLockItems =
-            if lockCache.IsMessage info.Name then lockCache.Message(info.Name).LockItems else []
-
-        messageLockItems
-        |> tryMap messageLockItemName id
-        |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInLockedMessage (info.Name,fieldName)))
-        |> Result.bind (fun fieldsMap ->
-            let maxNum = messageLockItems |> List.fold (fun m -> lockItemMaxNum >>  max m) 0
-
-            info.Fields
-            |> List.mapFold(fun nextNum field ->
-                match field.Type with
-                | IsUnion typesCache unionInfo ->
-                    match lockUnionCaseMessage info.Name fieldsMap field.Name unionInfo nextNum with
-                    | Ok (locks,nextNum) -> Ok (OneOf (field.Name, unionInfo.Name, locks)), nextNum
-                    | Error err -> Error err, nextNum
-                | _ -> // regular field
-                    match fieldsMap.TryFind field.Name with
-                    | None -> // new field
-                        Ok (Field {Name = field.Name; Type = field.Type; Num = nextNum}), (nextNum + 1)
-                    | Some (Field lock) ->
-                        Ok (Field {Name = field.Name; Type = field.Type; Num = lock.Num}), nextNum
-                    | Some (OneOf (_, lockedUnionName, _)) ->
-                        Error [UnacceptableEvolution(info.Name, field.Name, Complex lockedUnionName, field.Type)], nextNum)
-                (maxNum + 1)
-            |> fst
-            |> traverse id
-            |> Result.map (fun items -> MessageLock {Name = info.Name; LockItems = items}))
-
-    let lockUnionCaseMessage recordName fieldsMap fieldName info nextNum =
-        match fieldsMap.TryFind fieldName with
-        | Some (OneOf (_, lockedUnionName, lockedCases)) when lockedUnionName = info.Name -> Ok lockedCases
-        | Some (OneOf (_, lockedUnionName, _)) -> Error [UnionNameIsChanged(recordName, fieldName, lockedUnionName, info.Name)]
-        | Some (Field lock) -> Error [UnacceptableEvolution(recordName, fieldName, lock.Type, Complex info.Name)]
-        | None -> Ok []
-        |> Result.bind(fun lockedCases ->
-            lockedCases
-            |> tryMap (fun c -> c.CaseName) id
-            |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInLockedRecord (recordName,fieldName)))
-            |> Result.map (fun lockedCasesMap ->
-                info.Cases
-                |> List.mapFold (fun nextNum case ->
-                    match lockedCasesMap.TryFind(firstName case.Name) with
-                    | Some lockedCase -> (lockedCase, nextNum)
-                    | None -> ({CaseName = firstName case.Name; Num = nextNum}, (nextNum + 1)))
-                    nextNum
-                ))
