@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Protobuf Include="Domain.Subdomain.proto" GrpcServices="None" />
     <Protobuf Include="Domain.proto" GrpcServices="None" />
     <Protobuf Include="Betting.proto" GrpcServices="None" />
     <Protobuf Include="BettingFootball.proto" GrpcServices="None" />

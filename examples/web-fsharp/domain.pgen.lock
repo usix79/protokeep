@@ -49,3 +49,4 @@ record Domain.Response
     field Extra string option = 4
     field Since timestamp = 5
     field Tags string map = 6
+    field Status Domain.Subdomain.Status = 7

@@ -153,6 +153,7 @@ type ConvertDomain () =
             Extra = None
             Since = System.DateTimeOffset.MinValue
             Tags = Map.empty
+            Status = ConvertDomainSubdomain.DefaultStatus.Value
         }
     static member ResponseFromJson (json: Json): Domain.Response =
         let mutable vToken = ""
@@ -161,6 +162,7 @@ type ConvertDomain () =
         let mutable vExtra = None
         let mutable vSince = System.DateTimeOffset.MinValue
         let mutable vTags = ResizeArray()
+        let mutable vStatus = ConvertDomainSubdomain.DefaultStatus.Value
         getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
@@ -170,6 +172,7 @@ type ConvertDomain () =
             | "ExtraValue" -> pair.Value |> ifString (fun v -> vExtra <- v |> Some)
             | "Since" -> pair.Value |> ifString (fun v -> vSince <- v |> toDateTimeOffset)
             | "Tags" -> pair.Value |> ifObject (Map.iter (fun key -> ifString (fun v -> v |> fun v -> vTags.Add(key, v))))
+            | "Status" -> pair.Value |> ifString (fun v -> vStatus <- v |> ConvertDomainSubdomain.StatusFromString)
             | _ -> () )
         {
             Token = vToken
@@ -178,6 +181,7 @@ type ConvertDomain () =
             Extra = vExtra
             Since = vSince
             Tags = vTags |> Map.ofSeq
+            Status = vStatus
         }
     static member ResponseToJson (x: Domain.Response) =
         [
@@ -189,4 +193,5 @@ type ConvertDomain () =
            | None -> ()
            "Since", JString (x.Since |> fromDateTimeOffset)
            "Tags", JObject (x.Tags |> Map.map (fun _ v -> JString (v)))
+           "Status", JString (x.Status |> ConvertDomainSubdomain.StatusToString)
         ] |> Map.ofList |> JObject

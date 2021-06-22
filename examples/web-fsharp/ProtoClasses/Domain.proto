@@ -3,6 +3,7 @@ package Domain;
 option csharp_namespace = "ProtoClasses.Domain";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "Domain.Subdomain.proto";
 message Op {
     oneof Union {
         int32 Val = 1;
@@ -55,4 +56,5 @@ message Response {
     oneof Extra {string ExtraValue = 4;}
     google.protobuf.Timestamp Since = 5;
     map<string,string> Tags = 6;
+    Domain.Subdomain.Status Status = 7;
 }

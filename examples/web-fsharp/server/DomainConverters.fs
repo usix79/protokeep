@@ -104,6 +104,7 @@ type ConvertDomain () =
             Extra = if x.ExtraCase = ProtoClasses.Domain.Response.ExtraOneofCase.ExtraValue then Some (x.ExtraValue) else None
             Since = x.Since |> fun v -> v.ToDateTimeOffset()
             Tags = x.Tags |> Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq
+            Status = x.Status |> ConvertDomainSubdomain.FromProtobuf
         }
     static member ToProtobuf (x:Domain.Response) : ProtoClasses.Domain.Response =
         let y = ProtoClasses.Domain.Response()
@@ -115,4 +116,5 @@ type ConvertDomain () =
         | None -> ()
         y.Since <- x.Since |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset
         y.Tags.Add(x.Tags)
+        y.Status <- x.Status |> ConvertDomainSubdomain.ToProtobuf
         y

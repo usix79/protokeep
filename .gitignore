@@ -23,6 +23,7 @@ msbuild.wrn
 tools/
 
 .ionide
+nupkg/
 
 .DS_Store
 .fake

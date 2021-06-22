@@ -103,7 +103,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                 | Types.EmptyRecord ->
                     $"ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
                 | Types.SingleFieldRecord fieldInfo ->
-                    unpackField' $" |> {dottedName case.Name}" locks "y" fieldInfo.Type
+                    unpackField' $" |> {dottedName case.Name}" typesCache "y" fieldInfo.Type
                 | Types.MultiFieldsRecord ->
                     $"(fun v -> y <- v |> Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson)"
             line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
@@ -121,7 +121,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             let jsonConstructor =
                 match case with
                 | Types.EmptyRecord -> "JBool (true)"
-                | Types.SingleFieldRecord fieldInfo -> $"{packField locks values fieldInfo.Type}"
+                | Types.SingleFieldRecord fieldInfo -> $"{packField typesCache values fieldInfo.Type}"
                 | Types.MultiFieldsRecord  -> $"Convert{lastNames union.Name |> solidName}.{firstName union.Name}Case{firstName case.Name}ToJson ({values})"
             line txt $"{condition} -> \"{firstName case.Name}\", {jsonConstructor}"
         line txt $"        | _ -> \"Unknown\", JBool (true)"
@@ -164,7 +164,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         for fieldInfo in recordInfo.Fields do
             let vName = prefix + fieldInfo.Name
             let suffix = match fieldInfo.Type with Optional _ -> "Value" | _ -> ""
-            line txt $"            | \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackField locks vName fieldInfo.Type}"
+            line txt $"            | \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackField typesCache vName fieldInfo.Type}"
         line txt $"            | _ -> () )"
     and writeObject prefix recordInfo =
         line txt $"        ["
@@ -174,9 +174,9 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             | Optional t ->
                 let inner = "v"
                 line txt $"           match {vName} with"
-                line txt $"           | Some v -> \"{fieldInfo.Name}Value\", {packField locks inner t}"
+                line txt $"           | Some v -> \"{fieldInfo.Name}Value\", {packField typesCache inner t}"
                 line txt $"           | None -> ()"
-            | _ -> line txt $"           \"{firstCharToUpper fieldInfo.Name}\", {packField locks vName fieldInfo.Type}"
+            | _ -> line txt $"           \"{firstCharToUpper fieldInfo.Name}\", {packField typesCache vName fieldInfo.Type}"
         line txt $"        ] |> Map.ofList |> JObject"
 
     line txt $"namespace Protogen.FableConverters"
@@ -206,7 +206,7 @@ let rec defValue isMutable = function
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
 
-let unpackField' rightOp (locks:LocksCollection) vName =
+let unpackField' rightOp (typesCache:Types.TypesCache) vName =
     let rec f leftOp rightOp = function
         | Bool -> $"ifBool (fun v -> {leftOp}v{rightOp})"
         | String -> $"ifString (fun v -> {leftOp}v{rightOp})"
@@ -224,16 +224,16 @@ let unpackField' rightOp (locks:LocksCollection) vName =
             let inner = f "" $" |> fun v -> {vName}.Add(key, v)" t
             $"ifObject (Map.iter (fun key -> {inner}))"
         | Complex typeName ->
-            if locks.IsEnum typeName then
-                $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
-            else
-                $"(fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
+            match typesCache.TryFind typeName with
+            | Some (Enum _) -> $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
+            | _ -> $"(fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
+
 
     f $"{vName} <- " rightOp
 
 let unpackField = unpackField' ""
 
-let packField (locks:LocksCollection) (vName:string) type' =
+let packField (typesCache:Types.TypesCache) (vName:string) type' =
     let rec f vName = function
         | Bool -> $"JBool ({vName})"
         | String -> $"JString ({vName})"
@@ -251,10 +251,9 @@ let packField (locks:LocksCollection) (vName:string) type' =
             let inner = f "v" t
             $"JObject ({vName} |> Map.map (fun _ v -> {inner}))"
         | Complex typeName ->
-            if locks.IsEnum typeName then
-                $"JString ({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToString)"
-            else
-                $"({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToJson)"
+            match typesCache.TryFind typeName with
+            | Some (Enum _) -> $"JString ({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToString)"
+            | _ -> $"({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToJson)"
 
     f vName type'
 

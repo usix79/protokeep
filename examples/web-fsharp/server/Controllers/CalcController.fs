@@ -40,6 +40,7 @@ type CalcController (logger : ILogger<CalcController>) =
                     Extra = None
                     Since = DateTimeOffset.UtcNow
                     Tags = ["tag1", "AGA"; "tag2", "BG"; "tag3333", "Hello"] |> Map.ofList
+                    Status = Subdomain.Status.Green
                 }
 
             return

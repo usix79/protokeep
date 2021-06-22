@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Domain.Subdomain;
+option csharp_namespace = "ProtoClasses.Domain.Subdomain";
+enum Status {
+    StatusUnknown = 0;
+    StatusGreen = 1;
+    StatusYellow = 2;
+    StatusRed = 3;
+}

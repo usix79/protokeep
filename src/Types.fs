@@ -202,8 +202,7 @@ module Types =
     let resolveReferences (module': Module) (imports: Module list) : Result<Module*TypesCache, TypeError list> =
         let typesCache = module' :: imports |> List.collect toTypesCacheItems |> Map.ofList
 
-        let (ComplexName ns) = module'.Name
-        let getFullName typeName =
+        let getFullName ns typeName =
             let (ComplexName name') = typeName
             let rec f ns =
                 let testName = ComplexName (name' @ ns)
@@ -214,29 +213,30 @@ module Types =
                     | [] -> None
             f ns
 
-        let resolveRecord (info:RecordInfo) =
+        let resolveRecord ns (info:RecordInfo) =
             info.Fields
             |> traverse (fun fieldInfo ->
                 match fieldInfo.Type with
-                | Optional (Complex typeName) -> getFullName typeName |> Option.map (Complex >> Optional)
-                | Array (Complex typeName) -> getFullName typeName |> Option.map (Complex >> Array)
-                | List (Complex typeName) -> getFullName typeName |> Option.map (Complex >> List)
-                | Map (Complex typeName) -> getFullName typeName |> Option.map (Complex >> Map)
-                | Complex typeName  -> getFullName typeName |> Option.map Complex
+                | Optional (Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Optional)
+                | Array (Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Array)
+                | List (Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> List)
+                | Map (Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Map)
+                | Complex typeName  -> getFullName ns typeName |> Option.map Complex
                 | t -> Some t
                 |> Option.map (fun type' -> Ok {fieldInfo with Type = type'})
                 |> Option.defaultWith (fun () -> Error [UnresolvedType fieldInfo.Type]) )
             |> Result.map (fun fields -> {info with Fields = fields})
 
-        let updateModule module' =
+        let updateModule (module':Module) =
+            let (ComplexName ns) = module'.Name
             module'.Items
             |> traverse (fun item ->
                 match item with
                 | Enum _ -> Ok item
-                | Record info -> resolveRecord info |> Result.map Record
+                | Record info -> resolveRecord ns info |> Result.map Record
                 | Union info ->
                     info.Cases
-                    |> traverse resolveRecord
+                    |> traverse (resolveRecord ns)
                     |> Result.map (fun cases -> Union {info with Cases = cases}) )
             |> Result.map (fun items -> {module' with Items = items})
 

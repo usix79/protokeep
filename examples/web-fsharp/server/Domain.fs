@@ -68,4 +68,5 @@ type Response = {
     Extra : string option
     Since : System.DateTimeOffset
     Tags : Map<string,string>
+    Status : Domain.Subdomain.Status
 }

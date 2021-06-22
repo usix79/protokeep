@@ -1,0 +1,6 @@
+module Domain.Subdomain
+
+enum Status =
+    | Green
+    | Yellow
+    | Red
