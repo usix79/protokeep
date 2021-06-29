@@ -9,7 +9,7 @@ type LightStatus =
     | Unknown
     | Normal
     | Warning of errorsCount:int
-    | OutOfOrder of since:System.DateTimeOffset
+    | OutOfOrder of since:System.DateTime
 with
     static member MakeUnknownKey () = Key.Value "0"
     static member MakeNormalKey () = Key.Value "1"
@@ -28,6 +28,7 @@ type Crossroad = {
     Light : TrafficLight
     LightStatus : LightStatus
     History : LightStatus list
+    Lirycs : string list
 }
 type Crossroad2 = {
     Id : int
@@ -39,7 +40,7 @@ type Crossroad2 = {
     Xpos : float32
     Ypos : float
     Ratio : decimal
-    LastChecked : System.DateTimeOffset
+    LastChecked : System.DateTime
     ServiceInterval : System.TimeSpan
     CurrentLight : TrafficLight
     Nickname : string option

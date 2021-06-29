@@ -8,7 +8,8 @@
   <ItemGroup>
     <Compile Include="Protogen.fs" />
     <Compile Include="Domain.fs" />
-    <Compile Include="DomainConverters.fs" />
+    <Compile Include="DomainProtoConverters.fs" />
+    <Compile Include="DomainJsonConverters.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

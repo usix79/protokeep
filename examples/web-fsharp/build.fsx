@@ -67,24 +67,24 @@ Target.create "Gen" (fun _ ->
     dotnetWithArgs [pgenFile; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "proto"; "-o"; protoFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFile; "fsharp-converters"; "-o"; fsharpConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-json-converters"; "-o"; fsharpConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFileClient;  "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fable-converters"; "-o"; fableConvertersFile; "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileSubdomain; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileSubdomain; "proto"; "-o"; protoFileSubdomain] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileSubdomain; "fsharp-types"; "-o"; fsharpTypesFileSubdomain; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFileSubdomain; "fsharp-converters"; "-o"; fsharpConvertersFileSubdomain; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFileSubdomain; "fsharp-json-converters"; "-o"; fsharpConvertersFileSubdomain; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileSubdomain; "fsharp-types"; "-o"; fsharpTypesFileClientSubdomain;  "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileSubdomain; "fable-converters"; "-o"; fableConvertersFileSubdomain; "--update-commons-in"; fableCommonsFile] protogenDll __SOURCE_DIRECTORY__
 
     dotnetWithArgs [pgenFileForBetting; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "proto"; "-o"; protoFileForBetting] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBetting; "fsharp-types"; "-o"; fsharpTypesFileForBetting] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFileForBetting; "fsharp-converters"; "-o"; fsharpConvertersFileforBetting; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFileForBetting; "fsharp-json-converters"; "-o"; fsharpConvertersFileforBetting; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBettingFootball; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBettingFootball; "proto"; "-o"; protoFileForBettingFootball] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFileForBettingFootball; "fsharp-types"; "-o"; fsharpTypesFileForBettingFootball] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFileForBettingFootball; "fsharp-converters"; "-o"; fsharpConvertersFileforBettingFootball; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFileForBettingFootball; "fsharp-json-converters"; "-o"; fsharpConvertersFileforBettingFootball; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
 )
 
 Target.create "Build" (fun _ ->

@@ -1,6 +1,16 @@
-namespace Protogen.FsharpConverters
+namespace Protogen.FsharpJsonConverters
+open System.Text.Json
+open Protogen.FsharpJsonConvertersHelpers
 type ConvertDomainSubdomain () =
-    static member FromProtobuf (x:ProtoClasses.Domain.Subdomain.Status) : Domain.Subdomain.Status =
-        enum<Domain.Subdomain.Status>(int x)
-    static member ToProtobuf (x:Domain.Subdomain.Status) : ProtoClasses.Domain.Subdomain.Status =
-        enum<ProtoClasses.Domain.Subdomain.Status>(int x)
+    static member DefaultStatus =
+        lazy Domain.Subdomain.Status.Unknown
+    static member StatusFromString = function
+        | "StatusGreen" -> Domain.Subdomain.Status.Green
+        | "StatusYellow" -> Domain.Subdomain.Status.Yellow
+        | "StatusRed" -> Domain.Subdomain.Status.Red
+        | _ -> Domain.Subdomain.Status.Unknown
+    static member StatusToString = function
+        | Domain.Subdomain.Status.Green -> "StatusGreen"
+        | Domain.Subdomain.Status.Yellow -> "StatusYellow"
+        | Domain.Subdomain.Status.Red -> "StatusRed"
+        | _ -> "Unknown"

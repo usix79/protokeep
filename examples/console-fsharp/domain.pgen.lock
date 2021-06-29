@@ -18,6 +18,7 @@ record Domain.Crossroad
     field Light Domain.TrafficLight = 4
     field LightStatus Domain.LightStatus = 5
     field History Domain.LightStatus list = 6
+    field Lirycs string list = 7
 record Domain.Crossroad2
     field Id int = 1
     field LongId long = 2

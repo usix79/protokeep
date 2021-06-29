@@ -9,7 +9,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FableConvertersTests.fs" />
-    <Compile Include="FsharpConvertersTests.fs" />
+    <Compile Include="FsharpJsonConvertersTests.fs" />
+    <Compile Include="FsharpProtoConvertersTests.fs" />
     <Compile Include="FsharpTypesTests.fs" />
     <Compile Include="ProtoTests.fs" />
     <Compile Include="EvolutionTests.fs" />

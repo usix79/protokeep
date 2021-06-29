@@ -100,7 +100,7 @@ let rec typeToString (ns:ComplexName) (type':Type) =
     | Double -> "float"
     | Decimal _ -> "decimal"
     | Bytes -> "byte array"
-    | Timestamp -> "System.DateTimeOffset"
+    | Timestamp -> "System.DateTime"
     | Duration -> "System.TimeSpan"
     | Guid -> "System.Guid"
     | Optional v -> typeToString ns v + " option"

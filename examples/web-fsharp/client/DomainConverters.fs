@@ -151,7 +151,7 @@ type ConvertDomain () =
             Result = Domain.OpResult.Unknown
             ExecutionTime = System.TimeSpan.Zero
             Extra = None
-            Since = System.DateTimeOffset.MinValue
+            Since = System.DateTime.MinValue
             Tags = Map.empty
             Status = ConvertDomainSubdomain.DefaultStatus.Value
         }
@@ -160,7 +160,7 @@ type ConvertDomain () =
         let mutable vResult = Domain.OpResult.Unknown
         let mutable vExecutionTime = System.TimeSpan.Zero
         let mutable vExtra = None
-        let mutable vSince = System.DateTimeOffset.MinValue
+        let mutable vSince = System.DateTime.MinValue
         let mutable vTags = ResizeArray()
         let mutable vStatus = ConvertDomainSubdomain.DefaultStatus.Value
         getProps json
@@ -170,7 +170,7 @@ type ConvertDomain () =
             | "Result" -> pair.Value |> (fun v -> vResult <- v |> ConvertDomain.OpResultFromJson)
             | "ExecutionTime" -> pair.Value |> ifString (fun v -> vExecutionTime <- v |> toTimeSpan)
             | "ExtraValue" -> pair.Value |> ifString (fun v -> vExtra <- v |> Some)
-            | "Since" -> pair.Value |> ifString (fun v -> vSince <- v |> toDateTimeOffset)
+            | "Since" -> pair.Value |> ifString (fun v -> vSince <- v |> toDateTime)
             | "Tags" -> pair.Value |> ifObject (Map.iter (fun key -> ifString (fun v -> v |> fun v -> vTags.Add(key, v))))
             | "Status" -> pair.Value |> ifString (fun v -> vStatus <- v |> ConvertDomainSubdomain.StatusFromString)
             | _ -> () )
@@ -191,7 +191,7 @@ type ConvertDomain () =
            match x.Extra with
            | Some v -> "ExtraValue", JString (v)
            | None -> ()
-           "Since", JString (x.Since |> fromDateTimeOffset)
+           "Since", JString (x.Since |> fromDateTime)
            "Tags", JObject (x.Tags |> Map.map (fun _ v -> JString (v)))
            "Status", JString (x.Status |> ConvertDomainSubdomain.StatusToString)
         ] |> Map.ofList |> JObject

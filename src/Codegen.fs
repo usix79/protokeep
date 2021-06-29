@@ -8,6 +8,9 @@ open Types
 
 
 let line (txt:StringBuilder) l = txt.AppendLine(l) |> ignore
+let linei (txt:StringBuilder) i l =
+    for _ in 1 .. i * 4 do txt.Append(' ') |> ignore
+    txt.AppendLine(l) |> ignore
 
 let solidName (ComplexName ns) = ns |> List.rev |> String.concat ""
 

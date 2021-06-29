@@ -23,6 +23,7 @@ message Crossroad {
     Domain.TrafficLight Light = 4;
     Domain.LightStatus LightStatus = 5;
     repeated Domain.LightStatus History = 6;
+    repeated string Lirycs = 7;
 }
 message Crossroad2 {
     int32 Id = 1;

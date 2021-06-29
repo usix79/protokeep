@@ -4,6 +4,7 @@ open System
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
 open System.IO
+open System.Text.Json
 open FSharp.Control.Tasks.V2
 
 open Protogen
@@ -23,11 +24,9 @@ type CalcController (logger : ILogger<CalcController>) =
         task{
             use reader = new StreamReader(x.Request.Body)
             let! jsonReq = reader.ReadToEndAsync()
+            let mutable reader = Utf8JsonReader(ReadOnlySpan(System.Text.Encoding.UTF8.GetBytes(jsonReq)))
 
-            let req =
-                jsonReq
-                |> Google.Protobuf.JsonParser.Default.Parse<ProtoClasses.Domain.Request>
-                |> FsharpConverters.ConvertDomain.FromProtobuf
+            let req = FsharpJsonConverters.ConvertDomain.RequestFromJson(&reader)
 
             let resp =
                 {
@@ -38,13 +37,17 @@ type CalcController (logger : ILogger<CalcController>) =
                         | Error v -> Fail v
                     ExecutionTime = TimeSpan.FromMilliseconds(1341.)
                     Extra = None
-                    Since = DateTimeOffset.UtcNow
+                    Since = DateTime.UtcNow
                     Tags = ["tag1", "AGA"; "tag2", "BG"; "tag3333", "Hello"] |> Map.ofList
                     Status = Subdomain.Status.Green
                 }
 
-            return
-                resp
-                |> FsharpConverters.ConvertDomain.ToProtobuf
-                |> Google.Protobuf.JsonFormatter.Default.Format
+            use stream = new MemoryStream()
+            let mutable writer = new Utf8JsonWriter(stream)
+            FsharpJsonConverters.ConvertDomain.ResponseToJson(&writer,resp)
+            writer.Flush()
+            let data = stream.ToArray()
+            let json = System.Text.Encoding.UTF8.GetString(data, 0, data.Length)
+
+            return json
         }

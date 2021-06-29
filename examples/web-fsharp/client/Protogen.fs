@@ -10,8 +10,8 @@ module FableConverterHelpers =
     let ifObject action = function (JObject v) -> action v | _ -> ()
     let ifArray action = function (JArray v) -> action v | _ -> ()
 
-    let toDateTimeOffset (v:string) = System.DateTimeOffset.Parse v
-    let fromDateTimeOffset (v:System.DateTimeOffset) = v.ToString("O")
+    let toDateTime (v:string) = System.DateTime.Parse v
+    let fromDateTime (v:System.DateTime) = v.ToString("O")
 
     let durationRegex = System.Text.RegularExpressions.Regex @"^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$"
     let subsecondScalingFactors = [| 0; 100000000; 100000000; 10000000; 1000000; 100000; 10000; 1000; 100; 10; 1 |]

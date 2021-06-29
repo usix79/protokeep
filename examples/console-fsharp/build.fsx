@@ -18,7 +18,8 @@ let pgenFile = "domain.pgen"
 let protoClassesDir = "./ProtoClasses/"
 let protoFile = protoClassesDir + "Domain.proto"
 let fsharpTypesFile = "./App/Domain.fs"
-let fsharpConvertersFile = "./App/DomainConverters.fs"
+let fsharpProtoConvertersFile = "./App/DomainProtoConverters.fs"
+let fsharpJsonConvertersFile = "./App/DomainJsonConverters.fs"
 let fsharpCommonsFile = "./App/Protogen.fs"
 
 let runTool cmd args workingDir =
@@ -49,7 +50,8 @@ Target.create "Gen" (fun _ ->
     dotnetWithArgs [pgenFile; "lock"] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "proto"; "-o"; protoFile] protogenDll __SOURCE_DIRECTORY__
     dotnetWithArgs [pgenFile; "fsharp-types"; "-o"; fsharpTypesFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
-    dotnetWithArgs [pgenFile; "fsharp-converters"; "-o"; fsharpConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-proto-converters"; "-o"; fsharpProtoConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
+    dotnetWithArgs [pgenFile; "fsharp-json-converters"; "-o"; fsharpJsonConvertersFile; "--update-commons-in"; fsharpCommonsFile] protogenDll __SOURCE_DIRECTORY__
 )
 
 Target.create "Build" (fun _ ->

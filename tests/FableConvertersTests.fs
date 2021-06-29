@@ -91,7 +91,7 @@ type ConvertDomain () =
             Xpos = 0.f
             Ypos = 0.
             Ratio = 0m
-            LastChecked = System.DateTimeOffset.MinValue
+            LastChecked = System.DateTime.MinValue
             ServiceInterval = System.TimeSpan.Zero
             CurrentLight = ConvertDomain.DefaultTrafficLight.Value
             Nickname = None
@@ -110,7 +110,7 @@ type ConvertDomain () =
         let mutable vXpos = 0.f
         let mutable vYpos = 0.
         let mutable vRatio = 0m
-        let mutable vLastChecked = System.DateTimeOffset.MinValue
+        let mutable vLastChecked = System.DateTime.MinValue
         let mutable vServiceInterval = System.TimeSpan.Zero
         let mutable vCurrentLight = ConvertDomain.DefaultTrafficLight.Value
         let mutable vNickname = None
@@ -130,7 +130,7 @@ type ConvertDomain () =
             | "Xpos" -> pair.Value |> ifNumber (fun v -> vXpos <- v |> unbox)
             | "Ypos" -> pair.Value |> ifNumber (fun v -> vYpos <- v |> unbox)
             | "Ratio" -> pair.Value |> ifNumber (fun v -> vRatio <- v / 100. |> unbox)
-            | "LastChecked" -> pair.Value |> ifString (fun v -> vLastChecked <- v |> toDateTimeOffset)
+            | "LastChecked" -> pair.Value |> ifString (fun v -> vLastChecked <- v |> toDateTime)
             | "ServiceInterval" -> pair.Value |> ifString (fun v -> vServiceInterval <- v |> toTimeSpan)
             | "CurrentLight" -> pair.Value |> ifString (fun v -> vCurrentLight <- v |> ConvertDomain.TrafficLightFromString)
             | "NicknameValue" -> pair.Value |> ifString (fun v -> vNickname <- v |> Some)
@@ -169,7 +169,7 @@ type ConvertDomain () =
            "Xpos", JNumber (unbox x.Xpos)
            "Ypos", JNumber (unbox x.Ypos)
            "Ratio", JNumber (x.Ratio * 100m |> System.Decimal.Truncate |> unbox)
-           "LastChecked", JString (x.LastChecked |> fromDateTimeOffset)
+           "LastChecked", JString (x.LastChecked |> fromDateTime)
            "ServiceInterval", JString (x.ServiceInterval |> fromTimeSpan)
            "CurrentLight", JString (x.CurrentLight |> ConvertDomain.TrafficLightToString)
            match x.Nickname with
@@ -231,18 +231,18 @@ type ConvertDomain () =
         | _ -> "Unknown", JBool (true)
         |> List.singleton |> Map.ofList |> JObject
     static member LightStatusCaseOutOfOrderFromJson (json: Json) =
-        let mutable since = System.DateTimeOffset.MinValue
+        let mutable since = System.DateTime.MinValue
         let mutable period = System.TimeSpan.Zero
         getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
-            | "Since" -> pair.Value |> ifString (fun v -> since <- v |> toDateTimeOffset)
+            | "Since" -> pair.Value |> ifString (fun v -> since <- v |> toDateTime)
             | "Period" -> pair.Value |> ifString (fun v -> period <- v |> toTimeSpan)
             | _ -> () )
         Domain.LightStatus.OutOfOrder (since,period)
     static member LightStatusCaseOutOfOrderToJson (since,period) =
         [
-           "Since", JString (since |> fromDateTimeOffset)
+           "Since", JString (since |> fromDateTime)
            "Period", JString (period |> fromTimeSpan)
         ] |> Map.ofList |> JObject
     static member DefaultCrossroad: Lazy<Domain.Crossroad> =

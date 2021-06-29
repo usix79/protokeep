@@ -1,5 +1,5 @@
 [<RequireQualifiedAccess>]
-module rec Protogen.FsharpConvertersCmd
+module rec Protogen.FsharpProtoConvertersCmd
 
 open System
 open System.Text
@@ -21,8 +21,8 @@ let Handler module' locks typesCache = function
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance = {
-    Name = "fsharp-converters"
-    Description = "generate converters between protobuf classes and fsharp types: fsharp-converters [-o|--output] outputFile"
+    Name = "fsharp-proto-converters"
+    Description = "generate converters between protobuf classes and fsharp types: fsharp-proto-converters [-o|--output] outputFile"
     Run = Handler
 }
 
@@ -145,7 +145,8 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         | t ->
             line txt $"        {yName} <- {xName}{convertionTo t}"
 
-    line txt $"namespace Protogen.FsharpConverters"
+
+    line txt $"namespace Protogen.FsharpProtoConverters"
     line txt $"type Convert{solidName module'.Name} () ="
     for item in module'.Items do
         genItem item
@@ -162,7 +163,7 @@ let rec fieldFromProtobuf type' =
     | Double -> None
     | Decimal scale -> Some $"fun v -> (decimal v) / {10. ** float(scale)}m"
     | Bytes -> Some "fun v -> v.ToByteArray()"
-    | Timestamp -> Some "fun v -> v.ToDateTimeOffset()"
+    | Timestamp -> Some "fun v -> v.ToDateTime()"
     | Duration -> Some "fun v -> v.ToTimeSpan()"
     | Guid  -> Some "fun v -> System.Guid(v.ToByteArray())"
     | Optional t -> failwith "direct convertion is not possible"
@@ -193,7 +194,7 @@ let rec fieldToProtobuf type' =
     | Double -> None
     | Decimal scale -> Some $"fun v -> int64(v * {10. ** float(scale)}m)"
     | Bytes -> Some "Google.Protobuf.ByteString.CopyFrom"
-    | Timestamp -> Some "Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset"
+    | Timestamp -> Some "Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime"
     | Duration -> Some "Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan"
     | Guid -> Some "fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())"
     | Optional _ -> failwith "direct convertion is not possible"

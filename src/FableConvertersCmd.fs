@@ -132,8 +132,6 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
             match case with
             | Types.MultiFieldsRecord ->
-                let values = case.Fields |> List.map Utils.getName |> String.concat ","
-
                 line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (json: Json) ="
                 readObject "" case
 
@@ -197,7 +195,7 @@ let rec defValue isMutable = function
     | Double -> "0."
     | Decimal _ -> "0m"
     | Bytes -> "Array.empty"
-    | Timestamp -> "System.DateTimeOffset.MinValue"
+    | Timestamp -> "System.DateTime.MinValue"
     | Duration -> "System.TimeSpan.Zero"
     | Guid  -> "System.Guid.Empty"
     | Optional _ -> "None"
@@ -213,7 +211,7 @@ let unpackField' rightOp (typesCache:Types.TypesCache) vName =
         | Int | Long | Float | Double -> $"ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Decimal scale -> $"ifNumber (fun v -> {leftOp}v / {10. ** float(scale)}. |> unbox{rightOp})"
         | Bytes -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
-        | Timestamp -> $"ifString (fun v -> {leftOp}v |> toDateTimeOffset{rightOp})"
+        | Timestamp -> $"ifString (fun v -> {leftOp}v |> toDateTime{rightOp})"
         | Duration -> $"ifString (fun v -> {leftOp}v |> toTimeSpan{rightOp})"
         | Guid  -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
         | Optional t -> f $"{vName} <- " " |> Some" t
@@ -240,7 +238,7 @@ let packField (typesCache:Types.TypesCache) (vName:string) type' =
         | Int | Long | Float | Double -> $"JNumber (unbox {vName})"
         | Decimal scale -> $"JNumber ({vName} * {10. ** float(scale)}m |> System.Decimal.Truncate |> unbox)"
         | Bytes -> $"JString ({vName} |> System.Convert.ToBase64String)"
-        | Timestamp -> $"JString ({vName} |> fromDateTimeOffset)"
+        | Timestamp -> $"JString ({vName} |> fromDateTime)"
         | Duration -> $"JString ({vName} |> fromTimeSpan)"
         | Guid  -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"
         | Optional _ -> failwith "cannot upack optional field"
@@ -269,8 +267,8 @@ let helpersBody = """
     let ifObject action = function (JObject v) -> action v | _ -> ()
     let ifArray action = function (JArray v) -> action v | _ -> ()
 
-    let toDateTimeOffset (v:string) = System.DateTimeOffset.Parse v
-    let fromDateTimeOffset (v:System.DateTimeOffset) = v.ToString("O")
+    let toDateTime (v:string) = System.DateTime.Parse v
+    let fromDateTime (v:System.DateTime) = v.ToString("O")
 
     let durationRegex = System.Text.RegularExpressions.Regex @"^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$"
     let subsecondScalingFactors = [| 0; 100000000; 100000000; 10000000; 1000000; 100000; 10000; 1000; 100; 10; 1 |]

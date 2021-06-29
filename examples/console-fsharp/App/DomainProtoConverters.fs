@@ -1,4 +1,4 @@
-namespace Protogen.FsharpConverters
+namespace Protogen.FsharpProtoConverters
 type ConvertDomain () =
     static member FromProtobuf (x:ProtoClasses.Domain.TrafficLight) : Domain.TrafficLight =
         enum<Domain.TrafficLight>(int x)
@@ -8,7 +8,7 @@ type ConvertDomain () =
         match x.UnionCase with
         | ProtoClasses.Domain.LightStatus.UnionOneofCase.Normal -> Domain.LightStatus.Normal
         | ProtoClasses.Domain.LightStatus.UnionOneofCase.Warning -> Domain.LightStatus.Warning(x.Warning)
-        | ProtoClasses.Domain.LightStatus.UnionOneofCase.OutOfOrder -> Domain.LightStatus.OutOfOrder(x.OutOfOrder |> fun v -> v.ToDateTimeOffset())
+        | ProtoClasses.Domain.LightStatus.UnionOneofCase.OutOfOrder -> Domain.LightStatus.OutOfOrder(x.OutOfOrder |> fun v -> v.ToDateTime())
         | _ -> Domain.LightStatus.Unknown
     static member ToProtobuf (x:Domain.LightStatus) : ProtoClasses.Domain.LightStatus =
         let y = ProtoClasses.Domain.LightStatus()
@@ -17,7 +17,7 @@ type ConvertDomain () =
         | Domain.LightStatus.Warning (errorsCount) ->
             y.Warning <- errorsCount
         | Domain.LightStatus.OutOfOrder (since) ->
-            y.OutOfOrder <- since |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset
+            y.OutOfOrder <- since |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime
         | Domain.LightStatus.Unknown -> ()
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Crossroad) : Domain.Crossroad =
@@ -28,6 +28,7 @@ type ConvertDomain () =
             Light = x.Light |> ConvertDomain.FromProtobuf
             LightStatus = x.LightStatus |> ConvertDomain.FromProtobuf
             History = x.History |> Seq.map(ConvertDomain.FromProtobuf) |> List.ofSeq
+            Lirycs = x.Lirycs |> List.ofSeq
         }
     static member ToProtobuf (x:Domain.Crossroad) : ProtoClasses.Domain.Crossroad =
         let y = ProtoClasses.Domain.Crossroad()
@@ -37,6 +38,7 @@ type ConvertDomain () =
         y.Light <- x.Light |> ConvertDomain.ToProtobuf
         y.LightStatus <- x.LightStatus |> ConvertDomain.ToProtobuf
         y.History.AddRange(x.History |> Seq.map(ConvertDomain.ToProtobuf))
+        y.Lirycs.AddRange(x.Lirycs)
         y
     static member FromProtobuf (x:ProtoClasses.Domain.Crossroad2) : Domain.Crossroad2 =
         {
@@ -49,7 +51,7 @@ type ConvertDomain () =
             Xpos = x.Xpos
             Ypos = x.Ypos
             Ratio = x.Ratio |> fun v -> (decimal v) / 100m
-            LastChecked = x.LastChecked |> fun v -> v.ToDateTimeOffset()
+            LastChecked = x.LastChecked |> fun v -> v.ToDateTime()
             ServiceInterval = x.ServiceInterval |> fun v -> v.ToTimeSpan()
             CurrentLight = x.CurrentLight |> ConvertDomain.FromProtobuf
             Nickname = if x.NicknameCase = ProtoClasses.Domain.Crossroad2.NicknameOneofCase.NicknameValue then Some (x.NicknameValue) else None
@@ -68,7 +70,7 @@ type ConvertDomain () =
         y.Xpos <- x.Xpos
         y.Ypos <- x.Ypos
         y.Ratio <- x.Ratio |> fun v -> int64(v * 100m)
-        y.LastChecked <- x.LastChecked |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset
+        y.LastChecked <- x.LastChecked |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime
         y.ServiceInterval <- x.ServiceInterval |> Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan
         y.CurrentLight <- x.CurrentLight |> ConvertDomain.ToProtobuf
         match x.Nickname with
