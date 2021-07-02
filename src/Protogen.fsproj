@@ -10,14 +10,18 @@
     <Authors>usix</Authors>
     <Title>YAPG - Yet Another Proto Generator</Title>
     <Description>Code generation tool around protobuf</Description>
-    <AssemblyVersion>0.2.0.0</AssemblyVersion>
-    <FileVersion>0.2.0.0</FileVersion>
-    <Version>0.2.0.0</Version>
+    <AssemblyVersion>0.2.2.0</AssemblyVersion>
+    <FileVersion>0.2.2.0</FileVersion>
+    <Version>0.2.2.0</Version>
     <PackageTags>Protobuf;Serializer;Codegen</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/usix79/Protogen</RepositoryUrl>
     <PackageReleaseNotes>
       # Release Notes
+      ## 0.2.2 - 2021-07-02
+      * bugfix
+      ## 0.2.1 - 2021-07-01
+      * bugfix
       ## 0.2.0 - 2021-06-29
       * Added fsharp-json-converter
       ## 0.1.2 - 2021-06-22

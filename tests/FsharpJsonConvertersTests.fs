@@ -118,7 +118,7 @@ type ConvertDomain () =
         let mutable vNotes = ResizeArray()
         let mutable vSiblings = ResizeArray()
         let mutable vProps = ResizeArray()
-        if reader.Read() && reader.TokenType = JsonTokenType.StartObject then
+        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Id")) then
@@ -329,7 +329,7 @@ type ConvertDomain () =
     static member LightStatusCaseOutOfOrderFromJson (reader: byref<Utf8JsonReader>) =
         let mutable since = System.DateTime.MinValue
         let mutable period = System.TimeSpan.Zero
-        if reader.Read() && reader.TokenType = JsonTokenType.StartObject then
+        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Since")) then
@@ -363,7 +363,7 @@ type ConvertDomain () =
         let mutable vStreet2 = ""
         let mutable vCurrentLight = ConvertDomain.DefaultTrafficLight.Value
         let mutable vLightStatus = Domain.LightStatus.Unknown
-        if reader.Read() && reader.TokenType = JsonTokenType.StartObject then
+        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Id")) then

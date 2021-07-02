@@ -159,7 +159,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             | Types.IsUnion typesCache unionInfo -> line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
             | _ ->  line txt $"        let mutable {prefix}{fieldInfo.Name} = {defValue true fieldInfo.Type}"
 
-        line txt $"        if reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
+        line txt $"        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
         line txt $"            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do"
         line txt $"                if reader.TokenType <> JsonTokenType.PropertyName then ()"
         for fieldInfo in recordInfo.Fields do

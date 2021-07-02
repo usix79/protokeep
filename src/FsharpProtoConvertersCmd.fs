@@ -139,8 +139,8 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         | Map t ->
             match fieldToProtobuf t with
             | Some cnv ->
-                line txt $"    for pair in {xName} do"
-                line txt $"        {yName}.[pair.Key] <- pair.Value{cnv}"
+                line txt $"        for pair in {xName} do"
+                line txt $"            {yName}.[pair.Key] <- pair.Value |> {cnv}"
             | None -> line txt $"        {yName}.Add({xName})"
         | t ->
             line txt $"        {yName} <- {xName}{convertionTo t}"
@@ -179,7 +179,7 @@ let rec fieldFromProtobuf type' =
         |> Some
     | Map t ->
         match fieldFromProtobuf t with
-        | Some convertion -> $"x.Props |> Seq.map(fun pair -> pair.Key,pair.Value |> {convertion}) |> Map.ofSeq"
+        | Some convertion -> $"Seq.map(fun pair -> pair.Key,pair.Value |> {convertion}) |> Map.ofSeq"
         | None -> "Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq"
         |> Some
     | Complex typeName -> Some $"Convert{lastNames typeName |> solidName}.FromProtobuf"
