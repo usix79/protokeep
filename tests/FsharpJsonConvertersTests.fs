@@ -100,7 +100,7 @@ type ConvertDomain () =
             Siblings = List.empty
             Props = Map.empty
         }
-    static member CrossroadFromJson (reader: inref<Utf8JsonReader>): Domain.Crossroad =
+    static member CrossroadFromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad =
         let mutable vId = 0
         let mutable vLongId = 0L
         let mutable vAltId = System.Guid.Empty
@@ -296,7 +296,7 @@ type ConvertDomain () =
         | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
         | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
-    static member LightStatusFromJson (reader: inref<Utf8JsonReader>): Domain.LightStatus =
+    static member LightStatusFromJson (reader: byref<Utf8JsonReader>): Domain.LightStatus =
         let mutable y = Domain.LightStatus.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -331,7 +331,7 @@ type ConvertDomain () =
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
     static member LightStatusToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.LightStatusToJson(&w,v)))
-    static member LightStatusCaseOutOfOrderFromJson (reader: inref<Utf8JsonReader>) =
+    static member LightStatusCaseOutOfOrderFromJson (reader: byref<Utf8JsonReader>) =
         let mutable since = System.DateTime.MinValue
         let mutable period = System.TimeSpan.Zero
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
@@ -362,7 +362,7 @@ type ConvertDomain () =
             CurrentLight = ConvertDomain.DefaultTrafficLight.Value
             LightStatus = Domain.LightStatus.Unknown
         }
-    static member CrossroadFromJson (reader: inref<Utf8JsonReader>): Domain.Crossroad =
+    static member CrossroadFromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad =
         let mutable vId = 0
         let mutable vStreet1 = ""
         let mutable vStreet2 = ""

@@ -71,7 +71,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                 line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
         line txt $"        }}"
 
-        line txt $"    static member {firstName info.Name}FromJson (reader: inref<Utf8JsonReader>): {fullNameTxt} ="
+        line txt $"    static member {firstName info.Name}FromJson (reader: byref<Utf8JsonReader>): {fullNameTxt} ="
         readObject "v" info
 
         line txt $"        {{"
@@ -88,7 +88,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         writeObject "x." info
         line txt $"    static member {firstName info.Name}ToJsonDel = lazy(ToJsonDelegate(fun w v -> Convert{lastNames info.Name |> solidName}.{firstName info.Name}ToJson(&w,v)))"
     | Union union ->
-        line txt $"    static member {firstName union.Name}FromJson (reader: inref<Utf8JsonReader>): {dottedName union.Name} ="
+        line txt $"    static member {firstName union.Name}FromJson (reader: byref<Utf8JsonReader>): {dottedName union.Name} ="
         line txt $"        let mutable y = {dottedName union.Name}.Unknown"
         line txt $"        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
         line txt $"            while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do"
@@ -139,7 +139,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
             match case with
             | Types.MultiFieldsRecord ->
-                line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (reader: inref<Utf8JsonReader>) ="
+                line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (reader: byref<Utf8JsonReader>) ="
                 readObject "" case
 
                 let convertedValues =
@@ -291,7 +291,7 @@ let rec setValue (typesCache:Types.TypesCache) vName type' =
 
 let helpersBody = """
     open System.Text.Json
-    type FromJsonDelegate<'a> = delegate of inref<Utf8JsonReader> -> 'a
+    type FromJsonDelegate<'a> = delegate of byref<Utf8JsonReader> -> 'a
     type ToJsonDelegate<'a> = delegate of inref<Utf8JsonWriter> * 'a -> unit
 
     let fromDateTime (v:System.DateTime) = v.ToString("O")
