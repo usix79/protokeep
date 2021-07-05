@@ -11,6 +11,10 @@ module FsharpTypes =
 
 module FsharpJsonConvertersHelpers =
 
+    open System.Text.Json
+    type FromJsonDelegate<'a> = delegate of inref<Utf8JsonReader> -> 'a
+    type ToJsonDelegate<'a> = delegate of inref<Utf8JsonWriter> * 'a -> unit
+
     let fromDateTime (v:System.DateTime) = v.ToString("O")
 
     let durationRegex = System.Text.RegularExpressions.Regex @"^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$"

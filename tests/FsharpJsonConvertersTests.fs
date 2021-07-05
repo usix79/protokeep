@@ -100,7 +100,7 @@ type ConvertDomain () =
             Siblings = List.empty
             Props = Map.empty
         }
-    static member CrossroadFromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad =
+    static member CrossroadFromJson (reader: inref<Utf8JsonReader>): Domain.Crossroad =
         let mutable vId = 0
         let mutable vLongId = 0L
         let mutable vAltId = System.Guid.Empty
@@ -219,7 +219,8 @@ type ConvertDomain () =
             Siblings = vSiblings |> List.ofSeq
             Props = vProps |> Map.ofSeq
         }
-    static member CrossroadToJson (writer:byref<Utf8JsonWriter>, x: Domain.Crossroad) =
+    static member CrossroadFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.CrossroadFromJson(&r)))
+    static member CrossroadToJson (writer: inref<Utf8JsonWriter>, x: Domain.Crossroad) =
         writer.WriteStartObject()
         writer.WritePropertyName("Id")
         writer.WriteNumberValue(x.Id)
@@ -259,6 +260,8 @@ type ConvertDomain () =
         writer.WritePropertyName("Props")
         writer.WriteStartObject(); (for pair in x.Props do writer.WritePropertyName(pair.Key); writer.WriteStringValue(pair.Value)); writer.WriteEndObject()
         writer.WriteEndObject()
+    static member CrossroadToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.CrossroadToJson(&w,v)))
+
 """);
     ("""
 module Domain
@@ -293,7 +296,7 @@ type ConvertDomain () =
         | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
         | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
-    static member LightStatusFromJson (reader: byref<Utf8JsonReader>): Domain.LightStatus =
+    static member LightStatusFromJson (reader: inref<Utf8JsonReader>): Domain.LightStatus =
         let mutable y = Domain.LightStatus.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -310,7 +313,8 @@ type ConvertDomain () =
                     y <- ConvertDomain.LightStatusCaseOutOfOrderFromJson(&reader)
                 else reader.Skip()
         y
-    static member LightStatusToJson (writer:byref<Utf8JsonWriter>, x: Domain.LightStatus) =
+    static member LightStatusFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.LightStatusFromJson(&r)))
+    static member LightStatusToJson (writer:inref<Utf8JsonWriter>, x: Domain.LightStatus) =
         writer.WriteStartObject()
         match x with
         | Domain.LightStatus.Normal ->
@@ -326,7 +330,8 @@ type ConvertDomain () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member LightStatusCaseOutOfOrderFromJson (reader: byref<Utf8JsonReader>) =
+    static member LightStatusToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.LightStatusToJson(&w,v)))
+    static member LightStatusCaseOutOfOrderFromJson (reader: inref<Utf8JsonReader>) =
         let mutable since = System.DateTime.MinValue
         let mutable period = System.TimeSpan.Zero
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
@@ -342,7 +347,7 @@ type ConvertDomain () =
                     else reader.Skip()
                 else reader.Skip()
         Domain.LightStatus.OutOfOrder (since,period)
-    static member LightStatusCaseOutOfOrderToJson (writer:byref<Utf8JsonWriter>,since,period) =
+    static member LightStatusCaseOutOfOrderToJson (writer: inref<Utf8JsonWriter>,since,period) =
         writer.WriteStartObject()
         writer.WritePropertyName("Since")
         writer.WriteStringValue(since |> fromDateTime)
@@ -357,7 +362,7 @@ type ConvertDomain () =
             CurrentLight = ConvertDomain.DefaultTrafficLight.Value
             LightStatus = Domain.LightStatus.Unknown
         }
-    static member CrossroadFromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad =
+    static member CrossroadFromJson (reader: inref<Utf8JsonReader>): Domain.Crossroad =
         let mutable vId = 0
         let mutable vStreet1 = ""
         let mutable vStreet2 = ""
@@ -392,7 +397,8 @@ type ConvertDomain () =
             CurrentLight = vCurrentLight
             LightStatus = vLightStatus
         }
-    static member CrossroadToJson (writer:byref<Utf8JsonWriter>, x: Domain.Crossroad) =
+    static member CrossroadFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.CrossroadFromJson(&r)))
+    static member CrossroadToJson (writer: inref<Utf8JsonWriter>, x: Domain.Crossroad) =
         writer.WriteStartObject()
         writer.WritePropertyName("Id")
         writer.WriteNumberValue(x.Id)
@@ -405,6 +411,7 @@ type ConvertDomain () =
         writer.WritePropertyName("LightStatus")
         ConvertDomain.LightStatusToJson(&writer, x.LightStatus)
         writer.WriteEndObject()
+    static member CrossroadToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.CrossroadToJson(&w,v)))
     """)
     ] |> Seq.map FSharpValue.GetTupleFields
 

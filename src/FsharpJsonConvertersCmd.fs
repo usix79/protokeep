@@ -71,7 +71,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                 line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
         line txt $"        }}"
 
-        line txt $"    static member {firstName info.Name}FromJson (reader: byref<Utf8JsonReader>): {fullNameTxt} ="
+        line txt $"    static member {firstName info.Name}FromJson (reader: inref<Utf8JsonReader>): {fullNameTxt} ="
         readObject "v" info
 
         line txt $"        {{"
@@ -83,11 +83,12 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
             | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
         line txt $"        }}"
-
-        line txt $"    static member {firstName info.Name}ToJson (writer:byref<Utf8JsonWriter>, x: {fullNameTxt}) ="
+        line txt $"    static member {firstName info.Name}FromJsonDel = lazy(FromJsonDelegate(fun r -> Convert{lastNames info.Name |> solidName}.{firstName info.Name}FromJson(&r)))"
+        line txt $"    static member {firstName info.Name}ToJson (writer: inref<Utf8JsonWriter>, x: {fullNameTxt}) ="
         writeObject "x." info
+        line txt $"    static member {firstName info.Name}ToJsonDel = lazy(ToJsonDelegate(fun w v -> Convert{lastNames info.Name |> solidName}.{firstName info.Name}ToJson(&w,v)))"
     | Union union ->
-        line txt $"    static member {firstName union.Name}FromJson (reader: byref<Utf8JsonReader>): {dottedName union.Name} ="
+        line txt $"    static member {firstName union.Name}FromJson (reader: inref<Utf8JsonReader>): {dottedName union.Name} ="
         line txt $"        let mutable y = {dottedName union.Name}.Unknown"
         line txt $"        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
         line txt $"            while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do"
@@ -111,8 +112,9 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                 linei txt 5 $"y <- Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson(&reader)"
         linei txt 4 $"else reader.Skip()"
         line txt $"        y"
+        line txt $"    static member {firstName union.Name}FromJsonDel = lazy(FromJsonDelegate(fun r -> Convert{lastNames union.Name |> solidName}.{firstName union.Name}FromJson(&r)))"
 
-        line txt $"    static member {firstName union.Name}ToJson (writer:byref<Utf8JsonWriter>, x: {dottedName union.Name}) ="
+        line txt $"    static member {firstName union.Name}ToJson (writer:inref<Utf8JsonWriter>, x: {dottedName union.Name}) ="
         line txt $"        writer.WriteStartObject()"
         line txt $"        match x with"
         for case in union.Cases do
@@ -130,13 +132,14 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
         line txt $"            writer.WritePropertyName(\"Unknown\")"
         line txt $"            writer.WriteBooleanValue(true)"
         line txt $"        writer.WriteEndObject()"
+        line txt $"    static member {firstName union.Name}ToJsonDel = lazy(ToJsonDelegate(fun w v -> Convert{lastNames union.Name |> solidName}.{firstName union.Name}ToJson(&w,v)))"
 
         for case in union.Cases do
             let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
 
             match case with
             | Types.MultiFieldsRecord ->
-                line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (reader: byref<Utf8JsonReader>) ="
+                line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (reader: inref<Utf8JsonReader>) ="
                 readObject "" case
 
                 let convertedValues =
@@ -150,9 +153,10 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
                 line txt $"        {case.Name |> dottedName} ({convertedValues})"
 
-                line txt $"    static member {firstName union.Name}Case{firstName case.Name}ToJson (writer:byref<Utf8JsonWriter>,{fieldsNames}) ="
+                line txt $"    static member {firstName union.Name}Case{firstName case.Name}ToJson (writer: inref<Utf8JsonWriter>,{fieldsNames}) ="
                 writeObject "" case
             | _ -> ()
+
     and readObject prefix recordInfo =
         for fieldInfo in recordInfo.Fields do
             match fieldInfo.Type with
@@ -286,6 +290,10 @@ let rec setValue (typesCache:Types.TypesCache) vName type' =
     f vName type'
 
 let helpersBody = """
+    open System.Text.Json
+    type FromJsonDelegate<'a> = delegate of inref<Utf8JsonReader> -> 'a
+    type ToJsonDelegate<'a> = delegate of inref<Utf8JsonWriter> * 'a -> unit
+
     let fromDateTime (v:System.DateTime) = v.ToString("O")
 
     let durationRegex = System.Text.RegularExpressions.Regex @"^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$"
