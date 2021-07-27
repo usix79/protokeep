@@ -103,7 +103,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
 
             match case with
             | Types.MultiFieldsRecord ->
-                line txt $"    static member FromProtobuf (x:{fullCaseNameTxt})  ="
+                line txt $"    static member FromProtobuf (x:{fullCaseNameTxt}) ="
                 let values =
                     case.Fields
                     |> List.map(fun fieldInfo -> $"({genFieldFromProtobuf fullCaseNameTxt fieldInfo})")
@@ -122,8 +122,8 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
     and genFieldFromProtobuf fullNameTxt fieldInfo =
         match fieldInfo.Type with
         | Optional t ->
-            let caseValue = $"{fullNameTxt}.{fieldInfo.Name}OneofCase.{fieldInfo.Name}Value"
-            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then Some (x.{fieldInfo.Name}Value{convertionFrom t}) else None"
+            let caseValue = $"{fullNameTxt}.{firstCharToUpper fieldInfo.Name}OneofCase.{firstCharToUpper fieldInfo.Name}Value"
+            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then Some (x.{firstCharToUpper fieldInfo.Name}Value{convertionFrom t}) else None"
         | t -> $"x.{firstCharToUpper fieldInfo.Name}{convertionFrom t}"
 
     and genFieldToProtobuf xName yName fieldInfo =
