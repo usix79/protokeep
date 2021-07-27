@@ -28,6 +28,8 @@ type CalcController (logger : ILogger<CalcController>) =
 
             let req = FsharpJsonConverters.ConvertDomain.RequestFromJson(&reader)
 
+            printfn $"{req}"
+
             let resp =
                 {
                     Token = req.Token

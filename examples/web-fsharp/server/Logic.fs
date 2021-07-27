@@ -19,3 +19,5 @@ let rec calc = function
     | Quantum _ -> Error OpError.NotSupported
     | Op.Unknown -> OpError.General "Unknown operation" |> Error
     | Zero -> Ok 0
+    | Imagine (Some i) -> Ok i
+    | Imagine None -> Ok 0

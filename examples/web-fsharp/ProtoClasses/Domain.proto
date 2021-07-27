@@ -12,6 +12,7 @@ message Op {
         Domain.Op__Div Div = 4;
         Domain.Op Ln = 5;
         Domain.Op__Quantum Quantum = 6;
+        Domain.Op__Imagine Imagine = 8;
         bool Zero = 7;
     }
 }
@@ -31,6 +32,9 @@ message Op__Quantum {
     Domain.Op P1 = 1;
     Domain.Op P2 = 2;
     string P3 = 3;
+}
+message Op__Imagine {
+    oneof P1 {int32 P1Value = 1;}
 }
 message OpError {
     oneof Union {

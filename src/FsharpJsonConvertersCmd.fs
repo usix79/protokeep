@@ -203,7 +203,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
                 let inner = "v"
                 linei txt 2 $"match {vName} with"
                 linei txt 2 $"| Some v ->"
-                linei txt 3 $"writer.WritePropertyName(\"{fieldInfo.Name}Value\")"
+                linei txt 3 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}Value\")"
                 linei txt 3 $"{setValue typesCache inner t}"
                 linei txt 2 $"| None -> ()"
             | _ ->

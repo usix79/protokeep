@@ -2,7 +2,7 @@ namespace Protogen.FsharpJsonConverters
 open System.Text.Json
 open Protogen.FsharpJsonConvertersHelpers
 type ConvertDomain () =
-    static member OpFromJson (reader: inref<Utf8JsonReader>): Domain.Op =
+    static member OpFromJson (reader: byref<Utf8JsonReader>): Domain.Op =
         let mutable y = Domain.Op.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -23,6 +23,8 @@ type ConvertDomain () =
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Quantum")) then
                     y <- ConvertDomain.OpCaseQuantumFromJson(&reader)
+                else if (reader.ValueTextEquals("Imagine")) then
+                    y <- ConvertDomain.OpCaseImagineFromJson(&reader)
                 else if (reader.ValueTextEquals("Zero")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.True
                     then y <- Domain.Op.Zero
@@ -51,6 +53,9 @@ type ConvertDomain () =
         | Domain.Op.Quantum (p1,p2,p3) ->
             writer.WritePropertyName("Quantum")
             ConvertDomain.OpCaseQuantumToJson(&writer,p1,p2,p3)
+        | Domain.Op.Imagine (p1) ->
+            writer.WritePropertyName("Imagine")
+            ConvertDomain.OpCaseImagineToJson(&writer,p1)
         | Domain.Op.Zero ->
             writer.WritePropertyName("Zero")
             writer.WriteBooleanValue(true)
@@ -59,7 +64,7 @@ type ConvertDomain () =
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
     static member OpToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.OpToJson(&w,v)))
-    static member OpCaseSumFromJson (reader: inref<Utf8JsonReader>) =
+    static member OpCaseSumFromJson (reader: byref<Utf8JsonReader>) =
         let mutable p1 = Domain.Op.Unknown
         let mutable p2 = Domain.Op.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
@@ -78,7 +83,7 @@ type ConvertDomain () =
         writer.WritePropertyName("P2")
         ConvertDomain.OpToJson(&writer, p2)
         writer.WriteEndObject()
-    static member OpCaseMulFromJson (reader: inref<Utf8JsonReader>) =
+    static member OpCaseMulFromJson (reader: byref<Utf8JsonReader>) =
         let mutable p1 = Domain.Op.Unknown
         let mutable p2 = Domain.Op.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
@@ -97,7 +102,7 @@ type ConvertDomain () =
         writer.WritePropertyName("P2")
         ConvertDomain.OpToJson(&writer, p2)
         writer.WriteEndObject()
-    static member OpCaseDivFromJson (reader: inref<Utf8JsonReader>) =
+    static member OpCaseDivFromJson (reader: byref<Utf8JsonReader>) =
         let mutable p1 = Domain.Op.Unknown
         let mutable p2 = Domain.Op.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
@@ -116,7 +121,7 @@ type ConvertDomain () =
         writer.WritePropertyName("P2")
         ConvertDomain.OpToJson(&writer, p2)
         writer.WriteEndObject()
-    static member OpCaseQuantumFromJson (reader: inref<Utf8JsonReader>) =
+    static member OpCaseQuantumFromJson (reader: byref<Utf8JsonReader>) =
         let mutable p1 = Domain.Op.Unknown
         let mutable p2 = Domain.Op.Unknown
         let mutable p3 = ""
@@ -142,7 +147,26 @@ type ConvertDomain () =
         writer.WritePropertyName("P3")
         writer.WriteStringValue(p3)
         writer.WriteEndObject()
-    static member OpErrorFromJson (reader: inref<Utf8JsonReader>): Domain.OpError =
+    static member OpCaseImagineFromJson (reader: byref<Utf8JsonReader>) =
+        let mutable p1 = None
+        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
+            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
+                else if (reader.ValueTextEquals("P1Value")) then
+                    if reader.Read() && reader.TokenType = JsonTokenType.Number
+                    then p1 <- reader.GetInt32() |> Some
+                    else reader.Skip()
+                else reader.Skip()
+        Domain.Op.Imagine (p1)
+    static member OpCaseImagineToJson (writer: inref<Utf8JsonWriter>,p1) =
+        writer.WriteStartObject()
+        match p1 with
+        | Some v ->
+            writer.WritePropertyName("P1Value")
+            writer.WriteNumberValue(v)
+        | None -> ()
+        writer.WriteEndObject()
+    static member OpErrorFromJson (reader: byref<Utf8JsonReader>): Domain.OpError =
         let mutable y = Domain.OpError.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -179,7 +203,7 @@ type ConvertDomain () =
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
     static member OpErrorToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.OpErrorToJson(&w,v)))
-    static member OpResultFromJson (reader: inref<Utf8JsonReader>): Domain.OpResult =
+    static member OpResultFromJson (reader: byref<Utf8JsonReader>): Domain.OpResult =
         let mutable y = Domain.OpResult.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -214,7 +238,7 @@ type ConvertDomain () =
             Token = ""
             Operation = Domain.Op.Unknown
         }
-    static member RequestFromJson (reader: inref<Utf8JsonReader>): Domain.Request =
+    static member RequestFromJson (reader: byref<Utf8JsonReader>): Domain.Request =
         let mutable vToken = ""
         let mutable vOperation = Domain.Op.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
@@ -250,7 +274,7 @@ type ConvertDomain () =
             Tags = Map.empty
             Status = ConvertDomainSubdomain.DefaultStatus.Value
         }
-    static member ResponseFromJson (reader: inref<Utf8JsonReader>): Domain.Response =
+    static member ResponseFromJson (reader: byref<Utf8JsonReader>): Domain.Response =
         let mutable vToken = ""
         let mutable vResult = Domain.OpResult.Unknown
         let mutable vExecutionTime = System.TimeSpan.Zero

@@ -8,6 +8,7 @@ union Op =
     | Div of Op*Op
     | Ln of Op
     | Quantum of Op*Op*string
+    | Imagine of int option
     | Zero
 
 union OpError =
@@ -18,7 +19,6 @@ union OpError =
 union OpResult =
     | Success of int
     | Fail of OpError
-
 
 record Request = {
     Token: string

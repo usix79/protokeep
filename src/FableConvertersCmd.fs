@@ -172,7 +172,7 @@ let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
             | Optional t ->
                 let inner = "v"
                 line txt $"           match {vName} with"
-                line txt $"           | Some v -> \"{fieldInfo.Name}Value\", {packField typesCache inner t}"
+                line txt $"           | Some v -> \"{firstCharToUpper fieldInfo.Name}Value\", {packField typesCache inner t}"
                 line txt $"           | None -> ()"
             | _ -> line txt $"           \"{firstCharToUpper fieldInfo.Name}\", {packField typesCache vName fieldInfo.Type}"
         line txt $"        ] |> Map.ofList |> JObject"

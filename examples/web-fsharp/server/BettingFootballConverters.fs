@@ -2,7 +2,7 @@ namespace Protogen.FsharpJsonConverters
 open System.Text.Json
 open Protogen.FsharpJsonConvertersHelpers
 type ConvertBettingFootball () =
-    static member MarketFromJson (reader: inref<Utf8JsonReader>): Betting.Football.Market =
+    static member MarketFromJson (reader: byref<Utf8JsonReader>): Betting.Football.Market =
         let mutable y = Betting.Football.Market.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -87,7 +87,7 @@ type ConvertBettingFootball () =
             Market = Betting.Football.Market.Unknown
             Status = ConvertBettingFootball.DefaultStatus.Value
         }
-    static member MarketItemFromJson (reader: inref<Utf8JsonReader>): Betting.Football.MarketItem =
+    static member MarketItemFromJson (reader: byref<Utf8JsonReader>): Betting.Football.MarketItem =
         let mutable vStatistic = ConvertBettingFootball.DefaultStatistic.Value
         let mutable vPeriod = ConvertBettingFootball.DefaultPeriod.Value
         let mutable vMarket = Betting.Football.Market.Unknown

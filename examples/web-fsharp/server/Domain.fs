@@ -8,6 +8,7 @@ type Op =
     | Div of p1:Op*p2:Op
     | Ln of p1:Op
     | Quantum of p1:Op*p2:Op*p3:string
+    | Imagine of p1:int option
     | Zero
 with
     static member MakeUnknownKey () = Key.Value "0"
@@ -17,6 +18,7 @@ with
     static member MakeDivKey () = Key.Value "4"
     static member MakeLnKey () = Key.Value "5"
     static member MakeQuantumKey () = Key.Value "6"
+    static member MakeImagineKey () = Key.Value "8"
     static member MakeZeroKey () = Key.Value "7"
     member x.Key =
         match x with
@@ -27,6 +29,7 @@ with
         | Op.Div (p1', p2') -> Op.MakeDivKey ()
         | Op.Ln (p1') -> Op.MakeLnKey ()
         | Op.Quantum (p1', p2', p3') -> Op.MakeQuantumKey ()
+        | Op.Imagine (p1') -> Op.MakeImagineKey ()
         | Op.Zero -> Op.MakeZeroKey ()
 type OpError =
     | Unknown

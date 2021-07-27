@@ -13,6 +13,7 @@ type ConvertDomain () =
             | "Div" -> pair.Value |> (fun v -> y <- v |> ConvertDomain.OpCaseDivFromJson)
             | "Ln" -> pair.Value |> (fun v -> y <- v |> ConvertDomain.OpFromJson |> Domain.Op.Ln)
             | "Quantum" -> pair.Value |> (fun v -> y <- v |> ConvertDomain.OpCaseQuantumFromJson)
+            | "Imagine" -> pair.Value |> (fun v -> y <- v |> ConvertDomain.OpCaseImagineFromJson)
             | "Zero" -> pair.Value |> ifBool (fun v -> y <- Domain.Op.Zero)
             | _ -> () )
         y
@@ -24,6 +25,7 @@ type ConvertDomain () =
         | Domain.Op.Div (p1,p2) -> "Div", ConvertDomain.OpCaseDivToJson (p1,p2)
         | Domain.Op.Ln (p1) -> "Ln", (p1 |> ConvertDomain.OpToJson)
         | Domain.Op.Quantum (p1,p2,p3) -> "Quantum", ConvertDomain.OpCaseQuantumToJson (p1,p2,p3)
+        | Domain.Op.Imagine (p1) -> "Imagine", ConvertDomain.OpCaseImagineToJson (p1)
         | Domain.Op.Zero -> "Zero", JBool (true)
         | _ -> "Unknown", JBool (true)
         |> List.singleton |> Map.ofList |> JObject
@@ -89,6 +91,20 @@ type ConvertDomain () =
            "P1", (p1 |> ConvertDomain.OpToJson)
            "P2", (p2 |> ConvertDomain.OpToJson)
            "P3", JString (p3)
+        ] |> Map.ofList |> JObject
+    static member OpCaseImagineFromJson (json: Json) =
+        let mutable p1 = None
+        getProps json
+        |> Seq.iter(fun pair ->
+            match pair.Key with
+            | "P1Value" -> pair.Value |> ifNumber (fun v -> p1 <- v |> unbox |> Some)
+            | _ -> () )
+        Domain.Op.Imagine (p1)
+    static member OpCaseImagineToJson (p1) =
+        [
+           match p1 with
+           | Some v -> "P1Value", JNumber (unbox v)
+           | None -> ()
         ] |> Map.ofList |> JObject
     static member OpErrorFromJson (json: Json): Domain.OpError =
         let mutable y = Domain.OpError.Unknown
