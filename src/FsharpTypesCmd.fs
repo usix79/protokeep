@@ -315,6 +315,12 @@ let commonsBody = """
         | Value of string
         | Items of Key list
         | Inner of Key
+    with
+        member x.Stringify() =
+            match x with
+            | Value v -> v
+            | Items keys -> keys |> List.map (fun key -> key.Stringify()) |> String.concat ","
+            | Inner key -> $"({key.Stringify()})"
 
     let (|TryFind|_|) f key = f key
 
