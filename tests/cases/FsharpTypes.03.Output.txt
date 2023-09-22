@@ -1,0 +1,30 @@
+namespace Domain
+open Protokeep.FsharpTypes
+type TrafficLight =
+    | Unknown = 0
+    | Red = 1
+    | Yellow = 2
+    | Green = 3
+type LightStatus =
+    | Unknown
+    | Normal
+    | Warning of errorsCount:int
+    | OutOfOrder of since:System.DateTime
+with
+    static member MakeUnknownKey () = Key.Value "0"
+    static member MakeNormalKey () = Key.Value "1"
+    static member MakeWarningKey () = Key.Value "2"
+    static member MakeOutOfOrderKey () = Key.Value "3"
+    member x.Key =
+        match x with
+        | LightStatus.Unknown -> LightStatus.MakeUnknownKey ()
+        | LightStatus.Normal -> LightStatus.MakeNormalKey ()
+        | LightStatus.Warning (errorsCount') -> LightStatus.MakeWarningKey ()
+        | LightStatus.OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
+type Crossroad = {
+    Id : int
+    Street1 : string
+    Street2 : string
+    Light : TrafficLight
+    LightStatus : LightStatus
+}

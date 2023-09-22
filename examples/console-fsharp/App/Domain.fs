@@ -1,5 +1,5 @@
 namespace Domain
-open Protogen.FsharpTypes
+open Protokeep.FsharpTypes
 type TrafficLight =
     | Unknown = 0
     | Red = 1

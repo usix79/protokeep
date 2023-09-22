@@ -1,0 +1,16 @@
+namespace Protokeep.FableConverters
+open Fable.SimpleJson
+open Protokeep.FableConverterHelpers
+type ConvertDomain () =
+    static member DefaultTrafficLight =
+        lazy Domain.TrafficLight.Unknown
+    static member TrafficLightFromString = function
+        | "TrafficLightRed" -> Domain.TrafficLight.Red
+        | "TrafficLightYellow" -> Domain.TrafficLight.Yellow
+        | "TrafficLightGreen" -> Domain.TrafficLight.Green
+        | _ -> Domain.TrafficLight.Unknown
+    static member TrafficLightToString = function
+        | Domain.TrafficLight.Red -> "TrafficLightRed"
+        | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
+        | Domain.TrafficLight.Green -> "TrafficLightGreen"
+        | _ -> "Unknown"

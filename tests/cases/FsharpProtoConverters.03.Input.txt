@@ -1,0 +1,19 @@
+module Domain
+record Crossroad = {
+    Id: int
+    LongId: long
+    AltId: guid
+    Street1: string
+    Street2: string
+    IsMonitored: bool
+    Xpos: float
+    Ypos: double
+    Ratio: decimal(2)
+    LastChecked: timestamp
+    ServiceInterval: duration
+    Nickname: string option
+    Img: bytes
+    Notes: string array
+    Siblings: int list
+    Props: string map
+}

@@ -1,0 +1,4 @@
+namespace Protokeep.FableConverters
+open Fable.SimpleJson
+open Protokeep.FableConverterHelpers
+type ConvertDomain () =

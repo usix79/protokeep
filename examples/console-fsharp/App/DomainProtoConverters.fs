@@ -1,4 +1,4 @@
-namespace Protogen.FsharpProtoConverters
+namespace Protokeep.FsharpProtoConverters
 type ConvertDomain () =
     static member FromProtobuf (x:ProtoClasses.Domain.TrafficLight) : Domain.TrafficLight =
         enum<Domain.TrafficLight>(int x)

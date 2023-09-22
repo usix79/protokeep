@@ -1,0 +1,26 @@
+namespace Domain
+open Protokeep.FsharpTypes
+type TrafficLight =
+    | Unknown = 0
+    | Red = 1
+    | Yellow = 2
+    | Green = 3
+type Crossroad = {
+    Id : int
+    LongId : int64
+    AltId : System.Guid
+    Street1 : string
+    Street2 : string
+    IsMonitored : bool
+    Xpos : float32
+    Ypos : float
+    Ratio : decimal
+    LastChecked : System.DateTime
+    ServiceInterval : System.TimeSpan
+    CurrentLight : TrafficLight
+    Nickname : string option
+    Img : byte array
+    Notes : string array
+    Siblings : int list
+    Props : Map<string,string>
+}

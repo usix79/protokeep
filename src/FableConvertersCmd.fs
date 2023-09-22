@@ -1,5 +1,5 @@
 [<RequireQualifiedAccess>]
-module rec Protogen.FableConvertersCmd
+module rec Protokeep.FableConvertersCmd
 
 open System
 open System.Text
@@ -7,186 +7,242 @@ open System.IO
 open Types
 open Codegen
 
-let Handler module' locks typesCache = function
-    | "-o"::outputFileName::args
-    | "--output"::outputFileName::args ->
+let Handler module' locks typesCache =
+    function
+    | "-o" :: outputFileName :: args
+    | "--output" :: outputFileName :: args ->
         Program.checkLock module' locks typesCache
-        |> Result.bind(fun _ ->
-            let fileContent:string = gen module' locks typesCache
+        |> Result.bind (fun _ ->
+            let fileContent: string = gen module' locks typesCache
+
             let fileName =
-                if Path.GetExtension(outputFileName) <> ".fs" then  outputFileName + ".g.fs" else outputFileName
+                if Path.GetExtension(outputFileName) <> ".fs" then
+                    outputFileName + ".g.fs"
+                else
+                    outputFileName
+
             Console.WriteLine($"Writing fable converters types to {fileName}")
             File.WriteAllText(fileName, fileContent)
 
-            Program.checkArgCore "Protogen.fs" args
+            let defaultCommonsFileName =
+                Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
+
+            Program.checkArgCore defaultCommonsFileName args
             |> Option.iter (fun coreFileName ->
                 let coreFileText =
-                    if (File.Exists coreFileName) then File.ReadAllText(coreFileName) else ""
+                    if (File.Exists coreFileName) then
+                        File.ReadAllText(coreFileName)
+                    else
+                        ""
 
-                let updatedCoreFileText = CoreFsharp.update coreFileText "FableConverterHelpers" helpersBody
+                let updatedCoreFileText =
+                    CoreFsharp.update coreFileText "FableConverterHelpers" helpersBody
+
                 Console.WriteLine($"Writing fable converters helpers to {coreFileName}")
-                File.WriteAllText (coreFileName, updatedCoreFileText)
-            )
-            Ok () )
+                File.WriteAllText(coreFileName, updatedCoreFileText))
+
+            Ok())
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
-let Instance = {
-    Name = "fable-converters"
-    Description = """
+let Instance =
+    { Name = "fable-converters"
+      Description =
+        """
 generate converters between protobuf's json and fsharp types for fable environment: fable-converters [-o|--output] outputFile [--update-commons | --update-commons-in commonsFile]
                 !!! Do not forget to add package Fable.SimpleJson"""
-    Run = Handler
-}
+      Run = Handler }
 
-let gen (module':Module) (locks:LocksCollection) (typesCache:Types.TypesCache) =
+let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
 
     let txt = StringBuilder()
 
     let ns = module'.Name
 
-    let rec genItem = function
-    | Enum info ->
-        let fullNameTxt = info.Name |> dottedName
-        line txt $"    static member Default{firstName info.Name} ="
-        line txt $"        lazy {fullNameTxt}.Unknown"
+    let rec genItem =
+        function
+        | Enum info ->
+            let fullNameTxt = info.Name |> dottedName
+            line txt $"    static member Default{firstName info.Name} ="
+            line txt $"        lazy {fullNameTxt}.Unknown"
 
-        line txt $"    static member {firstName info.Name}FromString = function"
-        for symbol in info.Symbols do
-            line txt $"        | \"{firstName info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
-        line txt $"        | _ -> {fullNameTxt}.Unknown"
+            line txt $"    static member {firstName info.Name}FromString = function"
 
-        line txt $"    static member {firstName info.Name}ToString = function"
-        for symbol in info.Symbols do
-            line txt $"        | {fullNameTxt}.{symbol} -> \"{firstName info.Name}{symbol}\""
-        line txt $"        | _ -> \"Unknown\""
+            for symbol in info.Symbols do
+                line txt $"        | \"{firstName info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
 
-    | Record info ->
-        let fullNameTxt = info.Name |> dottedName
+            line txt $"        | _ -> {fullNameTxt}.Unknown"
 
-        line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
-        line txt $"        lazy {{"
-        for fieldInfo in info.Fields do
-            match fieldInfo.Type with
-            | Types.IsUnion typesCache unionInfo ->
-                line txt $"            {fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-            | _ ->
-                line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
-        line txt $"        }}"
+            line txt $"    static member {firstName info.Name}ToString = function"
 
-        line txt $"    static member {firstName info.Name}FromJson (json: Json): {fullNameTxt} ="
-        readObject "v" info
+            for symbol in info.Symbols do
+                line txt $"        | {fullNameTxt}.{symbol} -> \"{firstName info.Name}{symbol}\""
 
-        line txt $"        {{"
-        for fieldInfo in info.Fields do
-            match fieldInfo.Type with
-            | Types.IsUnion typesCache _ ->
-                line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
-            | Array _ -> line txt $"            {fieldInfo.Name} = unbox v{fieldInfo.Name}"
-            | List _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> List.ofSeq"
-            | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
-            | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
-        line txt $"        }}"
+            line txt $"        | _ -> \"Unknown\""
 
-        line txt $"    static member {firstName info.Name}ToJson (x: {fullNameTxt}) ="
-        writeObject "x." info
+        | Record info ->
+            let fullNameTxt = info.Name |> dottedName
 
-    | Union union ->
+            line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
+            line txt $"        lazy {{"
 
-        line txt $"    static member {firstName union.Name}FromJson (json: Json): {dottedName union.Name} ="
-        line txt $"        let mutable y = {dottedName union.Name}.Unknown"
-        line txt $"        getProps json"
-        line txt $"        |> Seq.iter(fun pair ->"
-        line txt $"            match pair.Key with"
-        for case in union.Cases do
-            let rightValue =
+            for fieldInfo in info.Fields do
+                match fieldInfo.Type with
+                | Types.IsUnion typesCache unionInfo ->
+                    line txt $"            {fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
+                | _ -> line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
+
+            line txt $"        }}"
+
+            line txt $"    static member {firstName info.Name}FromJson (json: Json): {fullNameTxt} ="
+            readObject "v" info
+
+            line txt $"        {{"
+
+            for fieldInfo in info.Fields do
+                match fieldInfo.Type with
+                | Types.IsUnion typesCache _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
+                | Array _ -> line txt $"            {fieldInfo.Name} = unbox v{fieldInfo.Name}"
+                | List _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> List.ofSeq"
+                | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
+                | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
+
+            line txt $"        }}"
+
+            line txt $"    static member {firstName info.Name}ToJson (x: {fullNameTxt}) ="
+            writeObject "x." info
+
+        | Union union ->
+
+            line txt $"    static member {firstName union.Name}FromJson (json: Json): {dottedName union.Name} ="
+            line txt $"        let mutable y = {dottedName union.Name}.Unknown"
+            line txt $"        getProps json"
+            line txt $"        |> Seq.iter(fun pair ->"
+            line txt $"            match pair.Key with"
+
+            for case in union.Cases do
+                let rightValue =
+                    match case with
+                    | Types.EmptyRecord -> $"ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
+                    | Types.SingleFieldRecord fieldInfo ->
+                        unpackField' $" |> {dottedName case.Name}" typesCache "y" fieldInfo.Type
+                    | Types.MultiFieldsRecord ->
+                        $"(fun v -> y <- v |> Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson)"
+
+                line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
+
+            line txt $"            | _ -> () )"
+            line txt $"        y"
+
+            line txt $"    static member {firstName union.Name}ToJson (x:{dottedName union.Name}) ="
+            line txt $"        match x with"
+
+            for case in union.Cases do
+                let values = case.Fields |> List.map Common.getName |> String.concat ","
+
+                let condition =
+                    $"        | {dottedName case.Name}"
+                    + if values <> "" then $" ({values})" else ""
+
+                let jsonConstructor =
+                    match case with
+                    | Types.EmptyRecord -> "JBool (true)"
+                    | Types.SingleFieldRecord fieldInfo -> $"{packField typesCache values fieldInfo.Type}"
+                    | Types.MultiFieldsRecord ->
+                        $"Convert{lastNames union.Name |> solidName}.{firstName union.Name}Case{firstName case.Name}ToJson ({values})"
+
+                line txt $"{condition} -> \"{firstName case.Name}\", {jsonConstructor}"
+
+            line txt $"        | _ -> \"Unknown\", JBool (true)"
+            line txt $"        |> List.singleton |> Map.ofList |> JObject"
+
+            for case in union.Cases do
+                let fieldsNames =
+                    case.Fields |> List.map (fun field -> field.Name) |> String.concat ","
+
                 match case with
-                | Types.EmptyRecord ->
-                    $"ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
-                | Types.SingleFieldRecord fieldInfo ->
-                    unpackField' $" |> {dottedName case.Name}" typesCache "y" fieldInfo.Type
                 | Types.MultiFieldsRecord ->
-                    $"(fun v -> y <- v |> Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson)"
-            line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
-        line txt $"            | _ -> () )"
-        line txt $"        y"
+                    line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (json: Json) ="
+                    readObject "" case
 
-        line txt $"    static member {firstName union.Name}ToJson (x:{dottedName union.Name}) ="
-        line txt $"        match x with"
-        for case in union.Cases do
-            let values = case.Fields |> List.map Utils.getName |> String.concat ","
+                    let convertedValues =
+                        case.Fields
+                        |> Seq.map (fun fieldInfo ->
+                            match fieldInfo.Type with
+                            | Array _ -> $"unbox {fieldInfo.Name}"
+                            | List _ -> $"{fieldInfo.Name} |> List.ofSeq"
+                            | Map _ -> $"{fieldInfo.Name} |> Map.ofSeq"
+                            | _ -> fieldInfo.Name)
+                        |> String.concat ","
 
-            let condition =
-                $"        | {dottedName case.Name}" + if values <> "" then $" ({values})" else ""
+                    line txt $"        {case.Name |> dottedName} ({convertedValues})"
 
-            let jsonConstructor =
-                match case with
-                | Types.EmptyRecord -> "JBool (true)"
-                | Types.SingleFieldRecord fieldInfo -> $"{packField typesCache values fieldInfo.Type}"
-                | Types.MultiFieldsRecord  -> $"Convert{lastNames union.Name |> solidName}.{firstName union.Name}Case{firstName case.Name}ToJson ({values})"
-            line txt $"{condition} -> \"{firstName case.Name}\", {jsonConstructor}"
-        line txt $"        | _ -> \"Unknown\", JBool (true)"
-        line txt $"        |> List.singleton |> Map.ofList |> JObject"
+                    line
+                        txt
+                        $"    static member {firstName union.Name}Case{firstName case.Name}ToJson ({fieldsNames}) ="
 
-        for case in union.Cases do
-            let fieldsNames = case.Fields |> List.map(fun field -> field.Name) |> String.concat ","
+                    writeObject "" case
+                | _ -> ()
 
-            match case with
-            | Types.MultiFieldsRecord ->
-                line txt $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (json: Json) ="
-                readObject "" case
-
-                let convertedValues =
-                    case.Fields
-                    |> Seq.map (fun fieldInfo ->
-                        match fieldInfo.Type with
-                        | Array _ -> $"unbox {fieldInfo.Name}"
-                        | List _ -> $"{fieldInfo.Name} |> List.ofSeq"
-                        | Map _ -> $"{fieldInfo.Name} |> Map.ofSeq"
-                        | _ ->  fieldInfo.Name)
-                    |> String.concat ","
-
-                line txt $"        {case.Name |> dottedName} ({convertedValues})"
-
-                line txt $"    static member {firstName union.Name}Case{firstName case.Name}ToJson ({fieldsNames}) ="
-                writeObject "" case
-            | _ -> ()
     and readObject prefix recordInfo =
         for fieldInfo in recordInfo.Fields do
             match fieldInfo.Type with
-            | Types.IsUnion typesCache unionInfo -> line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-            | _ ->  line txt $"        let mutable {prefix}{fieldInfo.Name} = {defValue true fieldInfo.Type}"
+            | Types.IsUnion typesCache unionInfo ->
+                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
+            | _ -> line txt $"        let mutable {prefix}{fieldInfo.Name} = {defValue true fieldInfo.Type}"
 
         line txt $"        getProps json"
         line txt $"        |> Seq.iter(fun pair ->"
         line txt $"            match pair.Key with"
+
         for fieldInfo in recordInfo.Fields do
             let vName = prefix + fieldInfo.Name
-            let suffix = match fieldInfo.Type with Optional _ -> "Value" | _ -> ""
-            line txt $"            | \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackField typesCache vName fieldInfo.Type}"
+
+            let suffix =
+                match fieldInfo.Type with
+                | Optional _ -> "Value"
+                | _ -> ""
+
+            line
+                txt
+                $"            | \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackField typesCache vName fieldInfo.Type}"
+
         line txt $"            | _ -> () )"
+
     and writeObject prefix recordInfo =
         line txt $"        ["
+
         for fieldInfo in recordInfo.Fields do
             let vName = $"{prefix}{fieldInfo.Name}"
+
             match fieldInfo.Type with
             | Optional t ->
                 let inner = "v"
                 line txt $"           match {vName} with"
-                line txt $"           | Some v -> \"{firstCharToUpper fieldInfo.Name}Value\", {packField typesCache inner t}"
+
+                line
+                    txt
+                    $"           | Some v -> \"{firstCharToUpper fieldInfo.Name}Value\", {packField typesCache inner t}"
+
                 line txt $"           | None -> ()"
-            | _ -> line txt $"           \"{firstCharToUpper fieldInfo.Name}\", {packField typesCache vName fieldInfo.Type}"
+            | _ ->
+                line
+                    txt
+                    $"           \"{firstCharToUpper fieldInfo.Name}\", {packField typesCache vName fieldInfo.Type}"
+
         line txt $"        ] |> Map.ofList |> JObject"
 
-    line txt $"namespace Protogen.FableConverters"
+    line txt $"namespace Protokeep.FableConverters"
     line txt $"open Fable.SimpleJson"
-    line txt $"open Protogen.FableConverterHelpers"
+    line txt $"open Protokeep.FableConverterHelpers"
     line txt $"type Convert{solidName module'.Name} () ="
+
     for item in module'.Items do
         genItem item
 
     txt.ToString()
 
-let rec defValue isMutable = function
+let rec defValue isMutable =
+    function
     | Bool -> "false"
     | String -> "\"\""
     | Int -> "0"
@@ -197,25 +253,30 @@ let rec defValue isMutable = function
     | Bytes -> "Array.empty"
     | Timestamp -> "System.DateTime.MinValue"
     | Duration -> "System.TimeSpan.Zero"
-    | Guid  -> "System.Guid.Empty"
+    | Guid -> "System.Guid.Empty"
     | Optional _ -> "None"
     | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
 
-let unpackField' rightOp (typesCache:Types.TypesCache) vName =
-    let rec f leftOp rightOp = function
+let unpackField' rightOp (typesCache: Types.TypesCache) vName =
+    let rec f leftOp rightOp =
+        function
         | Bool -> $"ifBool (fun v -> {leftOp}v{rightOp})"
         | String -> $"ifString (fun v -> {leftOp}v{rightOp})"
-        | Int | Long | Float | Double -> $"ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
-        | Decimal scale -> $"ifNumber (fun v -> {leftOp}v / {10. ** float(scale)}. |> unbox{rightOp})"
+        | Int
+        | Long
+        | Float
+        | Double -> $"ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
+        | Decimal scale -> $"ifNumber (fun v -> {leftOp}v / {10. ** float (scale)}. |> unbox{rightOp})"
         | Bytes -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
         | Timestamp -> $"ifString (fun v -> {leftOp}v |> toDateTime{rightOp})"
         | Duration -> $"ifString (fun v -> {leftOp}v |> toTimeSpan{rightOp})"
-        | Guid  -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
+        | Guid -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
         | Optional t -> f $"{vName} <- " " |> Some" t
-        | Array t | List t ->
+        | Array t
+        | List t ->
             let inner = f "" $" |> {vName}.Add" t
             $"ifArray (Seq.iter ({inner}))"
         | Map t ->
@@ -223,26 +284,33 @@ let unpackField' rightOp (typesCache:Types.TypesCache) vName =
             $"ifObject (Map.iter (fun key -> {inner}))"
         | Complex typeName ->
             match typesCache.TryFind typeName with
-            | Some (Enum _) -> $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
-            | _ -> $"(fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
+            | Some(Enum _) ->
+                $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
+            | _ ->
+                $"(fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
 
 
     f $"{vName} <- " rightOp
 
 let unpackField = unpackField' ""
 
-let packField (typesCache:Types.TypesCache) (vName:string) type' =
-    let rec f vName = function
+let packField (typesCache: Types.TypesCache) (vName: string) type' =
+    let rec f vName =
+        function
         | Bool -> $"JBool ({vName})"
         | String -> $"JString ({vName})"
-        | Int | Long | Float | Double -> $"JNumber (unbox {vName})"
-        | Decimal scale -> $"JNumber ({vName} * {10. ** float(scale)}m |> System.Decimal.Truncate |> unbox)"
+        | Int
+        | Long
+        | Float
+        | Double -> $"JNumber (unbox {vName})"
+        | Decimal scale -> $"JNumber ({vName} * {10. ** float (scale)}m |> System.Decimal.Truncate |> unbox)"
         | Bytes -> $"JString ({vName} |> System.Convert.ToBase64String)"
         | Timestamp -> $"JString ({vName} |> fromDateTime)"
         | Duration -> $"JString ({vName} |> fromTimeSpan)"
-        | Guid  -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"
+        | Guid -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"
         | Optional _ -> failwith "cannot upack optional field"
-        | Array t | List t ->
+        | Array t
+        | List t ->
             let inner = f "v" t
             $"JArray ({vName} |> Seq.map (fun v -> {inner}) |> List.ofSeq)"
         | Map t ->
@@ -250,14 +318,16 @@ let packField (typesCache:Types.TypesCache) (vName:string) type' =
             $"JObject ({vName} |> Map.map (fun _ v -> {inner}))"
         | Complex typeName ->
             match typesCache.TryFind typeName with
-            | Some (Enum _) -> $"JString ({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToString)"
+            | Some(Enum _) ->
+                $"JString ({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToString)"
             | _ -> $"({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToJson)"
 
     f vName type'
 
 
 
-let helpersBody = """
+let helpersBody =
+    """
     open Fable.SimpleJson
 
     let getProps = function JObject p -> p | _ -> Map.empty

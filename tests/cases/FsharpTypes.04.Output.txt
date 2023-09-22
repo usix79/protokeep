@@ -1,0 +1,10 @@
+namespace Domain
+open Protokeep.FsharpTypes
+type Score = {
+    S1 : int
+    S2 : int
+}
+with
+    static member MakeKey (s1': int) =
+        Key.Value (s1'.ToString())
+    member x.Key = Score.MakeKey (x.S1)

@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <DefineConstants>FABLE_COMPILER</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="index.html" />
-    <Compile Include="Protogen.fs" />
-    <Compile Include="Subdomain.fs" />
-    <Compile Include="Domain.fs" />
-    <Compile Include="SubdomainConverters.fs" />
-    <Compile Include="DomainConverters.fs" />
+    <Compile Include="gen/Protokeep.fs" />
+    <Compile Include="gen/Subdomain.fs" />
+    <Compile Include="gen/Domain.fs" />
+    <Compile Include="gen/SubdomainConverters.fs" />
+    <Compile Include="gen/DomainConverters.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
 

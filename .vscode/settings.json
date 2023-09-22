@@ -1,0 +1,12 @@
+{
+    "editor.inlayHints.enabled": "offUnlessPressed",
+    "[fsharp]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "Ionide.Ionide-fsharp"
+    },
+    "[csharp]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "csharpier.csharpier-vscode"
+    },
+    "git.ignoreLimitWarning": true
+}

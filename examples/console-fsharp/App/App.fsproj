@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Protogen.fs" />
+    <Compile Include="Protokeep.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="DomainProtoConverters.fs" />
     <Compile Include="DomainJsonConverters.fs" />

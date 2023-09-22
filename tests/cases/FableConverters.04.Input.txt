@@ -1,0 +1,16 @@
+module Domain
+
+enum TrafficLight = Red | Yellow | Green
+
+union LightStatus =
+    | Normal
+    | Warning of errorsCount:int
+    | OutOfOrder of since:timestamp*period:duration
+
+record Crossroad = {
+    Id: int
+    Street1: string
+    Street2: string
+    Light: TrafficLight
+    LightStatus: LightStatus
+}

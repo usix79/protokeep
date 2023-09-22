@@ -1,46 +1,64 @@
 module CoreDocTests
 
-open FSharp.Reflection
 open Xunit
-open Protogen.Types
-open Protogen
+open Protokeep
 
-type TestData() =
-  static member FsharpTestData =
-    [
-        ("""""", "Test", """
-    any thing
-        you may im agine
-""", """
-namespace Protogen
+type TestCase =
+    { CoreText: string
+      ModuleName: string
+      ModuleText: string
+      ExpectedOutput: string }
+
+let testCases =
+    [ { CoreText = ""
+        ModuleName = "Test"
+        ModuleText =
+          "
+    anything
+        you may imagine
+"
+        ExpectedOutput =
+          "
+namespace Protokeep
 module Test =
 
-    any thing
-        you may im agine
-""");
-        ("""namespace Protogen
+    anything
+        you may imagine
+"     }
+      { CoreText =
+          "namespace Protokeep
 module Test =
     old data
     old ddd
 module XXX =
     1,3,4
-    45
-""", "Test", """
-    any thing
+    45"
+        ModuleName = "Test"
+        ModuleText =
+          "
+    anything
         you may imagine
-""", """namespace Protogen
+"
+        ExpectedOutput =
+          "
+namespace Protokeep
 module Test =
 
-    any thing
+    anything
         you may imagine
 
 module XXX =
     1,3,4
     45
-""")
-    ] |> Seq.map FSharpValue.GetTupleFields
+"     } ]
 
-[<Theory; MemberData("FsharpTestData", MemberType=typeof<TestData>)>]
-let testAllCases (coreTxt:string, moduleName:string, moduleTxt:string, expectedOutput:string) =
-    let outputText = Codegen.CoreFsharp.update coreTxt moduleName moduleTxt
-    Assert.Equal(expectedOutput.Trim(), outputText.Trim())
+[<Fact>]
+let ``All Core Test Cases Should Pass`` () =
+    for testCase in testCases do
+        let coreTxt = testCase.CoreText
+        let moduleName = testCase.ModuleName
+        let moduleTxt = testCase.ModuleText
+        let expectedOutput = testCase.ExpectedOutput
+
+        let outputText = Codegen.CoreFsharp.update coreTxt moduleName moduleTxt
+        Assert.Equal(expectedOutput.Trim(), outputText.Trim())

@@ -1,0 +1,6 @@
+module Domain
+
+enum TrafficLight =
+    | Red
+    | Yellow
+    | Green

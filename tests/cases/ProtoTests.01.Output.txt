@@ -1,0 +1,9 @@
+syntax = "proto3";
+package Domain;
+option csharp_namespace = "ProtoClasses.Domain";
+enum TrafficLight {
+    TrafficLightUnknown = 0;
+    TrafficLightRed = 1;
+    TrafficLightYellow = 2;
+    TrafficLightGreen = 3;
+}

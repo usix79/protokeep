@@ -1,5 +1,4 @@
 .vs
-.vscode
 
 *.suo
 *.user
@@ -26,7 +25,3 @@ tools/
 nupkg/
 
 .DS_Store
-.fake
-
-node_modules/
-*.fs.js

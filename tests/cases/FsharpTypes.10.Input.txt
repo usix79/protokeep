@@ -1,0 +1,20 @@
+module Domain
+record Triple = {
+    Comment1: string idx
+    Comment2: string idx
+    Comment3: string idx
+}
+record Score = {
+    S1 : int key
+    S2 : int key
+}
+record ScoreOutcome = {
+    Score: Score
+    Comment: string
+}
+record CorrectScore = {
+    Scores : ScoreOutcome list idx[.Score => .Comment]
+}
+union Market =
+    | Triple of Triple
+    | Multiple of CorrectScore

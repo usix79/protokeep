@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>protokeep</ToolCommandName>
+    <PackageOutputPath>../nupkg</PackageOutputPath>
+    <PackageId>Protokeep</PackageId>
+    <Authors>usix</Authors>
+    <Title>Protokeep</Title>
+    <Description>Metatool for keeping protobuf schema evolution and converters</Description>
+    <AssemblyVersion>0.3.4.0</AssemblyVersion>
+    <FileVersion>0.3.4.0</FileVersion>
+    <Version>0.3.4.0</Version>
+    <PackageTags>Protobuf;Serializer;Codegen</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/usix79/protokeeper</RepositoryUrl>
+    <PackageReleaseNotes>
+      # Release Notes
+      ## 0.3.2 - 2023-09-22
+      * Reincarnation under 'Protokeep' name
+      ## 0.2.6 - 2021-07-27
+      * bugfix
+      ## 0.2.5 - 2021-07-27
+      * uppercase in for option case name
+      ## 0.2.4 - 2021-07-05
+      * bugfix
+      ## 0.2.3 - 2021-07-05
+      * delegates in fsharp json converters
+      ## 0.2.2 - 2021-07-02
+      * bugfix
+      ## 0.2.1 - 2021-07-01
+      * bugfix
+      ## 0.2.0 - 2021-06-29
+      * Added fsharp-json-converter
+      ## 0.1.2 - 2021-06-22
+      * Bugfix (fable converters for imported enums)
+      ## 0.1.1 - 2021-06-22
+      * Bugfix (resolving namespaces in the imported modules)
+      ## 0.1.0 - 2020-12-21
+      * Initial Release
+    </PackageReleaseNotes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Common.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Parsers.fs" />
+    <Compile Include="Codegen.fs" />
+    <Compile Include="FableConvertersCmd.fs" />
+    <Compile Include="FsharpProtoConvertersCmd.fs" />
+    <Compile Include="FsharpJsonConvertersCmd.fs" />
+    <Compile Include="FsharpTypesCmd.fs" />
+    <Compile Include="ProtoCmd.fs" />
+    <Compile Include="LockCmd.fs" />
+    <Compile Include="CheckCmd.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FParsec" Version="2.0.0-beta2" />
+  </ItemGroup>
+</Project>

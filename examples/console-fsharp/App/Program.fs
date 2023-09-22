@@ -3,24 +3,23 @@ open System.IO
 open System.Text.Json
 open Google.Protobuf
 open Domain
-open Protogen
+open Protokeep
 
 [<EntryPoint>]
 let main argv =
 
-    let crossroad = {
-        Id = 124
-        Street1 = "Bond st"
-        Street2 = "Oxford st"
-        Light = TrafficLight.Green
-        LightStatus = LightStatus.OutOfOrder DateTime.UtcNow
-        History = [
-            LightStatus.Normal
-            LightStatus.Warning 1
-            LightStatus.Warning 3
-            LightStatus.OutOfOrder DateTime.UtcNow]
-        Lirycs = ["Words"; "Words"; "Words"]
-    }
+    let crossroad =
+        { Id = 124
+          Street1 = "Bond st"
+          Street2 = "Oxford st"
+          Light = TrafficLight.Green
+          LightStatus = LightStatus.OutOfOrder DateTime.UtcNow
+          History =
+            [ LightStatus.Normal
+              LightStatus.Warning 1
+              LightStatus.Warning 3
+              LightStatus.OutOfOrder DateTime.UtcNow ]
+          Lirycs = [ "Words"; "Words"; "Words" ] }
 
     printfn "Orig: %A" crossroad
 
@@ -30,7 +29,7 @@ let main argv =
     protobufCrossroad.WriteTo(output)
     output.Flush()
 
-    let bytes = outputStream.ToArray();
+    let bytes = outputStream.ToArray()
     printfn "Protobuf Bytes Length=%d, %s" bytes.Length (BitConverter.ToString(bytes))
 
     use inputStream = new MemoryStream(bytes)
@@ -44,19 +43,25 @@ let main argv =
     printfn "Protofuf Json: %A" protoJson
 
     use stream = new MemoryStream()
-    let mutable writer = Utf8JsonWriter(stream)
-    FsharpJsonConverters.ConvertDomain.CrossroadToJson(&writer,crossroad)
+    let mutable writer = new Utf8JsonWriter(stream)
+    FsharpJsonConverters.ConvertDomain.CrossroadToJson(&writer, crossroad)
     writer.Flush()
     let data = stream.ToArray()
     let json = System.Text.Encoding.UTF8.GetString(data, 0, data.Length)
-    printfn "Protogen Json: %A" json
+    printfn "Protokeep Json: %A" json
 
-    let mutable reader = Utf8JsonReader(ReadOnlySpan.op_Implicit(System.Text.Encoding.UTF8.GetBytes(json)))
+    let mutable reader =
+        Utf8JsonReader(ReadOnlySpan.op_Implicit (System.Text.Encoding.UTF8.GetBytes(json)))
+
     let copyFromJson = FsharpJsonConverters.ConvertDomain.CrossroadFromJson(&reader)
     printfn "Copy from Json : %A" copyFromJson
 
-    let protoCopyFromJson = JsonParser.Default.Parse<ProtoClasses.Domain.Crossroad>(json)
-    let copyFromJsonProto = FsharpProtoConverters.ConvertDomain.FromProtobuf protoCopyFromJson
+    let protoCopyFromJson =
+        JsonParser.Default.Parse<ProtoClasses.Domain.Crossroad>(json)
+
+    let copyFromJsonProto =
+        FsharpProtoConverters.ConvertDomain.FromProtobuf protoCopyFromJson
+
     printfn "Copy from Proto: %A" copyFromJsonProto
 
     0 // return an integer exit code

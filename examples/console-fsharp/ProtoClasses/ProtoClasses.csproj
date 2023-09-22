@@ -1,16 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <Protobuf Include="Domain.proto" GrpcServices="None" />
+    <Protobuf Include="domain.proto" GrpcServices="None" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.14.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.34.0">
+    <PackageReference Include="Google.Protobuf" Version="3.24.3" />
+    <PackageReference Include="Grpc.Tools" Version="2.58.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

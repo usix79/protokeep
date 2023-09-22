@@ -1,6 +1,6 @@
-namespace Protogen.FsharpJsonConverters
+namespace Protokeep.FsharpJsonConverters
 open System.Text.Json
-open Protogen.FsharpJsonConvertersHelpers
+open Protokeep.FsharpJsonConvertersHelpers
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown
@@ -14,7 +14,7 @@ type ConvertDomain () =
         | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
         | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
-    static member LightStatusFromJson (reader: inref<Utf8JsonReader>): Domain.LightStatus =
+    static member LightStatusFromJson (reader: byref<Utf8JsonReader>): Domain.LightStatus =
         let mutable y = Domain.LightStatus.Unknown
         if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
             while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
@@ -50,7 +50,7 @@ type ConvertDomain () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member LightStatusToJsonDel = lazy(ToJsonDelegate(fun r v -> ConvertDomain.LightStatusToJson(&r,v)))
+    static member LightStatusToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.LightStatusToJson(&w,v)))
     static member DefaultCrossroad: Lazy<Domain.Crossroad> =
         lazy {
             Id = 0
@@ -61,7 +61,7 @@ type ConvertDomain () =
             History = List.empty
             Lirycs = List.empty
         }
-    static member CrossroadFromJson (reader: inref<Utf8JsonReader>): Domain.Crossroad =
+    static member CrossroadFromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad =
         let mutable vId = 0
         let mutable vStreet1 = ""
         let mutable vStreet2 = ""
@@ -132,7 +132,7 @@ type ConvertDomain () =
         writer.WritePropertyName("Lirycs")
         writer.WriteStartArray(); (for v in x.Lirycs do writer.WriteStringValue(v)); writer.WriteEndArray()
         writer.WriteEndObject()
-    static member CrossroadToJsonDel = lazy(ToJsonDelegate(fun r v -> ConvertDomain.CrossroadToJson(&r,v)))
+    static member CrossroadToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.CrossroadToJson(&w,v)))
     static member DefaultCrossroad2: Lazy<Domain.Crossroad2> =
         lazy {
             Id = 0
@@ -152,7 +152,7 @@ type ConvertDomain () =
             Notes = Array.empty
             Props = Map.empty
         }
-    static member Crossroad2FromJson (reader: inref<Utf8JsonReader>): Domain.Crossroad2 =
+    static member Crossroad2FromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad2 =
         let mutable vId = 0
         let mutable vLongId = 0L
         let mutable vAltId = System.Guid.Empty
@@ -301,4 +301,4 @@ type ConvertDomain () =
         writer.WritePropertyName("Props")
         writer.WriteStartObject(); (for pair in x.Props do writer.WritePropertyName(pair.Key); writer.WriteStringValue(pair.Value)); writer.WriteEndObject()
         writer.WriteEndObject()
-    static member Crossroad2ToJsonDel = lazy(ToJsonDelegate(fun r v -> ConvertDomain.Crossroad2ToJson(&r,v)))
+    static member Crossroad2ToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.Crossroad2ToJson(&w,v)))

@@ -1,0 +1,5 @@
+module Domain
+record Score = {
+    S1 : int idx
+    S2 : int idx
+}
