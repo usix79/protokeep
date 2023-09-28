@@ -25,7 +25,6 @@ type ConvertBettingFootball () =
                     else reader.Skip()
                 else reader.Skip()
         y
-    static member MarketFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBettingFootball.MarketFromJson(&r)))
     static member MarketToJson (writer:inref<Utf8JsonWriter>, x: Betting.Football.Market) =
         writer.WriteStartObject()
         match x with
@@ -45,7 +44,6 @@ type ConvertBettingFootball () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member MarketToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBettingFootball.MarketToJson(&w,v)))
     static member DefaultPeriod =
         lazy Betting.Football.Period.Unknown
     static member PeriodFromString = function
@@ -116,7 +114,6 @@ type ConvertBettingFootball () =
             Market = vMarket
             Status = vStatus
         }
-    static member MarketItemFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBettingFootball.MarketItemFromJson(&r)))
     static member MarketItemToJson (writer: inref<Utf8JsonWriter>, x: Betting.Football.MarketItem) =
         writer.WriteStartObject()
         writer.WritePropertyName("Statistic")
@@ -128,4 +125,3 @@ type ConvertBettingFootball () =
         writer.WritePropertyName("Status")
         writer.WriteStringValue(x.Status |> ConvertBettingFootball.StatusToString)
         writer.WriteEndObject()
-    static member MarketItemToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBettingFootball.MarketItemToJson(&w,v)))

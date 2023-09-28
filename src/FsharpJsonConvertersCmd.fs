@@ -13,7 +13,11 @@ let Handler module' locks typesCache =
     | "--output" :: outputFileName :: args ->
         Program.checkLock module' locks typesCache
         |> Result.bind (fun _ ->
-            let fileContent = gen module' locks typesCache
+            let ns =
+                Program.checkArgNamespace args
+                |> Option.defaultValue "Protokeep.FsharpJsonConverters"
+
+            let fileContent = gen ns module' locks typesCache
 
             let fileName =
                 if Path.GetExtension(outputFileName) <> ".fs" then
@@ -27,7 +31,7 @@ let Handler module' locks typesCache =
             let defaultCommonsFileName =
                 Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
 
-            Program.checkArgCore defaultCommonsFileName args
+            Program.checkArgUpdateCommons defaultCommonsFileName args
             |> Option.iter (fun coreFileName ->
                 let coreFileText =
                     if (File.Exists coreFileName) then
@@ -42,6 +46,8 @@ let Handler module' locks typesCache =
                 File.WriteAllText(coreFileName, updatedCoreFileText))
 
 
+
+
             Ok())
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
@@ -50,7 +56,7 @@ let Instance =
       Description = "generate converters between json and fsharp types: fsharp-json-converters [-o|--output] outputFile"
       Run = Handler }
 
-let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
+let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
 
     let txt = StringBuilder()
     let ns = module'.Name
@@ -106,17 +112,10 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
             line
                 txt
-                $"    static member {firstName info.Name}FromJsonDel = lazy(FromJsonDelegate(fun r -> Convert{lastNames info.Name |> solidName}.{firstName info.Name}FromJson(&r)))"
-
-            line
-                txt
                 $"    static member {firstName info.Name}ToJson (writer: inref<Utf8JsonWriter>, x: {fullNameTxt}) ="
 
             writeObject "x." info
 
-            line
-                txt
-                $"    static member {firstName info.Name}ToJsonDel = lazy(ToJsonDelegate(fun w v -> Convert{lastNames info.Name |> solidName}.{firstName info.Name}ToJson(&w,v)))"
         | Union union ->
             line
                 txt
@@ -164,10 +163,6 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
             line
                 txt
-                $"    static member {firstName union.Name}FromJsonDel = lazy(FromJsonDelegate(fun r -> Convert{lastNames union.Name |> solidName}.{firstName union.Name}FromJson(&r)))"
-
-            line
-                txt
                 $"    static member {firstName union.Name}ToJson (writer:inref<Utf8JsonWriter>, x: {dottedName union.Name}) ="
 
             line txt $"        writer.WriteStartObject()"
@@ -198,10 +193,6 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             line txt $"            writer.WritePropertyName(\"Unknown\")"
             line txt $"            writer.WriteBooleanValue(true)"
             line txt $"        writer.WriteEndObject()"
-
-            line
-                txt
-                $"    static member {firstName union.Name}ToJsonDel = lazy(ToJsonDelegate(fun w v -> Convert{lastNames union.Name |> solidName}.{firstName union.Name}ToJson(&w,v)))"
 
             for case in union.Cases do
                 let fieldsNames =
@@ -305,7 +296,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
         line txt $"        writer.WriteEndObject()"
 
-    line txt $"namespace Protokeep.FsharpJsonConverters"
+    line txt $"namespace {genNamespace}"
     line txt $"open System.Text.Json"
     line txt $"open Protokeep.FsharpJsonConvertersHelpers"
     line txt $"type Convert{solidName module'.Name} () ="
@@ -408,8 +399,6 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
 let helpersBody =
     """
     open System.Text.Json
-    type FromJsonDelegate<'a> = delegate of byref<Utf8JsonReader> -> 'a
-    type ToJsonDelegate<'a> = delegate of inref<Utf8JsonWriter> * 'a -> unit
 
     let fromDateTime (v:System.DateTime) = v.ToString("O")
 

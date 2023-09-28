@@ -6,8 +6,8 @@ open Microsoft.Extensions.Logging
 open System.IO
 open System.Text.Json
 
-open Protokeep
 open Domain
+open Domain.JsonConverters
 open Logic
 
 [<ApiController>]
@@ -27,7 +27,7 @@ type CalcController(logger: ILogger<CalcController>) =
             let mutable reader =
                 Utf8JsonReader(ReadOnlySpan(System.Text.Encoding.UTF8.GetBytes(jsonReq)))
 
-            let req = FsharpJsonConverters.ConvertDomain.RequestFromJson(&reader)
+            let req = ConvertDomain.RequestFromJson(&reader)
 
             printfn $"{req}"
 
@@ -45,7 +45,7 @@ type CalcController(logger: ILogger<CalcController>) =
 
             use stream = new MemoryStream()
             let mutable writer = new Utf8JsonWriter(stream)
-            FsharpJsonConverters.ConvertDomain.ResponseToJson(&writer, resp)
+            ConvertDomain.ResponseToJson(&writer, resp)
             writer.Flush()
             let data = stream.ToArray()
             let json = System.Text.Encoding.UTF8.GetString(data, 0, data.Length)

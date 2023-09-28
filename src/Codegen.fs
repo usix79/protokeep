@@ -43,12 +43,19 @@ module Program =
             else
                 Ok())
 
-    let rec checkArgCore defaultName =
+    let rec checkArgUpdateCommons defaultName =
         function
         | [] -> None
         | "--update-commons" :: _ -> Some defaultName
         | "--update-commons-in" :: fileName :: _ -> Some fileName
-        | _ :: tail -> checkArgCore defaultName tail
+        | _ :: tail -> checkArgUpdateCommons defaultName tail
+
+    let rec checkArgNamespace =
+        function
+        | [] -> None
+        | "--namespace" :: ns :: _
+        | "-ns" :: ns :: _ -> Some ns
+        | _ :: tail -> checkArgNamespace tail
 
 module CoreFsharp =
     let construct (modules: (string * string) seq) =

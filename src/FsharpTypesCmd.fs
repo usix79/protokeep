@@ -27,7 +27,7 @@ let Handler module' locks typesCache =
             let defaultCommonsFileName =
                 Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
 
-            Program.checkArgCore defaultCommonsFileName args
+            Program.checkArgUpdateCommons defaultCommonsFileName args
             |> Option.iter (fun coreFileName ->
                 let coreFileText =
                     if (File.Exists coreFileName) then

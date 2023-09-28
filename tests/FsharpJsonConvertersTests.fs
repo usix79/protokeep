@@ -15,7 +15,11 @@ let testAllCases (scenarioName, input, expectedOutput: string) =
             Types.lock module' (LocksCollection []) typesCache
             |> Result.map (fun locks ->
                 let outputText =
-                    FsharpJsonConvertersCmd.gen module' (LocksCollection locks) typesCache
+                    FsharpJsonConvertersCmd.gen
+                        "Protokeep.FsharpJsonConverters"
+                        module'
+                        (LocksCollection locks)
+                        typesCache
 
                 Assert.Equal(expectedOutput.Trim(), outputText.Trim())))
         |> Result.mapError (fun error -> failwithf "%A" error))

@@ -37,7 +37,6 @@ type ConvertBetting () =
                     else reader.Skip()
                 else reader.Skip()
         y
-    static member OutcomeFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.OutcomeFromJson(&r)))
     static member OutcomeToJson (writer:inref<Utf8JsonWriter>, x: Betting.Outcome) =
         writer.WriteStartObject()
         match x with
@@ -57,7 +56,6 @@ type ConvertBetting () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member OutcomeToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.OutcomeToJson(&w,v)))
     static member OutcomeCasePricedWithProbFromJson (reader: byref<Utf8JsonReader>) =
         let mutable price = 0m
         let mutable prob = 0.f
@@ -106,7 +104,6 @@ type ConvertBetting () =
             Draw = vDraw
             Win2 = vWin2
         }
-    static member Winner3WayFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.Winner3WayFromJson(&r)))
     static member Winner3WayToJson (writer: inref<Utf8JsonWriter>, x: Betting.Winner3Way) =
         writer.WriteStartObject()
         writer.WritePropertyName("Win1")
@@ -116,7 +113,6 @@ type ConvertBetting () =
         writer.WritePropertyName("Win2")
         ConvertBetting.OutcomeToJson(&writer, x.Win2)
         writer.WriteEndObject()
-    static member Winner3WayToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.Winner3WayToJson(&w,v)))
     static member DefaultHandicap: Lazy<Betting.Handicap> =
         lazy {
             Value = 0m
@@ -144,7 +140,6 @@ type ConvertBetting () =
             Win1 = vWin1
             Win2 = vWin2
         }
-    static member HandicapFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.HandicapFromJson(&r)))
     static member HandicapToJson (writer: inref<Utf8JsonWriter>, x: Betting.Handicap) =
         writer.WriteStartObject()
         writer.WritePropertyName("Value")
@@ -154,7 +149,6 @@ type ConvertBetting () =
         writer.WritePropertyName("Win2")
         ConvertBetting.OutcomeToJson(&writer, x.Win2)
         writer.WriteEndObject()
-    static member HandicapToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.HandicapToJson(&w,v)))
     static member DefaultTotal: Lazy<Betting.Total> =
         lazy {
             Value = 0m
@@ -182,7 +176,6 @@ type ConvertBetting () =
             Over = vOver
             Under = vUnder
         }
-    static member TotalFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.TotalFromJson(&r)))
     static member TotalToJson (writer: inref<Utf8JsonWriter>, x: Betting.Total) =
         writer.WriteStartObject()
         writer.WritePropertyName("Value")
@@ -192,7 +185,6 @@ type ConvertBetting () =
         writer.WritePropertyName("Under")
         ConvertBetting.OutcomeToJson(&writer, x.Under)
         writer.WriteEndObject()
-    static member TotalToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.TotalToJson(&w,v)))
     static member DefaultScore: Lazy<Betting.Score> =
         lazy {
             S1 = 0
@@ -217,7 +209,6 @@ type ConvertBetting () =
             S1 = vS1
             S2 = vS2
         }
-    static member ScoreFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.ScoreFromJson(&r)))
     static member ScoreToJson (writer: inref<Utf8JsonWriter>, x: Betting.Score) =
         writer.WriteStartObject()
         writer.WritePropertyName("S1")
@@ -225,7 +216,6 @@ type ConvertBetting () =
         writer.WritePropertyName("S2")
         writer.WriteNumberValue(x.S2)
         writer.WriteEndObject()
-    static member ScoreToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.ScoreToJson(&w,v)))
     static member DefaultScoreOutcome: Lazy<Betting.ScoreOutcome> =
         lazy {
             Score = ConvertBetting.DefaultScore.Value
@@ -246,7 +236,6 @@ type ConvertBetting () =
             Score = vScore
             Outcome = vOutcome
         }
-    static member ScoreOutcomeFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.ScoreOutcomeFromJson(&r)))
     static member ScoreOutcomeToJson (writer: inref<Utf8JsonWriter>, x: Betting.ScoreOutcome) =
         writer.WriteStartObject()
         writer.WritePropertyName("Score")
@@ -254,7 +243,6 @@ type ConvertBetting () =
         writer.WritePropertyName("Outcome")
         ConvertBetting.OutcomeToJson(&writer, x.Outcome)
         writer.WriteEndObject()
-    static member ScoreOutcomeToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.ScoreOutcomeToJson(&w,v)))
     static member DefaultCorrectScore: Lazy<Betting.CorrectScore> =
         lazy {
             Scores = List.empty
@@ -275,10 +263,8 @@ type ConvertBetting () =
         {
             Scores = vScores |> List.ofSeq
         }
-    static member CorrectScoreFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertBetting.CorrectScoreFromJson(&r)))
     static member CorrectScoreToJson (writer: inref<Utf8JsonWriter>, x: Betting.CorrectScore) =
         writer.WriteStartObject()
         writer.WritePropertyName("Scores")
         writer.WriteStartArray(); (for v in x.Scores do ConvertBetting.ScoreOutcomeToJson(&writer, v)); writer.WriteEndArray()
         writer.WriteEndObject()
-    static member CorrectScoreToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertBetting.CorrectScoreToJson(&w,v)))

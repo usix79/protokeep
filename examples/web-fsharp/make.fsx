@@ -16,17 +16,17 @@ let gen _ =
             let fullFileName = $"{protokeepDir}{file}.protokeep"
             do! protokeep $"{fullFileName} lock" __SOURCE_DIRECTORY__
 
-            do! protokeep $"{fullFileName} fsharp-types -o {serverDir}{file}.fs --update-commons" __SOURCE_DIRECTORY__
+            do! protokeep $"{fullFileName} fsharp-types -o {serverDir}{file}.fs --update-common" __SOURCE_DIRECTORY__
             do! protokeep $"{fullFileName} fsharp-types -o {clientDir}{file}.fs --update-commons" __SOURCE_DIRECTORY__
 
             do!
                 protokeep
-                    $"{fullFileName} fsharp-json-converters -o {serverDir}{file}Converters.fs --update-commons"
+                    $"{fullFileName} fsharp-json-converters -o {serverDir}{file}Converters.fs --update-commons -ns Domain.JsonConverters"
                     __SOURCE_DIRECTORY__
 
             do!
                 protokeep
-                    $"{fullFileName} fable-converters -o {clientDir}{file}Converters.fs --update-commons"
+                    $"{fullFileName} fable-converters -o {clientDir}{file}Converters.fs --update-commons -ns Domain.JsonConverters"
                     __SOURCE_DIRECTORY__
     }
 

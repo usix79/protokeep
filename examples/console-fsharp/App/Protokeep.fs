@@ -18,8 +18,6 @@ module FsharpTypes =
 module FsharpJsonConvertersHelpers =
 
     open System.Text.Json
-    type FromJsonDelegate<'a> = delegate of byref<Utf8JsonReader> -> 'a
-    type ToJsonDelegate<'a> = delegate of inref<Utf8JsonWriter> * 'a -> unit
 
     let fromDateTime (v:System.DateTime) = v.ToString("O")
 

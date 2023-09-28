@@ -31,7 +31,6 @@ type ConvertDomain () =
                     y <- ConvertDomain.LightStatusCaseOutOfOrderFromJson(&reader)
                 else reader.Skip()
         y
-    static member LightStatusFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.LightStatusFromJson(&r)))
     static member LightStatusToJson (writer:inref<Utf8JsonWriter>, x: Domain.LightStatus) =
         writer.WriteStartObject()
         match x with
@@ -48,7 +47,6 @@ type ConvertDomain () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member LightStatusToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.LightStatusToJson(&w,v)))
     static member LightStatusCaseOutOfOrderFromJson (reader: byref<Utf8JsonReader>) =
         let mutable since = System.DateTime.MinValue
         let mutable period = System.TimeSpan.Zero
@@ -115,7 +113,6 @@ type ConvertDomain () =
             CurrentLight = vCurrentLight
             LightStatus = vLightStatus
         }
-    static member CrossroadFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.CrossroadFromJson(&r)))
     static member CrossroadToJson (writer: inref<Utf8JsonWriter>, x: Domain.Crossroad) =
         writer.WriteStartObject()
         writer.WritePropertyName("Id")
@@ -129,4 +126,3 @@ type ConvertDomain () =
         writer.WritePropertyName("LightStatus")
         ConvertDomain.LightStatusToJson(&writer, x.LightStatus)
         writer.WriteEndObject()
-    static member CrossroadToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.CrossroadToJson(&w,v)))

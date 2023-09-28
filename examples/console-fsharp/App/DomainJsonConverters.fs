@@ -33,7 +33,6 @@ type ConvertDomain () =
                     else reader.Skip()
                 else reader.Skip()
         y
-    static member LightStatusFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.LightStatusFromJson(&r)))
     static member LightStatusToJson (writer:inref<Utf8JsonWriter>, x: Domain.LightStatus) =
         writer.WriteStartObject()
         match x with
@@ -50,7 +49,6 @@ type ConvertDomain () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member LightStatusToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.LightStatusToJson(&w,v)))
     static member DefaultCrossroad: Lazy<Domain.Crossroad> =
         lazy {
             Id = 0
@@ -114,7 +112,6 @@ type ConvertDomain () =
             History = vHistory |> List.ofSeq
             Lirycs = vLirycs |> List.ofSeq
         }
-    static member CrossroadFromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.CrossroadFromJson(&r)))
     static member CrossroadToJson (writer: inref<Utf8JsonWriter>, x: Domain.Crossroad) =
         writer.WriteStartObject()
         writer.WritePropertyName("Id")
@@ -132,7 +129,6 @@ type ConvertDomain () =
         writer.WritePropertyName("Lirycs")
         writer.WriteStartArray(); (for v in x.Lirycs do writer.WriteStringValue(v)); writer.WriteEndArray()
         writer.WriteEndObject()
-    static member CrossroadToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.CrossroadToJson(&w,v)))
     static member DefaultCrossroad2: Lazy<Domain.Crossroad2> =
         lazy {
             Id = 0
@@ -262,7 +258,6 @@ type ConvertDomain () =
             Notes = vNotes |> Array.ofSeq
             Props = vProps |> Map.ofSeq
         }
-    static member Crossroad2FromJsonDel = lazy(FromJsonDelegate(fun r -> ConvertDomain.Crossroad2FromJson(&r)))
     static member Crossroad2ToJson (writer: inref<Utf8JsonWriter>, x: Domain.Crossroad2) =
         writer.WriteStartObject()
         writer.WritePropertyName("Id")
@@ -301,4 +296,3 @@ type ConvertDomain () =
         writer.WritePropertyName("Props")
         writer.WriteStartObject(); (for pair in x.Props do writer.WritePropertyName(pair.Key); writer.WriteStringValue(pair.Value)); writer.WriteEndObject()
         writer.WriteEndObject()
-    static member Crossroad2ToJsonDel = lazy(ToJsonDelegate(fun w v -> ConvertDomain.Crossroad2ToJson(&w,v)))

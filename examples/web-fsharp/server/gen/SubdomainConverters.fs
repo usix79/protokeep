@@ -1,4 +1,4 @@
-namespace Protokeep.FsharpJsonConverters
+namespace Domain.JsonConverters
 open System.Text.Json
 open Protokeep.FsharpJsonConvertersHelpers
 type ConvertDomainSubdomain () =
