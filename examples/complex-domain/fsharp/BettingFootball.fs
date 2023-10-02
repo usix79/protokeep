@@ -12,13 +12,14 @@ with
     static member MakeHandicapKey (p1Key: Key) = Key.Items [Key.Value "2"; Key.Inner p1Key]
     static member MakeTotalKey (p1Key: Key) = Key.Items [Key.Value "3"; Key.Inner p1Key]
     static member MakeCorrectScoreKey () = Key.Value "4"
-    member x.Key =
-        match x with
-        | Market.Unknown -> Market.MakeUnknownKey ()
-        | Market.Winner3Way (p1') -> Market.MakeWinner3WayKey ()
-        | Market.Handicap (p1') -> Market.MakeHandicapKey (p1'.Key)
-        | Market.Total (p1') -> Market.MakeTotalKey (p1'.Key)
-        | Market.CorrectScore (p1') -> Market.MakeCorrectScoreKey ()
+    interface IEntity with
+        member x.Key =
+            match x with
+            | Market.Unknown -> Market.MakeUnknownKey ()
+            | Market.Winner3Way (p1') -> Market.MakeWinner3WayKey ()
+            | Market.Handicap (p1') -> Market.MakeHandicapKey (p1'.Key)
+            | Market.Total (p1') -> Market.MakeTotalKey (p1'.Key)
+            | Market.CorrectScore (p1') -> Market.MakeCorrectScoreKey ()
     member x.ItemValues () =
         match x with
         | Market.Unknown -> Array.empty
@@ -70,4 +71,5 @@ type MarketItem = {
 with
     static member MakeKey (statistic': Statistic, period': Period, marketKey: Key) =
         Key.Items [Key.Value ((int statistic').ToString()); Key.Value ((int period').ToString()); Key.Inner marketKey]
-    member x.Key = MarketItem.MakeKey (x.Statistic, x.Period, x.Market.Key)
+    interface IEntity with
+        member x.Key = MarketItem.MakeKey (x.Statistic, x.Period, x.Market.Key)

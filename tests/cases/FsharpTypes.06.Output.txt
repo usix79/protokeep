@@ -14,4 +14,5 @@ type Crossroad = {
 with
     static member MakeKey (id': int, light': TrafficLight) =
         Key.Items [Key.Value (id'.ToString()); Key.Value ((int light').ToString())]
-    member x.Key = Crossroad.MakeKey (x.Id, x.Light)
+    interface IEntity with
+        member x.Key = Crossroad.MakeKey (x.Id, x.Light)

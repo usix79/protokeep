@@ -1,7 +1,7 @@
-open System
+#load "../../shared.fsx"
 
-#load "../../make.Shared.fsx"
-open Make.Shared
+open FsToolkit.ErrorHandling
+open Shared
 
 
 let protokeepDir = "./protokeep/"
@@ -48,4 +48,11 @@ let clean _ =
         do! rmAll $"{__SOURCE_DIRECTORY__}/{fableDir}"
     }
 
-[ ("CLEAN", clean); ("GEN", gen) ] |> make "Protokeep - Complex Domain Example"
+let rebuild _ =
+    result {
+        do! clean ()
+        do! gen ()
+    }
+
+[ ("CLEAN", clean); ("GEN", gen); ("REBUILD", rebuild) ]
+|> make "Protokeep - Complex Domain Example"

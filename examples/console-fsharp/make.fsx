@@ -1,7 +1,7 @@
-open System
+#load "../../shared.fsx"
 
-#load "../../make.Shared.fsx"
-open Make.Shared
+open FsToolkit.ErrorHandling
+open Shared
 
 
 let protokeepFileName = "domain.protokeep"
@@ -44,8 +44,16 @@ let clean _ =
         do! rm fsharpCommonsFile __SOURCE_DIRECTORY__
     }
 
+let rebuild _ =
+    result {
+        do! clean ()
+        do! gen ()
+    }
+
+
 [ ("CLEAN", clean)
   ("GEN", gen)
   ("BUILD", (fun _ -> dotnet "build" __SOURCE_DIRECTORY__))
+  ("REBUILD", rebuild)
   ("RUN", (fun _ -> dotnet "run --project App" __SOURCE_DIRECTORY__)) ]
 |> make "Protokeep - Fsharp Console Example"

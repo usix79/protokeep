@@ -1,8 +1,8 @@
-open System.IO
-open System.Threading.Tasks
+#load "../../shared.fsx"
 
-#load "../../make.Shared.fsx"
-open Make.Shared
+open System.Threading.Tasks
+open FsToolkit.ErrorHandling
+open Shared
 
 
 let protokeepDir = "./domain/"
@@ -16,7 +16,7 @@ let gen _ =
             let fullFileName = $"{protokeepDir}{file}.protokeep"
             do! protokeep $"{fullFileName} lock" __SOURCE_DIRECTORY__
 
-            do! protokeep $"{fullFileName} fsharp-types -o {serverDir}{file}.fs --update-common" __SOURCE_DIRECTORY__
+            do! protokeep $"{fullFileName} fsharp-types -o {serverDir}{file}.fs --update-commons" __SOURCE_DIRECTORY__
             do! protokeep $"{fullFileName} fsharp-types -o {clientDir}{file}.fs --update-commons" __SOURCE_DIRECTORY__
 
             do!
@@ -33,7 +33,7 @@ let gen _ =
 let build _ =
     result {
         do! dotnet "build" __SOURCE_DIRECTORY__
-        do! dotnet $"fable ./client/client.fsproj" __SOURCE_DIRECTORY__
+        do! dotnet $"fable ./client/client.fsproj --noCache" __SOURCE_DIRECTORY__
     }
 
 let clean _ =

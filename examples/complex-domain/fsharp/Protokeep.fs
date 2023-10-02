@@ -5,14 +5,17 @@ module FsharpTypes =
         | Value of string
         | Items of Key list
         | Inner of Key
-    with
-        member x.Stringify() =
+
+        override x.ToString() =
             match x with
             | Value v -> v
-            | Items keys -> keys |> List.map (fun key -> key.Stringify()) |> String.concat ","
-            | Inner key -> $"({key.Stringify()})"
+            | Items keys -> keys |> List.map (fun key -> key.ToString()) |> String.concat ","
+            | Inner key -> $"({key})"
 
     let (|TryFind|_|) f key = f key
+
+    type IEntity =
+        abstract member Key: Key
 
 
 module FsharpJsonConvertersHelpers =

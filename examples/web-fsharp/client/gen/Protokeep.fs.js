@@ -1,10 +1,10 @@
-import { Union } from "../fable_modules/fable-library.4.1.4/Types.js";
-import { union_type, list_type, string_type } from "../fable_modules/fable-library.4.1.4/Reflection.js";
 import { toText, printf, toFail, substring, join } from "../fable_modules/fable-library.4.1.4/String.js";
 import { map } from "../fable_modules/fable-library.4.1.4/List.js";
+import { Union, toString } from "../fable_modules/fable-library.4.1.4/Types.js";
+import { union_type, list_type, string_type } from "../fable_modules/fable-library.4.1.4/Reflection.js";
 import { empty } from "../fable_modules/fable-library.4.1.4/Map.js";
 import { comparePrimitives } from "../fable_modules/fable-library.4.1.4/Util.js";
-import { toString, parse } from "../fable_modules/fable-library.4.1.4/Date.js";
+import { toString as toString_1, parse } from "../fable_modules/fable-library.4.1.4/Date.js";
 import { match } from "../fable_modules/fable-library.4.1.4/RegExp.js";
 import { fromFloat64, toInt64, toFloat64 } from "../fable_modules/fable-library.4.1.4/BigInt.js";
 import { parse as parse_1 } from "../fable_modules/fable-library.4.1.4/Long.js";
@@ -20,21 +20,14 @@ export class FsharpTypes_Key extends Union {
     cases() {
         return ["Value", "Items", "Inner"];
     }
+    toString() {
+        const x = this;
+        return (x.tag === 1) ? join(",", map(toString, x.fields[0])) : ((x.tag === 2) ? (`(${x.fields[0]})`) : x.fields[0]);
+    }
 }
 
 export function FsharpTypes_Key_$reflection() {
     return union_type("Protokeep.FsharpTypes.Key", [], FsharpTypes_Key, () => [[["Item", string_type]], [["Item", list_type(FsharpTypes_Key_$reflection())]], [["Item", FsharpTypes_Key_$reflection()]]]);
-}
-
-export function FsharpTypes_Key__Stringify(x) {
-    switch (x.tag) {
-        case 1:
-            return join(",", map(FsharpTypes_Key__Stringify, x.fields[0]));
-        case 2:
-            return `(${FsharpTypes_Key__Stringify(x.fields[0])})`;
-        default:
-            return x.fields[0];
-    }
 }
 
 export function FsharpTypes_$007CTryFind$007C_$007C(f, key) {
@@ -87,7 +80,7 @@ export function FableConverterHelpers_toDateTime(v) {
 }
 
 export function FableConverterHelpers_fromDateTime(v) {
-    return toString(v, "O");
+    return toString_1(v, "O");
 }
 
 export const FableConverterHelpers_durationRegex = /^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$/gu;

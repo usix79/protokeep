@@ -15,12 +15,13 @@ with
     static member MakeNormalKey () = Key.Value "1"
     static member MakeWarningKey () = Key.Value "2"
     static member MakeOutOfOrderKey () = Key.Value "3"
-    member x.Key =
-        match x with
-        | LightStatus.Unknown -> LightStatus.MakeUnknownKey ()
-        | LightStatus.Normal -> LightStatus.MakeNormalKey ()
-        | LightStatus.Warning (errorsCount') -> LightStatus.MakeWarningKey ()
-        | LightStatus.OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
+    interface IEntity with
+        member x.Key =
+            match x with
+            | LightStatus.Unknown -> LightStatus.MakeUnknownKey ()
+            | LightStatus.Normal -> LightStatus.MakeNormalKey ()
+            | LightStatus.Warning (errorsCount') -> LightStatus.MakeWarningKey ()
+            | LightStatus.OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
 type Crossroad = {
     Id : int
     Street1 : string

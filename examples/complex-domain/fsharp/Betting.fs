@@ -18,13 +18,14 @@ with
     static member MakePricedKey () = Key.Value "2"
     static member MakePricedWithProbKey () = Key.Value "3"
     static member MakeResultedKey () = Key.Value "4"
-    member x.Key =
-        match x with
-        | Outcome.Unknown -> Outcome.MakeUnknownKey ()
-        | Outcome.Empty -> Outcome.MakeEmptyKey ()
-        | Outcome.Priced (price') -> Outcome.MakePricedKey ()
-        | Outcome.PricedWithProb (price', prob') -> Outcome.MakePricedWithProbKey ()
-        | Outcome.Resulted (result') -> Outcome.MakeResultedKey ()
+    interface IEntity with
+        member x.Key =
+            match x with
+            | Outcome.Unknown -> Outcome.MakeUnknownKey ()
+            | Outcome.Empty -> Outcome.MakeEmptyKey ()
+            | Outcome.Priced (price') -> Outcome.MakePricedKey ()
+            | Outcome.PricedWithProb (price', prob') -> Outcome.MakePricedWithProbKey ()
+            | Outcome.Resulted (result') -> Outcome.MakeResultedKey ()
 type Winner3Way = {
     Win1 : Outcome
     Draw : Outcome
@@ -54,7 +55,8 @@ type Handicap = {
 with
     static member MakeKey (value': decimal) =
         Key.Value (value'.ToString())
-    member x.Key = Handicap.MakeKey (x.Value)
+    interface IEntity with
+        member x.Key = Handicap.MakeKey (x.Value)
     member x.ItemValues () =
         [| x.Win1; x.Win2 |]
     member x.ItemIndexes () =
@@ -76,7 +78,8 @@ type Total = {
 with
     static member MakeKey (value': decimal) =
         Key.Value (value'.ToString())
-    member x.Key = Total.MakeKey (x.Value)
+    interface IEntity with
+        member x.Key = Total.MakeKey (x.Value)
     member x.ItemValues () =
         [| x.Over; x.Under |]
     member x.ItemIndexes () =
@@ -97,7 +100,8 @@ type Score = {
 with
     static member MakeKey (s1': int, s2': int) =
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
-    member x.Key = Score.MakeKey (x.S1, x.S2)
+    interface IEntity with
+        member x.Key = Score.MakeKey (x.S1, x.S2)
 type ScoreOutcome = {
     Score : Score
     Outcome : Outcome

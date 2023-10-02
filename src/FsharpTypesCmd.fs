@@ -198,7 +198,8 @@ let recordKeyMembers ns (typesCache: TypesCache) txt typeName keyFields =
     | _ -> line txt $"        Key.Items [{keyExpression typesCache keyFields}]"
 
     let keyArgs = makeKeyArgs typesCache keyFields "x." ""
-    line txt $"    member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
+    line txt "    interface IEntity with"
+    line txt $"        member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
 
 let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (info: UnionInfo) =
     line txt "    static member MakeUnknownKey () = Key.Value \"0\""
@@ -214,9 +215,10 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
 
         line txt $"    static member Make{caseLock.Name}Key ({keyParams ns typesCache keyFields}) = {keyExpression}"
 
-    line txt "    member x.Key ="
-    line txt "        match x with"
-    line txt $"        | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
+    line txt "    interface IEntity with"
+    line txt "        member x.Key ="
+    line txt "            match x with"
+    line txt $"            | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
 
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
@@ -224,7 +226,7 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
 
         line
             txt
-            $"        | {firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+            $"            | {firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
 
 let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
     let indexedFields =
@@ -397,13 +399,16 @@ let commonsBody =
         | Value of string
         | Items of Key list
         | Inner of Key
-    with
-        member x.Stringify() =
+
+        override x.ToString() =
             match x with
             | Value v -> v
-            | Items keys -> keys |> List.map (fun key -> key.Stringify()) |> String.concat ","
-            | Inner key -> $"({key.Stringify()})"
+            | Items keys -> keys |> List.map (fun key -> key.ToString()) |> String.concat ","
+            | Inner key -> $"({key})"
 
     let (|TryFind|_|) f key = f key
+
+    type IEntity =
+        abstract member Key: Key
 
 """

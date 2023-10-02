@@ -7,7 +7,8 @@ type Score = {
 with
     static member MakeKey (s1': int, s2': int) =
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
-    member x.Key = Score.MakeKey (x.S1, x.S2)
+    interface IEntity with
+        member x.Key = Score.MakeKey (x.S1, x.S2)
 type Incident =
     | Unknown
     | MatchStarted
@@ -18,9 +19,10 @@ with
     static member MakeMatchStartedKey () = Key.Value "1"
     static member MakeTeamScoredKey (p1': int) = Key.Items [Key.Value "2"; Key.Value (p1'.ToString())]
     static member MakeMatchFinishedKey (p1Key: Key) = Key.Items [Key.Value "3"; Key.Inner p1Key]
-    member x.Key =
-        match x with
-        | Incident.Unknown -> Incident.MakeUnknownKey ()
-        | Incident.MatchStarted -> Incident.MakeMatchStartedKey ()
-        | Incident.TeamScored (p1') -> Incident.MakeTeamScoredKey (p1')
-        | Incident.MatchFinished (p1') -> Incident.MakeMatchFinishedKey (p1'.Key)
+    interface IEntity with
+        member x.Key =
+            match x with
+            | Incident.Unknown -> Incident.MakeUnknownKey ()
+            | Incident.MatchStarted -> Incident.MakeMatchStartedKey ()
+            | Incident.TeamScored (p1') -> Incident.MakeTeamScoredKey (p1')
+            | Incident.MatchFinished (p1') -> Incident.MakeMatchFinishedKey (p1'.Key)

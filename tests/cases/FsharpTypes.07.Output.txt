@@ -7,7 +7,8 @@ type Score = {
 with
     static member MakeKey (s1': int, s2': int) =
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
-    member x.Key = Score.MakeKey (x.S1, x.S2)
+    interface IEntity with
+        member x.Key = Score.MakeKey (x.S1, x.S2)
 type Incident = {
     Score : Score
     Details : string
@@ -15,4 +16,5 @@ type Incident = {
 with
     static member MakeKey (scoreKey: Key) =
         Key.Inner scoreKey
-    member x.Key = Incident.MakeKey (x.Score.Key)
+    interface IEntity with
+        member x.Key = Incident.MakeKey (x.Score.Key)

@@ -7,4 +7,5 @@ type Score = {
 with
     static member MakeKey (s1': int) =
         Key.Value (s1'.ToString())
-    member x.Key = Score.MakeKey (x.S1)
+    interface IEntity with
+        member x.Key = Score.MakeKey (x.S1)
