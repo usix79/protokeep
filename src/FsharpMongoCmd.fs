@@ -159,6 +159,11 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 | Array _
                 | List _
                 | Map _ -> linei txt 5 $"()"
+                | Complex _ ->
+                    linei
+                        txt
+                        5
+                        $"y <- {getValue typesCache fieldInfo.Type} |> {dottedName union.Name}.{firstName case.Name}"
                 | _ ->
                     linei txt 5 $"match {getValue typesCache fieldInfo.Type} with"
                     linei txt 5 $"| ValueSome v -> y <- v |> {dottedName union.Name}.{firstName case.Name}"
@@ -253,7 +258,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
         line txt $"                | _ -> reader.SkipValue()"
         line txt "            | _ -> printfn \"Unexpected state: %A\" reader.State"
-
+        line txt $"        reader.ReadEndDocument()"
 
     and writeObject prefix recordInfo =
         line txt $"        writer.WriteStartDocument()"
@@ -307,8 +312,9 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
         line txt $"        {className}.{typeName |> firstName}ToBson(ctx.Writer, value)"
 
-    line txt $"module Serializers ="
-    line txt $"    let registerConverters () ="
+
+    line txt $"type {className} with"
+    line txt $"    static member RegisterSerializers() ="
     line txt $"        BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3"
 
     for typeName in typeNames do
@@ -362,7 +368,7 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
         | Complex typeName ->
             match typesCache.TryFind typeName with
             | Some(Enum _) -> $"writer.WriteInt32({vName} |> int)"
-            | _ -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}ToBson(&writer, {vName})"
+            | _ -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}ToBson(writer, {vName})"
 
     f vName type'
 
