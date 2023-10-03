@@ -3,6 +3,7 @@
 ## 0.3.14 - 2023-10-02
 
 * Restructuring of the project along with new package id
+* Added IEntity interface
 
 ## 0.3.6 - 2023-09-28
 

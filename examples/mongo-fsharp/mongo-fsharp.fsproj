@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>Protokeep</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Protokeep.fs" />
+    <Compile Include="Domain.fs" />
+    <Compile Include="DomainJsonConverters.fs" />
+    <Compile Include="DomainMongoConverters.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.21.0" />
+  </ItemGroup>
+
+</Project>

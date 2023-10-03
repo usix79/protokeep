@@ -258,7 +258,7 @@ let rec defValue isMutable =
     | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
-    | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
+    | Complex typeName -> $"{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
 
 let unpackField' rightOp (typesCache: Types.TypesCache) vName =
     let rec f leftOp rightOp =

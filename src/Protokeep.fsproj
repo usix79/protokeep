@@ -4,9 +4,9 @@
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <Title>Protokeep</Title>
     <Description>Protokeep is a tool for keeping evolutionary compatibility of the data schemas</Description>
-    <AssemblyVersion>0.3.9.0</AssemblyVersion>
-    <FileVersion>0.3.9.0</FileVersion>
-    <Version>0.3.9.0</Version>
+    <AssemblyVersion>0.3.9.13</AssemblyVersion>
+    <FileVersion>0.3.9.13</FileVersion>
+    <Version>0.3.9.13</Version>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>protokeep</ToolCommandName>
     <PackageOutputPath>../nupkg</PackageOutputPath>
@@ -22,10 +22,11 @@
     <Compile Include="Types.fs" />
     <Compile Include="Parsers.fs" />
     <Compile Include="Codegen.fs" />
+    <Compile Include="FsharpTypesCmd.fs" />
     <Compile Include="FableConvertersCmd.fs" />
     <Compile Include="FsharpProtoConvertersCmd.fs" />
     <Compile Include="FsharpJsonConvertersCmd.fs" />
-    <Compile Include="FsharpTypesCmd.fs" />
+    <Compile Include="FsharpMongoCmd.fs" />
     <Compile Include="ProtoCmd.fs" />
     <Compile Include="LockCmd.fs" />
     <Compile Include="CheckCmd.fs" />

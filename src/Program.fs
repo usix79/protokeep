@@ -9,6 +9,7 @@ let commands: Command list =
       Protokeep.FsharpTypesCmd.Instance
       Protokeep.FsharpProtoConvertersCmd.Instance
       Protokeep.FsharpJsonConvertersCmd.Instance
+      Protokeep.FsharpMongoConvertersCmd.Instance
       Protokeep.FableConvertersCmd.Instance ]
 
 let processImports rootPath (module': Module) : Result<Module * TypesCache, string> =

@@ -76,14 +76,25 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                 |> List.map (fun i -> i.Name)
                 |> List.distinct
 
-            if not keys.IsEmpty || not indexes.IsEmpty then
-                line txt $"with"
+            line txt $"with"
+            line txt $"    static member Default: Lazy<{dottedDiff ns info.Name}> ="
+            line txt $"        lazy {{"
 
-                if not keys.IsEmpty then
-                    recordKeyMembers ns typesCache txt info.Name keys
+            for fieldInfo in info.Fields do
+                match fieldInfo.Type with
+                | Types.IsEnum typesCache enumInfo ->
+                    line txt $"            {fieldInfo.Name} = {dottedDiff ns enumInfo.Name}.Unknown"
+                | Types.IsUnion typesCache unionInfo ->
+                    line txt $"            {fieldInfo.Name} = {dottedDiff ns unionInfo.Name}.Unknown"
+                | _ -> line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
 
-                for indexName in indexes do
-                    recordIndexMembers locks txt indexName info
+            line txt $"        }}"
+
+            if not keys.IsEmpty then
+                recordKeyMembers ns typesCache txt info.Name keys
+
+            for indexName in indexes do
+                recordIndexMembers locks txt indexName info
 
         | Union info ->
             line txt $"type {firstName info.Name} ="
@@ -392,6 +403,26 @@ let unionIndexMembers (typesCache: TypesCache) txt indexName unionInfo =
             | None -> "x"
 
         line txt $"        | {left} -> {right}"
+
+let defValue isMutable =
+    function
+    | Bool -> "false"
+    | String -> "\"\""
+    | Int -> "0"
+    | Long -> "0L"
+    | Float -> "0.f"
+    | Double -> "0."
+    | Decimal _ -> "0m"
+    | Bytes -> "Array.empty"
+    | Timestamp -> "System.DateTime.MinValue"
+    | Duration -> "System.TimeSpan.Zero"
+    | Guid -> "System.Guid.Empty"
+    | Optional _ -> "None"
+    | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
+    | List _ -> if isMutable then "ResizeArray()" else "List.empty"
+    | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
+    | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
+
 
 let commonsBody =
     """

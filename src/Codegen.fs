@@ -17,6 +17,15 @@ let solidName (ComplexName ns) = ns |> List.rev |> String.concat ""
 
 let dottedName (ComplexName ns) = ns |> List.rev |> String.concat "."
 
+let dottedDiff (ComplexName currentNamespace) (ComplexName typeName) =
+    let rec loop =
+        function
+        | n1 :: ns1, n2 :: ns2 when n1 = n2 -> loop (ns1, ns2)
+        | _, ns2 -> ns2
+
+    loop ((currentNamespace |> List.rev), (typeName |> List.rev))
+    |> String.concat "."
+
 let firstName (ComplexName ns) = ns.Head
 
 let lastNames (ComplexName ns) = ComplexName ns.Tail
@@ -32,6 +41,7 @@ let firstCharToLower (name: string) =
         Char.ToLower(name.[0]).ToString() + name.Substring(1)
     else
         name
+
 
 module Program =
     let checkLock module' locks typesCache =
