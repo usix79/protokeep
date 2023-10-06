@@ -1,4 +1,7 @@
+[<AutoOpen>]
 module Protokeep.Common
+
+let inline (^) f x = f x
 
 type System.Collections.Generic.IDictionary<'TKey, 'TValue> with
 

@@ -1,10 +1,11 @@
-namespace Protokeep.FableConverters
+namespace Protokeep.FsharpFable
 open Fable.SimpleJson
-open Protokeep.FableConverterHelpers
+open Protokeep
+
 type ConvertBettingFootball () =
     static member MarketFromJson (json: Json): Betting.Football.Market =
         let mutable y = Betting.Football.Market.Unknown
-        getProps json
+        FsharpFableHelpers.getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
             | "Winner3Way" -> pair.Value |> (fun v -> y <- v |> ConvertBetting.Winner3WayFromJson |> Betting.Football.Market.Winner3Way)
@@ -21,8 +22,6 @@ type ConvertBettingFootball () =
         | Betting.Football.Market.CorrectScore (p1) -> "CorrectScore", (p1 |> ConvertBetting.CorrectScoreToJson)
         | _ -> "Unknown", JBool (true)
         |> List.singleton |> Map.ofList |> JObject
-    static member DefaultPeriod =
-        lazy Betting.Football.Period.Unknown
     static member PeriodFromString = function
         | "PeriodHalf1" -> Betting.Football.Period.Half1
         | "PeriodHalf2" -> Betting.Football.Period.Half2
@@ -33,8 +32,6 @@ type ConvertBettingFootball () =
         | Betting.Football.Period.Half2 -> "PeriodHalf2"
         | Betting.Football.Period.MainTime -> "PeriodMainTime"
         | _ -> "Unknown"
-    static member DefaultStatistic =
-        lazy Betting.Football.Statistic.Unknown
     static member StatisticFromString = function
         | "StatisticGoals" -> Betting.Football.Statistic.Goals
         | "StatisticYellowCards" -> Betting.Football.Statistic.YellowCards
@@ -45,8 +42,6 @@ type ConvertBettingFootball () =
         | Betting.Football.Statistic.YellowCards -> "StatisticYellowCards"
         | Betting.Football.Statistic.Corners -> "StatisticCorners"
         | _ -> "Unknown"
-    static member DefaultStatus =
-        lazy Betting.Football.Status.Unknown
     static member StatusFromString = function
         | "StatusOpen" -> Betting.Football.Status.Open
         | "StatusClosed" -> Betting.Football.Status.Closed
@@ -55,31 +50,27 @@ type ConvertBettingFootball () =
         | Betting.Football.Status.Open -> "StatusOpen"
         | Betting.Football.Status.Closed -> "StatusClosed"
         | _ -> "Unknown"
-    static member DefaultMarketItem: Lazy<Betting.Football.MarketItem> =
-        lazy {
-            Statistic = ConvertBettingFootball.DefaultStatistic.Value
-            Period = ConvertBettingFootball.DefaultPeriod.Value
-            Market = Betting.Football.Market.Unknown
-            Status = ConvertBettingFootball.DefaultStatus.Value
-        }
     static member MarketItemFromJson (json: Json): Betting.Football.MarketItem =
-        let mutable vStatistic = ConvertBettingFootball.DefaultStatistic.Value
-        let mutable vPeriod = ConvertBettingFootball.DefaultPeriod.Value
+        let mutable vStatistic = Betting.Football.Statistic.Unknown
+        let mutable vPeriod = Betting.Football.Period.Unknown
         let mutable vMarket = Betting.Football.Market.Unknown
-        let mutable vStatus = ConvertBettingFootball.DefaultStatus.Value
-        getProps json
+        let mutable vStatus = Betting.Football.Status.Unknown
+        let mutable vVersion = 0
+        FsharpFableHelpers.getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
-            | "Statistic" -> pair.Value |> ifString (fun v -> vStatistic <- v |> ConvertBettingFootball.StatisticFromString)
-            | "Period" -> pair.Value |> ifString (fun v -> vPeriod <- v |> ConvertBettingFootball.PeriodFromString)
+            | "Statistic" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vStatistic <- v |> ConvertBettingFootball.StatisticFromString)
+            | "Period" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vPeriod <- v |> ConvertBettingFootball.PeriodFromString)
             | "Market" -> pair.Value |> (fun v -> vMarket <- v |> ConvertBettingFootball.MarketFromJson)
-            | "Status" -> pair.Value |> ifString (fun v -> vStatus <- v |> ConvertBettingFootball.StatusFromString)
+            | "Status" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vStatus <- v |> ConvertBettingFootball.StatusFromString)
+            | "Version" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> vVersion <- v |> unbox)
             | _ -> () )
         {
             Statistic = vStatistic
             Period = vPeriod
             Market = vMarket
             Status = vStatus
+            Version = vVersion
         }
     static member MarketItemToJson (x: Betting.Football.MarketItem) =
         [
@@ -87,4 +78,5 @@ type ConvertBettingFootball () =
            "Period", JString (x.Period |> ConvertBettingFootball.PeriodToString)
            "Market", (x.Market |> ConvertBettingFootball.MarketToJson)
            "Status", JString (x.Status |> ConvertBettingFootball.StatusToString)
+           "Version", JNumber (unbox x.Version)
         ] |> Map.ofList |> JObject

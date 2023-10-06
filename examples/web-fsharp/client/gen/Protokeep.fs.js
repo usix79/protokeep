@@ -34,7 +34,7 @@ export function FsharpTypes_$007CTryFind$007C_$007C(f, key) {
     return f(key);
 }
 
-export function FableConverterHelpers_getProps(_arg) {
+export function FsharpFableHelpers_getProps(_arg) {
     if (_arg.tag === 5) {
         return _arg.fields[0];
     }
@@ -45,62 +45,62 @@ export function FableConverterHelpers_getProps(_arg) {
     }
 }
 
-export function FableConverterHelpers_ifBool(action, _arg) {
+export function FsharpFableHelpers_ifBool(action, _arg) {
     if (_arg.tag === 2) {
         action(_arg.fields[0]);
     }
 }
 
-export function FableConverterHelpers_ifString(action, _arg) {
+export function FsharpFableHelpers_ifString(action, _arg) {
     if (_arg.tag === 1) {
         action(_arg.fields[0]);
     }
 }
 
-export function FableConverterHelpers_ifNumber(action, _arg) {
+export function FsharpFableHelpers_ifNumber(action, _arg) {
     if (_arg.tag === 0) {
         action(_arg.fields[0]);
     }
 }
 
-export function FableConverterHelpers_ifObject(action, _arg) {
+export function FsharpFableHelpers_ifObject(action, _arg) {
     if (_arg.tag === 5) {
         action(_arg.fields[0]);
     }
 }
 
-export function FableConverterHelpers_ifArray(action, _arg) {
+export function FsharpFableHelpers_ifArray(action, _arg) {
     if (_arg.tag === 4) {
         action(_arg.fields[0]);
     }
 }
 
-export function FableConverterHelpers_toDateTime(v) {
+export function FsharpFableHelpers_toDateTime(v) {
     return parse(v);
 }
 
-export function FableConverterHelpers_fromDateTime(v) {
+export function FsharpFableHelpers_fromDateTime(v) {
     return toString_1(v, "O");
 }
 
-export const FableConverterHelpers_durationRegex = /^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$/gu;
+export const FsharpFableHelpers_durationRegex = /^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$/gu;
 
-export const FableConverterHelpers_subsecondScalingFactors = new Int32Array([0, 100000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1]);
+export const FsharpFableHelpers_subsecondScalingFactors = new Int32Array([0, 100000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1]);
 
-export function FableConverterHelpers_toTimeSpan(v) {
-    const m = match(FableConverterHelpers_durationRegex, v);
+export function FsharpFableHelpers_toTimeSpan(v) {
+    const m = match(FsharpFableHelpers_durationRegex, v);
     if (m != null) {
         const signText = m[1] || "";
         const secondsText = m[2] || "";
         const subseconds = m[3] || "";
-        return ((signText === "-") ? -1 : 1) * ((toFloat64(toInt64(parse_1(secondsText, 511, false, 64))) * 1000) + ((subseconds !== "") ? ~~((parse_2(substring(subseconds, 1), 511, false, 32) * FableConverterHelpers_subsecondScalingFactors[subseconds.length]) / 1000000) : 0));
+        return ((signText === "-") ? -1 : 1) * ((toFloat64(toInt64(parse_1(secondsText, 511, false, 64))) * 1000) + ((subseconds !== "") ? ~~((parse_2(substring(subseconds, 1), 511, false, 32) * FsharpFableHelpers_subsecondScalingFactors[subseconds.length]) / 1000000) : 0));
     }
     else {
         return toFail(printf("Invalid Duration value: %s"))(v);
     }
 }
 
-export function FableConverterHelpers_fromTimeSpan(v) {
+export function FsharpFableHelpers_fromTimeSpan(v) {
     const arg = toInt64(fromFloat64(totalSeconds(v)));
     const arg_1 = milliseconds_1(v) | 0;
     return toText(printf("%d.%ds"))(arg)(arg_1);

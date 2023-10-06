@@ -2,7 +2,7 @@ import { PromiseBuilder__Delay_62FBFDE1, PromiseBuilder__Run_212F1D4B } from "./
 import { Request, Op } from "./gen/Domain.fs.js";
 import { printf, toText } from "./fable_modules/fable-library.4.1.4/String.js";
 import { SimpleJson_parse, SimpleJson_toString } from "./fable_modules/Fable.SimpleJson.3.17.0/SimpleJson.fs.js";
-import { ConvertDomain_ResponseFromJson_Z3E28EAD9, ConvertDomain_RequestToJson_Z65DB4746 } from "./gen/DomainConverters.fs.js";
+import { ConvertDomain_ResponseFromJson_Z3E28EAD9, ConvertDomain_RequestToJson_Z65DB4746 } from "./gen/DomainJson.fs.js";
 import { fetch$, Types_RequestProperties } from "./fable_modules/Fable.Fetch.2.2.0/Fetch.fs.js";
 import { ofArray } from "./fable_modules/fable-library.4.1.4/List.js";
 import { promise } from "./fable_modules/Fable.Promise.2.0.0/PromiseImpl.fs.js";

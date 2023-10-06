@@ -1,22 +1,3 @@
-namespace Protokeep
-
-module FsharpTypes =
-    type Key =
-        | Value of string
-        | Items of Key list
-        | Inner of Key
-
-        override x.ToString() =
-            match x with
-            | Value v -> v
-            | Items keys -> keys |> List.map (fun key -> key.ToString()) |> String.concat ","
-            | Inner key -> $"({key})"
-
-    let (|TryFind|_|) f key = f key
-
-    type IVersioned =
-        abstract member Version: int with get, set
-
 module FsharpJsonHelpers =
     open System.Text.Json
 
@@ -71,4 +52,3 @@ module FsharpJsonHelpers =
 
     let moveToEndObject (reader: byref<Utf8JsonReader>) =
         reader.Read() = false || reader.TokenType = JsonTokenType.EndObject
-

@@ -1,11 +1,14 @@
-namespace Protokeep.FsharpJsonConverters
+namespace Protokeep.FsharpJson
+
 open System.Text.Json
-open Protokeep.FsharpJsonConvertersHelpers
-type ConvertBettingFootball () =
-    static member MarketFromJson (reader: byref<Utf8JsonReader>): Betting.Football.Market =
+open Protokeep
+
+type ConvertBettingFootball() =
+
+    static member MarketFromJson(reader: byref<Utf8JsonReader>): Betting.Football.Market =
         let mutable y = Betting.Football.Market.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Winner3Way")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.StartObject
@@ -44,54 +47,55 @@ type ConvertBettingFootball () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member DefaultPeriod =
-        lazy Betting.Football.Period.Unknown
-    static member PeriodFromString = function
+
+    static member PeriodFromString =
+        function
         | "PeriodHalf1" -> Betting.Football.Period.Half1
         | "PeriodHalf2" -> Betting.Football.Period.Half2
         | "PeriodMainTime" -> Betting.Football.Period.MainTime
         | _ -> Betting.Football.Period.Unknown
-    static member PeriodToString = function
+
+    static member PeriodToString =
+        function
         | Betting.Football.Period.Half1 -> "PeriodHalf1"
         | Betting.Football.Period.Half2 -> "PeriodHalf2"
         | Betting.Football.Period.MainTime -> "PeriodMainTime"
         | _ -> "Unknown"
-    static member DefaultStatistic =
-        lazy Betting.Football.Statistic.Unknown
-    static member StatisticFromString = function
+
+    static member StatisticFromString =
+        function
         | "StatisticGoals" -> Betting.Football.Statistic.Goals
         | "StatisticYellowCards" -> Betting.Football.Statistic.YellowCards
         | "StatisticCorners" -> Betting.Football.Statistic.Corners
         | _ -> Betting.Football.Statistic.Unknown
-    static member StatisticToString = function
+
+    static member StatisticToString =
+        function
         | Betting.Football.Statistic.Goals -> "StatisticGoals"
         | Betting.Football.Statistic.YellowCards -> "StatisticYellowCards"
         | Betting.Football.Statistic.Corners -> "StatisticCorners"
         | _ -> "Unknown"
-    static member DefaultStatus =
-        lazy Betting.Football.Status.Unknown
-    static member StatusFromString = function
+
+    static member StatusFromString =
+        function
         | "StatusOpen" -> Betting.Football.Status.Open
         | "StatusClosed" -> Betting.Football.Status.Closed
         | _ -> Betting.Football.Status.Unknown
-    static member StatusToString = function
+
+    static member StatusToString =
+        function
         | Betting.Football.Status.Open -> "StatusOpen"
         | Betting.Football.Status.Closed -> "StatusClosed"
         | _ -> "Unknown"
-    static member DefaultMarketItem: Lazy<Betting.Football.MarketItem> =
-        lazy {
-            Statistic = ConvertBettingFootball.DefaultStatistic.Value
-            Period = ConvertBettingFootball.DefaultPeriod.Value
-            Market = Betting.Football.Market.Unknown
-            Status = ConvertBettingFootball.DefaultStatus.Value
-        }
-    static member MarketItemFromJson (reader: byref<Utf8JsonReader>): Betting.Football.MarketItem =
+
+    static member MarketItemFromJson(reader: byref<Utf8JsonReader>): Betting.Football.MarketItem =
         let mutable vStatistic = ConvertBettingFootball.DefaultStatistic.Value
         let mutable vPeriod = ConvertBettingFootball.DefaultPeriod.Value
         let mutable vMarket = Betting.Football.Market.Unknown
         let mutable vStatus = ConvertBettingFootball.DefaultStatus.Value
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        let mutable vVersion = 0
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Statistic")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.String
@@ -107,12 +111,17 @@ type ConvertBettingFootball () =
                     if reader.Read() && reader.TokenType = JsonTokenType.String
                     then vStatus <- reader.GetString() |> ConvertBettingFootball.StatusFromString
                     else reader.Skip()
+                else if (reader.ValueTextEquals("Version")) then
+                    if reader.Read() && reader.TokenType = JsonTokenType.Number
+                    then vVersion <- reader.GetInt32()
+                    else reader.Skip()
                 else reader.Skip()
         {
             Statistic = vStatistic
             Period = vPeriod
             Market = vMarket
             Status = vStatus
+            Version = vVersion
         }
     static member MarketItemToJson (writer: inref<Utf8JsonWriter>, x: Betting.Football.MarketItem) =
         writer.WriteStartObject()
@@ -124,4 +133,7 @@ type ConvertBettingFootball () =
         ConvertBettingFootball.MarketToJson(&writer, x.Market)
         writer.WritePropertyName("Status")
         writer.WriteStringValue(x.Status |> ConvertBettingFootball.StatusToString)
+        writer.WritePropertyName("Version")
+        writer.WriteNumberValue(x.Version)
         writer.WriteEndObject()
+

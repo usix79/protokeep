@@ -1,9 +1,7 @@
 [<RequireQualifiedAccess>]
-module rec Protokeep.FsharpProtoConvertersCmd
+module rec Protokeep.FsharpProtoCmd
 
-open System
 open System.Text
-open System.IO
 open Types
 open Codegen
 
@@ -11,36 +9,28 @@ let Handler module' locks typesCache =
     function
     | "-o" :: outputFileName :: args
     | "--output" :: outputFileName :: args ->
-        Program.checkLock module' locks typesCache
-        |> Result.bind (fun _ ->
-            let fileContent = gen module' locks typesCache
-
-            let fileName =
-                if Path.GetExtension(outputFileName) <> ".fs" then
-                    outputFileName + ".g.fs"
-                else
-                    outputFileName
-
-            Console.WriteLine($"Writing fsharp conveters to {fileName}")
-            File.WriteAllText(fileName, fileContent)
-            Ok())
+        Infra.checkLock module' locks typesCache
+        |> Result.bind
+           ^ fun _ ->
+               let ns = Infra.checkArgNamespace args |> Option.defaultValue "Protokeep.FsharpProto"
+               let _ = gen ns module' locks typesCache |> Infra.writeFile outputFileName ".fs"
+               Ok()
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance =
-    { Name = "fsharp-proto-converters"
-      Description =
-        "generate converters between protobuf classes and fsharp types: fsharp-proto-converters [-o|--output] outputFile"
+    { Name = "fsharp-proto"
+      Description = "generate converters between protobuf classes and fsharp types"
       Run = Handler }
 
-let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
+let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
 
     let txt = StringBuilder()
 
     let fromProtobuf fullNameTxt =
-        line txt $"    static member FromProtobuf (x:ProtoClasses.{fullNameTxt}) : {fullNameTxt} ="
+        line txt $"    static member FromProtobuf(x: ProtoClasses.{fullNameTxt}) : {fullNameTxt} ="
 
     let toProtobuf fullNameTxt =
-        line txt $"    static member ToProtobuf (x:{fullNameTxt}) : ProtoClasses.{fullNameTxt} ="
+        line txt $"    static member ToProtobuf(x: {fullNameTxt}) : ProtoClasses.{fullNameTxt} ="
 
     let convertionFrom type' =
         fieldFromProtobuf type' |> Option.map ((+) " |> ") |> Option.defaultValue ""
@@ -55,9 +45,11 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
         | Enum info ->
             let fullNameTxt = info.Name |> dottedName
             fromProtobuf fullNameTxt
-            line txt $"        enum<{fullNameTxt}>(int x)"
+            line txt $"        enum<{fullNameTxt}> (int x)"
+            line txt ""
             toProtobuf fullNameTxt
-            line txt $"        enum<ProtoClasses.{fullNameTxt}>(int x)"
+            line txt $"        enum<ProtoClasses.{fullNameTxt}> (int x)"
+            line txt ""
         | Record info ->
             let fullNameTxt = info.Name |> dottedName
             let fullNameOfProtoClass = "ProtoClasses." + fullNameTxt
@@ -69,6 +61,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                 line txt $"            {fieldInfo.Name} = {genFieldFromProtobuf fullNameOfProtoClass fieldInfo}"
 
             line txt "        }"
+            line txt ""
 
             toProtobuf fullNameTxt
             line txt $"        let y = ProtoClasses.{fullNameTxt}()"
@@ -77,6 +70,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                 genFieldToProtobuf $"x.{fieldInfo.Name}" $"y.{fieldInfo.Name}" fieldInfo
 
             line txt $"        y"
+            line txt ""
         | Union union ->
             fromProtobuf (dottedName union.Name)
             line txt "        match x.UnionCase with"
@@ -137,6 +131,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
                     line txt $"        {case.Name |> dottedName}"
                     line txt $"            ({values})"
+                    line txt ""
 
                     line
                         txt
@@ -148,7 +143,10 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                         genFieldToProtobuf $"{fieldInfo.Name}" $"y.{firstCharToUpper fieldInfo.Name}" fieldInfo
 
                     line txt $"        y"
+                    line txt ""
                 | _ -> ()
+
+            line txt ""
 
     and genFieldFromProtobuf fullNameTxt fieldInfo =
         match fieldInfo.Type with
@@ -179,8 +177,10 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
         | t -> line txt $"        {yName} <- {xName}{convertionTo t}"
 
 
-    line txt $"namespace Protokeep.FsharpProtoConverters"
-    line txt $"type Convert{solidName module'.Name} () ="
+    line txt $"namespace {genNamespace}"
+    line txt ""
+    line txt $"type Convert{solidName module'.Name}() ="
+    line txt ""
 
     for item in module'.Items do
         genItem item

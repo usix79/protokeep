@@ -1,9 +1,7 @@
 [<RequireQualifiedAccess>]
-module rec Protokeep.FsharpMongoConvertersCmd
+module rec Protokeep.FsharpMongoCmd
 
-open System
 open System.Text
-open System.IO
 open Types
 open Codegen
 
@@ -13,44 +11,20 @@ let Handler module' locks typesCache =
     function
     | "-o" :: outputFileName :: args
     | "--output" :: outputFileName :: args ->
-        Program.checkLock module' locks typesCache
-        |> Result.bind (fun _ ->
-            let ns =
-                Program.checkArgNamespace args |> Option.defaultValue "Protokeep.FsharpMongo"
+        Infra.checkLock module' locks typesCache
+        |> Result.bind
+           ^ fun _ ->
+               let ns = Infra.checkArgNamespace args |> Option.defaultValue "Protokeep.FsharpMongo"
 
-            let fileContent = gen ns module' locks typesCache
+               let fileName =
+                   gen ns module' locks typesCache |> Infra.writeFile outputFileName ".fs"
 
-            let fileName =
-                if Path.GetExtension(outputFileName) <> ".fs" then
-                    outputFileName + ".g.fs"
-                else
-                    outputFileName
-
-            Console.WriteLine($"Writing fsharp mongo converters to {fileName}")
-            File.WriteAllText(fileName, fileContent)
-
-            let defaultCommonsFileName =
-                Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
-
-            Program.checkArgUpdateCommons defaultCommonsFileName args
-            |> Option.iter (fun coreFileName ->
-                let coreFileText =
-                    if (File.Exists coreFileName) then
-                        File.ReadAllText(coreFileName)
-                    else
-                        ""
-
-                let updatedCoreFileText = CoreFsharp.update coreFileText helpers moduleBody
-
-                Console.WriteLine($"Adding FsharpMongo module to {coreFileName}")
-                File.WriteAllText(coreFileName, updatedCoreFileText))
-
-            Ok())
+               FsharpHelpers.update helpers |> Infra.updateCommons fileName args
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance =
     { Name = "fsharp-mongo"
-      Description = "generate converters and serializers for Mongo Driver: fsharp-mongo [-o|--output] outputFile"
+      Description = "generate serializers for Mongo Driver"
       Run = Handler }
 
 let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
@@ -63,20 +37,22 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         | Enum info ->
             let fullNameTxt = info.Name |> dottedName
 
-            line txt $"    static member {firstName info.Name}FromInt = function"
+            line txt $"    static member{firstName info.Name}FromInt = function"
 
             for symbol in info.Symbols do
                 line txt $"        | {fullNameTxt}.{symbol} -> {fullNameTxt}.{symbol}"
 
             line txt $"        | _ -> {fullNameTxt}.Unknown"
+            line txt $""
 
         | Record info ->
             let fullNameTxt = info.Name |> dottedName
 
-            line txt $"    static member {firstName info.Name}ToBson (writer: IBsonWriter, x: {fullNameTxt}) ="
+            line txt $"    static member {firstName info.Name}ToBson(writer: IBsonWriter, x: {fullNameTxt}) ="
             writeObject "x." info
+            line txt $""
 
-            line txt $"    static member {firstName info.Name}FromBson (reader: IBsonReader): {fullNameTxt} ="
+            line txt $"    static member {firstName info.Name}FromBson(reader: IBsonReader): {fullNameTxt} ="
             readObject "v" info
 
             line txt $"        {{"
@@ -90,13 +66,14 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
 
             line txt $"        }}"
+            line txt $""
 
         | Union union ->
             writeUnion union
             readUnion union
 
     and writeUnion union =
-        line txt $"    static member {firstName union.Name}ToBson (writer: IBsonWriter, x: {dottedName union.Name}) ="
+        line txt $"    static member {firstName union.Name}ToBson(writer: IBsonWriter, x: {dottedName union.Name}) ="
 
         line txt $"        writer.WriteStartDocument()"
         line txt $"        match x with"
@@ -282,13 +259,15 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"        writer.WriteEndDocument()"
 
     line txt $"namespace {genNamespace}"
+    line txt $""
     line txt $"open MongoDB.Bson"
     line txt $"open MongoDB.Bson.IO"
     line txt $"open MongoDB.Bson.Serialization"
     line txt $"open MongoDB.Bson.Serialization.Serializers"
     line txt $"open Protokeep"
+    line txt $""
     let className = $"Convert{solidName module'.Name}"
-    line txt $"type {className} () ="
+    line txt $"type {className}() ="
 
     for item in module'.Items do
         genItem item
@@ -305,12 +284,14 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"    inherit SerializerBase<{typeName |> dottedName}>()"
         line txt $"    override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) ="
         line txt $"        {className}.{typeName |> firstName}FromBson(ctx.Reader)"
+        line txt $""
 
         line
             txt
             $"    override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: {typeName |> dottedName}) ="
 
         line txt $"        {className}.{typeName |> firstName}ToBson(ctx.Writer, value)"
+        line txt $""
 
 
     line txt $"type {className} with"
@@ -371,114 +352,3 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
             | _ -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}ToBson(writer, {vName})"
 
     f vName type'
-
-let moduleBody =
-    """
-    open System
-    open MongoDB.Bson
-
-    let private unixEpoch = DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
-
-    let toDateTime (milliseconds: int64) : DateTime =
-        unixEpoch.AddMilliseconds(float milliseconds)
-
-    let fromDateTime (dateTime: DateTime) : int64 =
-        int64 (dateTime - unixEpoch).TotalMilliseconds
-
-    let readTimestamp (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.DateTime -> reader.ReadDateTime() |> toDateTime |> ValueSome
-        | bsonType -> ValueNone
-
-    let toMoney (value: decimal, scale: int) : int =
-        int (value * decimal (Math.Pow(10., float scale)))
-
-    let fromMoney (value: int, scale: int) : decimal =
-        decimal value / decimal (Math.Pow(10., float scale))
-
-    let readInt (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Int32 -> reader.ReadInt32() |> ValueSome
-        | BsonType.Int64 -> int (reader.ReadInt64()) |> ValueSome
-        | BsonType.Double -> int (reader.ReadDouble()) |> ValueSome
-        | BsonType.String -> int (reader.ReadString()) |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readLong (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Int32 -> int64 (reader.ReadInt32()) |> ValueSome
-        | BsonType.Int64 -> reader.ReadInt64() |> ValueSome
-        | BsonType.Double -> int64 (reader.ReadDouble()) |> ValueSome
-        | BsonType.String -> int64 (reader.ReadString()) |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readFloat (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Int32 -> float32 (reader.ReadInt32()) |> ValueSome
-        | BsonType.Int64 -> float32 (reader.ReadInt64()) |> ValueSome
-        | BsonType.Double -> reader.ReadDouble() |> float32 |> ValueSome
-        | BsonType.String -> reader.ReadString() |> float32 |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readDouble (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Int32 -> float (reader.ReadInt32()) |> ValueSome
-        | BsonType.Int64 -> float (reader.ReadInt64()) |> ValueSome
-        | BsonType.Double -> reader.ReadDouble() |> ValueSome
-        | BsonType.String -> reader.ReadString() |> float |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readBoolean (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Boolean -> reader.ReadBoolean() |> ValueSome
-        | BsonType.Int32 -> reader.ReadInt32() |> (fun v -> v <> 0) |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readString (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.String -> reader.ReadString() |> ValueSome
-        | BsonType.Int32 -> reader.ReadInt32() |> string |> ValueSome
-        | BsonType.Int64 -> reader.ReadInt64() |> string |> ValueSome
-        | BsonType.Double -> reader.ReadDouble() |> string |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readBytes (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Binary -> reader.ReadBinaryData().Bytes |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let readMoney (reader: IO.IBsonReader, scale: int) =
-        readInt reader |> ValueOption.map (fun v -> fromMoney (v, scale))
-
-    let readDuration (reader: IO.IBsonReader) =
-        readInt reader |> ValueOption.map TimeSpan.FromMilliseconds
-
-    let readGuid (reader: IO.IBsonReader) =
-        match reader.CurrentBsonType with
-        | BsonType.Binary -> reader.ReadBinaryData().ToGuid() |> ValueSome
-        | _ ->
-            reader.SkipValue()
-            ValueNone
-
-    let writeGuid (writer: IO.IBsonWriter, value: Guid) =
-        writer.WriteBinaryData(
-            BsonBinaryData(
-                GuidConverter.ToBytes(value, GuidRepresentation.Standard),
-                GuidConverter.GetSubType(GuidRepresentation.Standard)
-            )
-        )
-"""

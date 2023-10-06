@@ -11,7 +11,7 @@ let Handler module' locks typesCache =
     function
     | "-o" :: outputFileName :: args
     | "--output" :: outputFileName :: args ->
-        Program.checkLock module' locks typesCache
+        Infra.checkLock module' locks typesCache
         |> Result.bind (fun _ ->
             let fileContent = gen module' locks typesCache
 

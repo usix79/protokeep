@@ -1,16 +1,20 @@
-namespace Protokeep.FsharpProtoConverters
-type ConvertDomain () =
-    static member FromProtobuf (x:ProtoClasses.Domain.TrafficLight) : Domain.TrafficLight =
-        enum<Domain.TrafficLight>(int x)
-    static member ToProtobuf (x:Domain.TrafficLight) : ProtoClasses.Domain.TrafficLight =
-        enum<ProtoClasses.Domain.TrafficLight>(int x)
-    static member FromProtobuf (x:ProtoClasses.Domain.LightStatus) : Domain.LightStatus =
+namespace Protokeep.FsharpProto
+
+type ConvertDomain() =
+
+    static member FromProtobuf(x: ProtoClasses.Domain.TrafficLight) : Domain.TrafficLight =
+        enum<Domain.TrafficLight> (int x)
+
+    static member ToProtobuf(x: Domain.TrafficLight) : ProtoClasses.Domain.TrafficLight =
+        enum<ProtoClasses.Domain.TrafficLight> (int x)
+
+    static member FromProtobuf(x: ProtoClasses.Domain.LightStatus) : Domain.LightStatus =
         match x.UnionCase with
         | ProtoClasses.Domain.LightStatus.UnionOneofCase.Normal -> Domain.LightStatus.Normal
         | ProtoClasses.Domain.LightStatus.UnionOneofCase.Warning -> Domain.LightStatus.Warning(x.Warning)
         | ProtoClasses.Domain.LightStatus.UnionOneofCase.OutOfOrder -> Domain.LightStatus.OutOfOrder(x.OutOfOrder |> fun v -> v.ToDateTime())
         | _ -> Domain.LightStatus.Unknown
-    static member ToProtobuf (x:Domain.LightStatus) : ProtoClasses.Domain.LightStatus =
+    static member ToProtobuf(x: Domain.LightStatus) : ProtoClasses.Domain.LightStatus =
         let y = ProtoClasses.Domain.LightStatus()
         match x with
         | Domain.LightStatus.Normal -> y.Normal <- true
@@ -20,7 +24,8 @@ type ConvertDomain () =
             y.OutOfOrder <- since |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime
         | Domain.LightStatus.Unknown -> ()
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.Crossroad) : Domain.Crossroad =
+
+    static member FromProtobuf(x: ProtoClasses.Domain.Crossroad) : Domain.Crossroad =
         {
             Id = x.Id
             Street1 = x.Street1
@@ -30,7 +35,8 @@ type ConvertDomain () =
             History = x.History |> Seq.map(ConvertDomain.FromProtobuf) |> List.ofSeq
             Lirycs = x.Lirycs |> List.ofSeq
         }
-    static member ToProtobuf (x:Domain.Crossroad) : ProtoClasses.Domain.Crossroad =
+
+    static member ToProtobuf(x: Domain.Crossroad) : ProtoClasses.Domain.Crossroad =
         let y = ProtoClasses.Domain.Crossroad()
         y.Id <- x.Id
         y.Street1 <- x.Street1
@@ -40,7 +46,8 @@ type ConvertDomain () =
         y.History.AddRange(x.History |> Seq.map(ConvertDomain.ToProtobuf))
         y.Lirycs.AddRange(x.Lirycs)
         y
-    static member FromProtobuf (x:ProtoClasses.Domain.Crossroad2) : Domain.Crossroad2 =
+
+    static member FromProtobuf(x: ProtoClasses.Domain.Crossroad2) : Domain.Crossroad2 =
         {
             Id = x.Id
             LongId = x.LongId
@@ -59,7 +66,8 @@ type ConvertDomain () =
             Notes = x.Notes |> Array.ofSeq
             Props = x.Props |> Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq
         }
-    static member ToProtobuf (x:Domain.Crossroad2) : ProtoClasses.Domain.Crossroad2 =
+
+    static member ToProtobuf(x: Domain.Crossroad2) : ProtoClasses.Domain.Crossroad2 =
         let y = ProtoClasses.Domain.Crossroad2()
         y.Id <- x.Id
         y.LongId <- x.LongId
@@ -80,3 +88,4 @@ type ConvertDomain () =
         y.Notes.AddRange(x.Notes)
         y.Props.Add(x.Props)
         y
+

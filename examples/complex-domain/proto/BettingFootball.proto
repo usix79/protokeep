@@ -32,4 +32,5 @@ message MarketItem {
     Betting.Football.Period Period = 2;
     Betting.Football.Market Market = 3;
     Betting.Football.Status Status = 4;
+    int32 Version = 5;
 }

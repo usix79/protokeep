@@ -23,7 +23,7 @@ let main argv =
 
     printfn "Orig: %A" crossroad
 
-    let protobufCrossroad = FsharpProtoConverters.ConvertDomain.ToProtobuf crossroad
+    let protobufCrossroad = FsharpProto.ConvertDomain.ToProtobuf crossroad
     use outputStream = new MemoryStream()
     use output = new CodedOutputStream(outputStream)
     protobufCrossroad.WriteTo(output)
@@ -36,7 +36,7 @@ let main argv =
     use input = new CodedInputStream(inputStream)
     let protoCopy = ProtoClasses.Domain.Crossroad()
     protoCopy.MergeFrom(input)
-    let copy = FsharpProtoConverters.ConvertDomain.FromProtobuf protoCopy
+    let copy = FsharpProto.ConvertDomain.FromProtobuf protoCopy
     printfn "Copy: %A" copy
 
     let protoJson = JsonFormatter.Default.Format(protobufCrossroad)
@@ -44,7 +44,7 @@ let main argv =
 
     use stream = new MemoryStream()
     let mutable writer = new Utf8JsonWriter(stream)
-    FsharpJsonConverters.ConvertDomain.CrossroadToJson(&writer, crossroad)
+    FsharpJson.ConvertDomain.CrossroadToJson(&writer, crossroad)
     writer.Flush()
     let data = stream.ToArray()
     let json = System.Text.Encoding.UTF8.GetString(data, 0, data.Length)
@@ -53,14 +53,13 @@ let main argv =
     let mutable reader =
         Utf8JsonReader(ReadOnlySpan.op_Implicit (System.Text.Encoding.UTF8.GetBytes(json)))
 
-    let copyFromJson = FsharpJsonConverters.ConvertDomain.CrossroadFromJson(&reader)
+    let copyFromJson = FsharpJson.ConvertDomain.CrossroadFromJson(&reader)
     printfn "Copy from Json : %A" copyFromJson
 
     let protoCopyFromJson =
         JsonParser.Default.Parse<ProtoClasses.Domain.Crossroad>(json)
 
-    let copyFromJsonProto =
-        FsharpProtoConverters.ConvertDomain.FromProtobuf protoCopyFromJson
+    let copyFromJsonProto = FsharpProto.ConvertDomain.FromProtobuf protoCopyFromJson
 
     printfn "Copy from Proto: %A" copyFromJsonProto
 

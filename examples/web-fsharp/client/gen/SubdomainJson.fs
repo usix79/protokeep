@@ -1,9 +1,8 @@
 namespace Domain.JsonConverters
-open System.Text.Json
-open Protokeep.FsharpJsonConvertersHelpers
+open Fable.SimpleJson
+open Protokeep
+
 type ConvertDomainSubdomain () =
-    static member DefaultStatus =
-        lazy Domain.Subdomain.Status.Unknown
     static member StatusFromString = function
         | "StatusGreen" -> Domain.Subdomain.Status.Green
         | "StatusYellow" -> Domain.Subdomain.Status.Yellow

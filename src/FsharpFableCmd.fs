@@ -1,58 +1,33 @@
 [<RequireQualifiedAccess>]
-module rec Protokeep.FableConvertersCmd
+module rec Protokeep.FsharpFableCmd
 
-open System
 open System.Text
-open System.IO
 open Types
 open Codegen
+
+let helpers = "FsharpFableHelpers"
 
 let Handler module' locks typesCache =
     function
     | "-o" :: outputFileName :: args
     | "--output" :: outputFileName :: args ->
-        Program.checkLock module' locks typesCache
-        |> Result.bind (fun _ ->
-            let fileContent: string = gen module' locks typesCache
+        Infra.checkLock module' locks typesCache
+        |> Result.bind
+           ^ fun _ ->
+               let ns = Infra.checkArgNamespace args |> Option.defaultValue "Protokeep.FsharpFable"
 
-            let fileName =
-                if Path.GetExtension(outputFileName) <> ".fs" then
-                    outputFileName + ".g.fs"
-                else
-                    outputFileName
+               let fileName =
+                   gen ns module' locks typesCache |> Infra.writeFile outputFileName ".fs"
 
-            Console.WriteLine($"Writing fable converters types to {fileName}")
-            File.WriteAllText(fileName, fileContent)
-
-            let defaultCommonsFileName =
-                Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
-
-            Program.checkArgUpdateCommons defaultCommonsFileName args
-            |> Option.iter (fun coreFileName ->
-                let coreFileText =
-                    if (File.Exists coreFileName) then
-                        File.ReadAllText(coreFileName)
-                    else
-                        ""
-
-                let updatedCoreFileText =
-                    CoreFsharp.update coreFileText "FableConverterHelpers" helpersBody
-
-                Console.WriteLine($"Writing fable converters helpers to {coreFileName}")
-                File.WriteAllText(coreFileName, updatedCoreFileText))
-
-            Ok())
+               FsharpHelpers.update helpers |> Infra.updateCommons fileName args
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance =
-    { Name = "fable-converters"
-      Description =
-        """
-generate converters between protobuf's json and fsharp types for fable environment: fable-converters [-o|--output] outputFile [--update-commons | --update-commons-in commonsFile]
-                !!! Do not forget to add package Fable.SimpleJson"""
+    { Name = "fsharp-fable"
+      Description = "generate converters between json and fsharp types in fable environment"
       Run = Handler }
 
-let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
+let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
 
     let txt = StringBuilder()
 
@@ -62,9 +37,6 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
         function
         | Enum info ->
             let fullNameTxt = info.Name |> dottedName
-            line txt $"    static member Default{firstName info.Name} ="
-            line txt $"        lazy {fullNameTxt}.Unknown"
-
             line txt $"    static member {firstName info.Name}FromString = function"
 
             for symbol in info.Symbols do
@@ -81,17 +53,6 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
         | Record info ->
             let fullNameTxt = info.Name |> dottedName
-
-            line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
-            line txt $"        lazy {{"
-
-            for fieldInfo in info.Fields do
-                match fieldInfo.Type with
-                | Types.IsUnion typesCache unionInfo ->
-                    line txt $"            {fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-                | _ -> line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
-
-            line txt $"        }}"
 
             line txt $"    static member {firstName info.Name}FromJson (json: Json): {fullNameTxt} ="
             readObject "v" info
@@ -115,14 +76,15 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
             line txt $"    static member {firstName union.Name}FromJson (json: Json): {dottedName union.Name} ="
             line txt $"        let mutable y = {dottedName union.Name}.Unknown"
-            line txt $"        getProps json"
+            line txt $"        {helpers}.getProps json"
             line txt $"        |> Seq.iter(fun pair ->"
             line txt $"            match pair.Key with"
 
             for case in union.Cases do
                 let rightValue =
                     match case with
-                    | Types.EmptyRecord -> $"ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
+                    | Types.EmptyRecord ->
+                        $"{helpers}.ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
                     | Types.SingleFieldRecord fieldInfo ->
                         unpackField' $" |> {dottedName case.Name}" typesCache "y" fieldInfo.Type
                     | Types.MultiFieldsRecord ->
@@ -186,11 +148,14 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
     and readObject prefix recordInfo =
         for fieldInfo in recordInfo.Fields do
             match fieldInfo.Type with
+            | Types.IsEnum typesCache enumInfo ->
+                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
             | Types.IsUnion typesCache unionInfo ->
                 line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-            | _ -> line txt $"        let mutable {prefix}{fieldInfo.Name} = {defValue true fieldInfo.Type}"
+            | _ ->
+                line txt $"        let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue true fieldInfo.Type}"
 
-        line txt $"        getProps json"
+        line txt $"        {helpers}.getProps json"
         line txt $"        |> Seq.iter(fun pair ->"
         line txt $"            match pair.Key with"
 
@@ -231,9 +196,10 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
         line txt $"        ] |> Map.ofList |> JObject"
 
-    line txt $"namespace Protokeep.FableConverters"
+    line txt $"namespace {genNamespace}"
     line txt $"open Fable.SimpleJson"
-    line txt $"open Protokeep.FableConverterHelpers"
+    line txt $"open Protokeep"
+    line txt $""
     line txt $"type Convert{solidName module'.Name} () ="
 
     for item in module'.Items do
@@ -241,51 +207,32 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
     txt.ToString()
 
-let rec defValue isMutable =
-    function
-    | Bool -> "false"
-    | String -> "\"\""
-    | Int -> "0"
-    | Long -> "0L"
-    | Float -> "0.f"
-    | Double -> "0."
-    | Decimal _ -> "0m"
-    | Bytes -> "Array.empty"
-    | Timestamp -> "System.DateTime.MinValue"
-    | Duration -> "System.TimeSpan.Zero"
-    | Guid -> "System.Guid.Empty"
-    | Optional _ -> "None"
-    | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
-    | List _ -> if isMutable then "ResizeArray()" else "List.empty"
-    | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
-    | Complex typeName -> $"{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
-
 let unpackField' rightOp (typesCache: Types.TypesCache) vName =
     let rec f leftOp rightOp =
         function
-        | Bool -> $"ifBool (fun v -> {leftOp}v{rightOp})"
-        | String -> $"ifString (fun v -> {leftOp}v{rightOp})"
+        | Bool -> $"{helpers}.ifBool (fun v -> {leftOp}v{rightOp})"
+        | String -> $"{helpers}.ifString (fun v -> {leftOp}v{rightOp})"
         | Int
         | Long
         | Float
-        | Double -> $"ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
-        | Decimal scale -> $"ifNumber (fun v -> {leftOp}v / {10. ** float (scale)}. |> unbox{rightOp})"
-        | Bytes -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
-        | Timestamp -> $"ifString (fun v -> {leftOp}v |> toDateTime{rightOp})"
-        | Duration -> $"ifString (fun v -> {leftOp}v |> toTimeSpan{rightOp})"
-        | Guid -> $"ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
+        | Double -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
+        | Decimal scale -> $"{helpers}.ifNumber (fun v -> {leftOp}v / {10. ** float (scale)}. |> unbox{rightOp})"
+        | Bytes -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
+        | Timestamp -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toDateTime{rightOp})"
+        | Duration -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toTimeSpan{rightOp})"
+        | Guid -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
         | Optional t -> f $"{vName} <- " " |> Some" t
         | Array t
         | List t ->
             let inner = f "" $" |> {vName}.Add" t
-            $"ifArray (Seq.iter ({inner}))"
+            $"{helpers}.ifArray (Seq.iter ({inner}))"
         | Map t ->
             let inner = f "" $" |> fun v -> {vName}.Add(key, v)" t
-            $"ifObject (Map.iter (fun key -> {inner}))"
+            $"{helpers}.ifObject (Map.iter (fun key -> {inner}))"
         | Complex typeName ->
             match typesCache.TryFind typeName with
             | Some(Enum _) ->
-                $"ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
+                $"{helpers}.ifString (fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromString{rightOp})"
             | _ ->
                 $"(fun v -> {leftOp}v |> Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson{rightOp})"
 
@@ -305,8 +252,8 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         | Double -> $"JNumber (unbox {vName})"
         | Decimal scale -> $"JNumber ({vName} * {10. ** float (scale)}m |> System.Decimal.Truncate |> unbox)"
         | Bytes -> $"JString ({vName} |> System.Convert.ToBase64String)"
-        | Timestamp -> $"JString ({vName} |> fromDateTime)"
-        | Duration -> $"JString ({vName} |> fromTimeSpan)"
+        | Timestamp -> $"JString ({vName} |> {helpers}.fromDateTime)"
+        | Duration -> $"JString ({vName} |> {helpers}.fromTimeSpan)"
         | Guid -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"
         | Optional _ -> failwith "cannot upack optional field"
         | Array t
@@ -323,44 +270,3 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
             | _ -> $"({vName} |> Convert{lastNames typeName |> solidName}.{firstName typeName}ToJson)"
 
     f vName type'
-
-
-
-let helpersBody =
-    """
-    open Fable.SimpleJson
-
-    let getProps = function JObject p -> p | _ -> Map.empty
-    let ifBool action = function (JBool v) -> action v | _ -> ()
-    let ifString action = function (JString v) -> action v | _ -> ()
-    let ifNumber action = function (JNumber v) -> action v | _ -> ()
-    let ifObject action = function (JObject v) -> action v | _ -> ()
-    let ifArray action = function (JArray v) -> action v | _ -> ()
-
-    let toDateTime (v:string) = System.DateTime.Parse v
-    let fromDateTime (v:System.DateTime) = v.ToString("O")
-
-    let durationRegex = System.Text.RegularExpressions.Regex @"^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$"
-    let subsecondScalingFactors = [| 0; 100000000; 100000000; 10000000; 1000000; 100000; 10000; 1000; 100; 10; 1 |]
-    let toTimeSpan (v:string) =
-            let m = durationRegex.Match(v)
-            match m.Success with
-            | true ->
-                let signText = m.Groups.[1].Value
-                let secondsText = m.Groups.[2].Value
-                let subseconds = m.Groups.[3].Value
-                let sign = if signText = "-" then -1. else 1.
-
-                let seconds = System.Int64.Parse(secondsText) |> float
-                let milliseconds =
-                    if subseconds <> "" then
-                        let parsedFraction = System.Int32.Parse(subseconds.Substring(1))
-                        parsedFraction * (subsecondScalingFactors.[subseconds.Length]) / 1000000 |> float
-                    else 0.
-
-                System.TimeSpan.FromMilliseconds(sign * (seconds * 1000. + milliseconds))
-            | false -> failwithf "Invalid Duration value: %s"  v
-
-    let fromTimeSpan (v:System.TimeSpan) =
-        sprintf "%d.%ds" (int64 v.TotalSeconds) v.Milliseconds
-"""

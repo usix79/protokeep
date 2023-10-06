@@ -9,8 +9,7 @@
   <ItemGroup>
     <Compile Include="Protokeep.fs" />
     <Compile Include="Domain.fs" />
-    <Compile Include="DomainJsonConverters.fs" />
-    <Compile Include="DomainMongoConverters.fs" />
+    <Compile Include="DomainMongo.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

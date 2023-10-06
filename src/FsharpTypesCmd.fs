@@ -1,9 +1,7 @@
 [<RequireQualifiedAccess>]
 module rec Protokeep.FsharpTypesCmd
 
-open System
 open System.Text
-open System.IO
 open Types
 open Codegen
 
@@ -11,41 +9,16 @@ let Handler module' locks typesCache =
     function
     | "-o" :: outputFileName :: args
     | "--output" :: outputFileName :: args ->
-        Program.checkLock module' locks typesCache
-        |> Result.bind (fun _ ->
-            let fileContent = gen module' locks typesCache
-
-            let fileName =
-                if Path.GetExtension(outputFileName) <> ".fs" then
-                    outputFileName + ".g.fs"
-                else
-                    outputFileName
-
-            Console.WriteLine($"Writing fsharp types to {fileName}")
-            File.WriteAllText(fileName, fileContent)
-
-            let defaultCommonsFileName =
-                Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
-
-            Program.checkArgUpdateCommons defaultCommonsFileName args
-            |> Option.iter (fun coreFileName ->
-                let coreFileText =
-                    if (File.Exists coreFileName) then
-                        File.ReadAllText(coreFileName)
-                    else
-                        ""
-
-                let updatedCoreFileText = CoreFsharp.update coreFileText "FsharpTypes" commonsBody
-                Console.WriteLine($"Writing common fsharp types and helpers to {coreFileName}")
-                File.WriteAllText(coreFileName, updatedCoreFileText))
-
-            Ok())
+        Infra.checkLock module' locks typesCache
+        |> Result.bind
+           ^ fun _ ->
+               let fileName = gen module' locks typesCache |> Infra.writeFile outputFileName ".fs"
+               FsharpHelpers.update "FsharpTypes" |> Infra.updateCommons fileName args
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance =
     { Name = "fsharp-types"
-      Description =
-        "generate fsharp types: fsharp-types [-o|--output] outputFile [--update-commons | --update-commons-in commonsFile]"
+      Description = "generate fsharp type"
       Run = Handler }
 
 let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
@@ -61,6 +34,8 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
             for symbol in locks.Enum(info.Name).Values do
                 line txt $"    | {symbol.Name} = {symbol.Num}"
+
+            line txt $""
         | Record info ->
             line txt $"type {firstName info.Name} = {{"
 
@@ -96,6 +71,8 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             for indexName in indexes do
                 recordIndexMembers locks txt indexName info
 
+            line txt $""
+
         | Union info ->
             line txt $"type {firstName info.Name} ="
             line txt $"    | Unknown"
@@ -103,13 +80,14 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             for case in info.Cases do
                 let fieldsStr =
                     case.Fields
-                    |> List.map (fun field -> $"{field.Name}:{typeToString ns field.Type}")
+                    |> List.map (fun field -> $"{field.Name}: {typeToString ns field.Type}")
                     |> String.concat "*"
                     |> (fun str -> if str <> "" then " of " + str else str)
 
                 line txt $"    | {firstName case.Name}{fieldsStr}"
 
-            line txt $"with"
+            // line txt $"with"
+            line txt $""
             unionKeyMembers ns locks typesCache txt info
 
             let indexes =
@@ -123,8 +101,12 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             for indexName in indexes do
                 unionIndexMembers typesCache txt indexName info
 
+            line txt $""
+
     line txt $"namespace {dottedName module'.Name}"
+    line txt ""
     line txt "open Protokeep.FsharpTypes"
+    line txt ""
 
     for item in module'.Items do
         genItem module'.Name item
@@ -209,8 +191,7 @@ let recordKeyMembers ns (typesCache: TypesCache) txt typeName keyFields =
     | _ -> line txt $"        Key.Items [{keyExpression typesCache keyFields}]"
 
     let keyArgs = makeKeyArgs typesCache keyFields "x." ""
-    line txt "    interface IEntity with"
-    line txt $"        member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
+    line txt $"    member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
 
 let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (info: UnionInfo) =
     line txt "    static member MakeUnknownKey () = Key.Value \"0\""
@@ -226,10 +207,9 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
 
         line txt $"    static member Make{caseLock.Name}Key ({keyParams ns typesCache keyFields}) = {keyExpression}"
 
-    line txt "    interface IEntity with"
-    line txt "        member x.Key ="
-    line txt "            match x with"
-    line txt $"            | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
+    line txt $"    member x.Key ="
+    line txt $"        match x with"
+    line txt $"        | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
 
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
@@ -237,7 +217,7 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
 
         line
             txt
-            $"            | {firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+            $"        | {firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
 
 let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
     let indexedFields =
@@ -422,24 +402,3 @@ let defValue isMutable =
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
-
-
-let commonsBody =
-    """
-    type Key =
-        | Value of string
-        | Items of Key list
-        | Inner of Key
-
-        override x.ToString() =
-            match x with
-            | Value v -> v
-            | Items keys -> keys |> List.map (fun key -> key.ToString()) |> String.concat ","
-            | Inner key -> $"({key})"
-
-    let (|TryFind|_|) f key = f key
-
-    type IEntity =
-        abstract member Key: Key
-
-"""

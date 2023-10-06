@@ -1,16 +1,19 @@
-namespace Protokeep.FsharpMongo
+namespace Domain
+
 open MongoDB.Bson
 open MongoDB.Bson.IO
 open MongoDB.Bson.Serialization
 open MongoDB.Bson.Serialization.Serializers
 open Protokeep
-type ConvertDomain () =
-    static member TrafficLightFromInt = function
+
+type ConvertDomain() =
+    static memberTrafficLightFromInt = function
         | Domain.TrafficLight.Red -> Domain.TrafficLight.Red
         | Domain.TrafficLight.Yellow -> Domain.TrafficLight.Yellow
         | Domain.TrafficLight.Green -> Domain.TrafficLight.Green
         | _ -> Domain.TrafficLight.Unknown
-    static member LightStatusToBson (writer: IBsonWriter, x: Domain.LightStatus) =
+
+    static member LightStatusToBson(writer: IBsonWriter, x: Domain.LightStatus) =
         writer.WriteStartDocument()
         match x with
         | Domain.LightStatus.Normal ->
@@ -69,8 +72,9 @@ type ConvertDomain () =
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()
             | _ -> printfn "Unexpected state: %A" reader.State
+        reader.ReadEndDocument()
         Domain.LightStatus.Warning (errorsCount,level)
-    static member CrossroadToBson (writer: IBsonWriter, x: Domain.Crossroad) =
+    static member CrossroadToBson(writer: IBsonWriter, x: Domain.Crossroad) =
         writer.WriteStartDocument()
         writer.WriteName("Id")
         writer.WriteInt32(x.Id)
@@ -108,7 +112,8 @@ type ConvertDomain () =
         writer.WriteName("Props")
         writer.WriteStartDocument(); (for pair in x.Props do writer.WriteName(pair.Key); writer.WriteString(pair.Value)); writer.WriteEndDocument()
         writer.WriteEndDocument()
-    static member CrossroadFromBson (reader: IBsonReader): Domain.Crossroad =
+
+    static member CrossroadFromBson(reader: IBsonReader): Domain.Crossroad =
         let mutable vId = 0
         let mutable vLongId = 0L
         let mutable vAltId = System.Guid.Empty
@@ -204,6 +209,7 @@ type ConvertDomain () =
                     reader.ReadEndDocument()
                 | _ -> reader.SkipValue()
             | _ -> printfn "Unexpected state: %A" reader.State
+        reader.ReadEndDocument()
         {
             Id = vId
             LongId = vLongId
@@ -222,20 +228,25 @@ type ConvertDomain () =
             Notes = vNotes |> Array.ofSeq
             Props = vProps |> Map.ofSeq
         }
+
 type LightStatusSerializer() =
     inherit SerializerBase<Domain.LightStatus>()
     override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) =
         ConvertDomain.LightStatusFromBson(ctx.Reader)
+
     override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: Domain.LightStatus) =
         ConvertDomain.LightStatusToBson(ctx.Writer, value)
+
 type CrossroadSerializer() =
     inherit SerializerBase<Domain.Crossroad>()
     override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) =
         ConvertDomain.CrossroadFromBson(ctx.Reader)
+
     override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: Domain.Crossroad) =
         ConvertDomain.CrossroadToBson(ctx.Writer, value)
-module Serializers =
-    let registerConverters () =
+
+type ConvertDomain with
+    static member RegisterSerializers() =
         BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3
         BsonSerializer.RegisterSerializer(LightStatusSerializer())
         BsonSerializer.RegisterSerializer(CrossroadSerializer())

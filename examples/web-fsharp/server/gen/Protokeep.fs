@@ -1,7 +1,6 @@
 namespace Protokeep
 
 module FsharpTypes =
-
     type Key =
         | Value of string
         | Items of Key list
@@ -15,12 +14,10 @@ module FsharpTypes =
 
     let (|TryFind|_|) f key = f key
 
-    type IEntity =
-        abstract member Key: Key
+    type IVersioned =
+        abstract member Version: int with get, set
 
-
-module FsharpJsonConvertersHelpers =
-
+module FsharpJsonHelpers =
     open System.Text.Json
 
     let fromDateTime (v: System.DateTime) = v.ToString("O")
@@ -67,3 +64,11 @@ module FsharpJsonConvertersHelpers =
 
     let fromTimeSpan (v: System.TimeSpan) =
         sprintf "%d.%ds" (int64 v.TotalSeconds) v.Milliseconds
+
+    let moveToStartObject (reader: byref<Utf8JsonReader>) =
+        reader.TokenType = JsonTokenType.StartObject
+        || reader.Read() && reader.TokenType = JsonTokenType.StartObject
+
+    let moveToEndObject (reader: byref<Utf8JsonReader>) =
+        reader.Read() = false || reader.TokenType = JsonTokenType.EndObject
+

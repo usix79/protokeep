@@ -1,59 +1,30 @@
 [<RequireQualifiedAccess>]
-module rec Protokeep.FsharpJsonConvertersCmd
+module rec Protokeep.FsharpJsonCmd
 
-open System
 open System.Text
-open System.IO
 open Types
 open Codegen
+
+let helpers = "FsharpJsonHelpers"
 
 let Handler module' locks typesCache =
     function
     | "-o" :: outputFileName :: args
     | "--output" :: outputFileName :: args ->
-        Program.checkLock module' locks typesCache
-        |> Result.bind (fun _ ->
-            let ns =
-                Program.checkArgNamespace args
-                |> Option.defaultValue "Protokeep.FsharpJsonConverters"
+        Infra.checkLock module' locks typesCache
+        |> Result.bind
+           ^ fun _ ->
+               let ns = Infra.checkArgNamespace args |> Option.defaultValue "Protokeep.FsharpJson"
 
-            let fileContent = gen ns module' locks typesCache
+               let fileName =
+                   gen ns module' locks typesCache |> Infra.writeFile outputFileName ".fs"
 
-            let fileName =
-                if Path.GetExtension(outputFileName) <> ".fs" then
-                    outputFileName + ".g.fs"
-                else
-                    outputFileName
-
-            Console.WriteLine($"Writing fsharp conveters to {fileName}")
-            File.WriteAllText(fileName, fileContent)
-
-            let defaultCommonsFileName =
-                Path.Combine(Path.GetDirectoryName(fileName), "Protokeep.fs")
-
-            Program.checkArgUpdateCommons defaultCommonsFileName args
-            |> Option.iter (fun coreFileName ->
-                let coreFileText =
-                    if (File.Exists coreFileName) then
-                        File.ReadAllText(coreFileName)
-                    else
-                        ""
-
-                let updatedCoreFileText =
-                    CoreFsharp.update coreFileText "FsharpJsonConvertersHelpers" helpersBody
-
-                Console.WriteLine($"Writing fsharp json converters helpers to {coreFileName}")
-                File.WriteAllText(coreFileName, updatedCoreFileText))
-
-
-
-
-            Ok())
+               FsharpHelpers.update helpers |> Infra.updateCommons fileName args
     | x -> Error $"expected arguments [-o|--output] outputFile, but {x}"
 
 let Instance =
-    { Name = "fsharp-json-converters"
-      Description = "generate converters between json and fsharp types: fsharp-json-converters [-o|--output] outputFile"
+    { Name = "fsharp-json"
+      Description = "generate converters between json and fsharp types"
       Run = Handler }
 
 let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
@@ -65,37 +36,28 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         function
         | Enum info ->
             let fullNameTxt = info.Name |> dottedName
-            line txt $"    static member Default{firstName info.Name} ="
-            line txt $"        lazy {fullNameTxt}.Unknown"
-
-            line txt $"    static member {firstName info.Name}FromString = function"
+            line txt $"    static member {firstName info.Name}FromString ="
+            line txt $"        function"
 
             for symbol in info.Symbols do
                 line txt $"        | \"{firstName info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
 
             line txt $"        | _ -> {fullNameTxt}.Unknown"
+            line txt $""
 
-            line txt $"    static member {firstName info.Name}ToString = function"
+            line txt $"    static member {firstName info.Name}ToString ="
+            line txt $"        function"
 
             for symbol in info.Symbols do
                 line txt $"        | {fullNameTxt}.{symbol} -> \"{firstName info.Name}{symbol}\""
 
             line txt $"        | _ -> \"Unknown\""
+            line txt $""
+
         | Record info ->
             let fullNameTxt = info.Name |> dottedName
 
-            line txt $"    static member Default{firstName info.Name}: Lazy<{fullNameTxt}> ="
-            line txt $"        lazy {{"
-
-            for fieldInfo in info.Fields do
-                match fieldInfo.Type with
-                | Types.IsUnion typesCache unionInfo ->
-                    line txt $"            {fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-                | _ -> line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
-
-            line txt $"        }}"
-
-            line txt $"    static member {firstName info.Name}FromJson (reader: byref<Utf8JsonReader>): {fullNameTxt} ="
+            line txt $"    static member {firstName info.Name}FromJson(reader: byref<Utf8JsonReader>): {fullNameTxt} ="
             readObject "v" info
 
             line txt $"        {{"
@@ -115,19 +77,18 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 $"    static member {firstName info.Name}ToJson (writer: inref<Utf8JsonWriter>, x: {fullNameTxt}) ="
 
             writeObject "x." info
+            line txt $""
 
         | Union union ->
             line
                 txt
-                $"    static member {firstName union.Name}FromJson (reader: byref<Utf8JsonReader>): {dottedName union.Name} ="
+                $"    static member {firstName union.Name}FromJson(reader: byref<Utf8JsonReader>): {dottedName union.Name} ="
 
             line txt $"        let mutable y = {dottedName union.Name}.Unknown"
 
-            line
-                txt
-                $"        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
+            line txt $"        if {helpers}.moveToStartObject(&reader)then"
 
-            line txt $"            while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do"
+            line txt $"            while {helpers}.moveToEndObject(&reader) = false do"
             line txt $"                if reader.TokenType <> JsonTokenType.PropertyName then ()"
 
             for case in union.Cases do
@@ -202,7 +163,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 | Types.MultiFieldsRecord ->
                     line
                         txt
-                        $"    static member {firstName union.Name}Case{firstName case.Name}FromJson (reader: byref<Utf8JsonReader>) ="
+                        $"    static member {firstName union.Name}Case{firstName case.Name}FromJson(reader: byref<Utf8JsonReader>) ="
 
                     readObject "" case
 
@@ -225,18 +186,21 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                     writeObject "" case
                 | _ -> ()
 
+            line txt $""
+
     and readObject prefix recordInfo =
         for fieldInfo in recordInfo.Fields do
             match fieldInfo.Type with
+            | Types.IsEnum typesCache enumInfo ->
+                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
             | Types.IsUnion typesCache unionInfo ->
                 line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-            | _ -> line txt $"        let mutable {prefix}{fieldInfo.Name} = {defValue true fieldInfo.Type}"
+            | _ ->
+                line txt $"        let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue true fieldInfo.Type}"
 
-        line
-            txt
-            $"        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
+        line txt $"        if {helpers}.moveToStartObject(&reader) then"
 
-        line txt $"            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do"
+        line txt $"            while {helpers}.moveToEndObject(&reader) = false do"
         line txt $"                if reader.TokenType <> JsonTokenType.PropertyName then ()"
 
         for fieldInfo in recordInfo.Fields do
@@ -260,7 +224,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 linei txt 5 $"else reader.Skip()"
             | Map t ->
                 linei txt 5 $"if reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
-                linei txt 6 $"while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do"
+                linei txt 6 $"while {helpers}.moveToEndObject(&reader) = false do"
                 linei txt 7 $"let propName = reader.GetString()"
                 linei txt 7 $"if reader.Read() && {checkTokenType typesCache t} then"
                 linei txt 8 $"{vName}.Add((propName, {getValue typesCache t}))"
@@ -297,33 +261,18 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"        writer.WriteEndObject()"
 
     line txt $"namespace {genNamespace}"
+    line txt $""
     line txt $"open System.Text.Json"
-    line txt $"open Protokeep.FsharpJsonConvertersHelpers"
-    line txt $"type Convert{solidName module'.Name} () ="
+    line txt $"open Protokeep"
+    line txt $""
+    line txt $"type Convert{solidName module'.Name}() ="
+    line txt $""
 
     for item in module'.Items do
         genItem item
 
     txt.ToString()
 
-let defValue isMutable =
-    function
-    | Bool -> "false"
-    | String -> "\"\""
-    | Int -> "0"
-    | Long -> "0L"
-    | Float -> "0.f"
-    | Double -> "0."
-    | Decimal _ -> "0m"
-    | Bytes -> "Array.empty"
-    | Timestamp -> "System.DateTime.MinValue"
-    | Duration -> "System.TimeSpan.Zero"
-    | Guid -> "System.Guid.Empty"
-    | Optional _ -> "None"
-    | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
-    | List _ -> if isMutable then "ResizeArray()" else "List.empty"
-    | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
-    | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
 
 let rec checkTokenType (typesCache: Types.TypesCache) =
     function
@@ -356,7 +305,7 @@ let rec getValue (typesCache: Types.TypesCache) =
     | Decimal scale -> $"decimal(float(reader.GetInt64()) / {10. ** float (scale)}.)"
     | Bytes -> "reader.GetBytesFromBase64()"
     | Timestamp -> "reader.GetDateTime()"
-    | Duration -> "reader.GetString() |> toTimeSpan"
+    | Duration -> $"reader.GetString() |> {helpers}.toTimeSpan"
     | Guid -> "System.Guid(reader.GetBytesFromBase64())"
     | Optional t -> $"{getValue typesCache t} |> Some"
     | Types.IsEnum typesCache ei ->
@@ -377,8 +326,8 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
         | Double -> $"writer.WriteNumberValue({vName})"
         | Decimal scale -> $"writer.WriteNumberValue({vName} * {10. ** float (scale)}m |> System.Decimal.Truncate)"
         | Bytes -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"
-        | Timestamp -> $"writer.WriteStringValue({vName} |> fromDateTime)"
-        | Duration -> $"writer.WriteStringValue({vName} |> fromTimeSpan)"
+        | Timestamp -> $"writer.WriteStringValue({vName} |> {helpers}.fromDateTime)"
+        | Duration -> $"writer.WriteStringValue({vName} |> {helpers}.fromTimeSpan)"
         | Guid -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}.ToByteArray()))"
         | Optional _ -> failwith "cannot unpack optional field"
         | Array t
@@ -395,34 +344,3 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
             | _ -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}ToJson(&writer, {vName})"
 
     f vName type'
-
-let helpersBody =
-    """
-    open System.Text.Json
-
-    let fromDateTime (v:System.DateTime) = v.ToString("O")
-
-    let durationRegex = System.Text.RegularExpressions.Regex @"^(-)?([0-9]{1,12})(\.[0-9]{1,9})?s$"
-    let subsecondScalingFactors = [| 0; 100000000; 100000000; 10000000; 1000000; 100000; 10000; 1000; 100; 10; 1 |]
-    let toTimeSpan (v:string) =
-            let m = durationRegex.Match(v)
-            match m.Success with
-            | true ->
-                let signText = m.Groups.[1].Value
-                let secondsText = m.Groups.[2].Value
-                let subseconds = m.Groups.[3].Value
-                let sign = if signText = "-" then -1. else 1.
-
-                let seconds = System.Int64.Parse(secondsText) |> float
-                let milliseconds =
-                    if subseconds <> "" then
-                        let parsedFraction = System.Int32.Parse(subseconds.Substring(1))
-                        parsedFraction * (subsecondScalingFactors.[subseconds.Length]) / 1000000 |> float
-                    else 0.
-
-                System.TimeSpan.FromMilliseconds(sign * (seconds * 1000. + milliseconds))
-            | false -> failwithf "Invalid Duration value: %s"  v
-
-    let fromTimeSpan (v:System.TimeSpan) =
-        sprintf "%d.%ds" (int64 v.TotalSeconds) v.Milliseconds
-"""

@@ -1,0 +1,4 @@
+namespace Tests.FsharpFable
+open Fable.SimpleJson
+open Protokeep.FsharpFable
+type ConvertDomain () =

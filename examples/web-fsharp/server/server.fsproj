@@ -8,8 +8,8 @@
     <Compile Include="gen/Protokeep.fs" />
     <Compile Include="gen/Subdomain.fs" />
     <Compile Include="gen/Domain.fs" />
-    <Compile Include="gen/SubdomainConverters.fs" />
-    <Compile Include="gen/DomainConverters.fs" />
+    <Compile Include="gen/SubdomainJson.fs" />
+    <Compile Include="gen/DomainJson.fs" />
     <Compile Include="Logic.fs" />
     <Compile Include="controllers/CalcController.fs" />
     <Compile Include="Startup.fs" />

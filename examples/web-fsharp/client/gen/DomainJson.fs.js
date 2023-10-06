@@ -1,13 +1,13 @@
 import { class_type } from "../fable_modules/fable-library.4.1.4/Reflection.js";
 import { Response, Request, OpResult, OpError, Op } from "./Domain.fs.js";
 import { append, singleton as singleton_1, empty, delay, toList, iterate } from "../fable_modules/fable-library.4.1.4/Seq.js";
-import { FableConverterHelpers_fromDateTime, FableConverterHelpers_fromTimeSpan, FableConverterHelpers_ifObject, FableConverterHelpers_toDateTime, FableConverterHelpers_toTimeSpan, FableConverterHelpers_ifString, FableConverterHelpers_getProps, FableConverterHelpers_ifBool, FableConverterHelpers_ifNumber } from "./Protokeep.fs.js";
-import { map, ofSeq, iterate as iterate_1, empty as empty_1, ofList } from "../fable_modules/fable-library.4.1.4/Map.js";
+import { FsharpFableHelpers_fromDateTime, FsharpFableHelpers_fromTimeSpan, FsharpFableHelpers_ifObject, FsharpFableHelpers_toDateTime, FsharpFableHelpers_toTimeSpan, FsharpFableHelpers_ifString, FsharpFableHelpers_getProps, FsharpFableHelpers_ifBool, FsharpFableHelpers_ifNumber } from "./Protokeep.fs.js";
+import { map, ofSeq, iterate as iterate_1, ofList } from "../fable_modules/fable-library.4.1.4/Map.js";
 import { Json } from "../fable_modules/Fable.SimpleJson.3.17.0/Json.fs.js";
 import { ofArray, singleton } from "../fable_modules/fable-library.4.1.4/List.js";
-import { Lazy, comparePrimitives } from "../fable_modules/fable-library.4.1.4/Util.js";
+import { comparePrimitives } from "../fable_modules/fable-library.4.1.4/Util.js";
 import { minValue } from "../fable_modules/fable-library.4.1.4/Date.js";
-import { ConvertDomainSubdomain_get_StatusToString, ConvertDomainSubdomain_get_StatusFromString, ConvertDomainSubdomain_get_DefaultStatus } from "./SubdomainConverters.fs.js";
+import { ConvertDomainSubdomain_get_StatusToString, ConvertDomainSubdomain_get_StatusFromString } from "./SubdomainJson.fs.js";
 
 export class ConvertDomain {
     constructor() {
@@ -15,7 +15,7 @@ export class ConvertDomain {
 }
 
 export function ConvertDomain_$reflection() {
-    return class_type("Protokeep.FableConverters.ConvertDomain", void 0, ConvertDomain);
+    return class_type("Domain.JsonConverters.ConvertDomain", void 0, ConvertDomain);
 }
 
 export function ConvertDomain_$ctor() {
@@ -28,7 +28,7 @@ export function ConvertDomain_OpFromJson_Z3E28EAD9(json) {
         const matchValue = pair[0];
         switch (matchValue) {
             case "Val": {
-                FableConverterHelpers_ifNumber((v) => {
+                FsharpFableHelpers_ifNumber((v) => {
                     y = (new Op(1, [v]));
                 }, pair[1]);
                 break;
@@ -58,7 +58,7 @@ export function ConvertDomain_OpFromJson_Z3E28EAD9(json) {
                 break;
             }
             case "Zero": {
-                FableConverterHelpers_ifBool((v_7) => {
+                FsharpFableHelpers_ifBool((v_7) => {
                     y = (new Op(8, []));
                 }, pair[1]);
                 break;
@@ -66,7 +66,7 @@ export function ConvertDomain_OpFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return y;
 }
 
@@ -93,7 +93,7 @@ export function ConvertDomain_OpCaseSumFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Op(2, [p1, p2]);
 }
 
@@ -120,7 +120,7 @@ export function ConvertDomain_OpCaseMulFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Op(3, [p1, p2]);
 }
 
@@ -147,7 +147,7 @@ export function ConvertDomain_OpCaseDivFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Op(4, [p1, p2]);
 }
 
@@ -173,7 +173,7 @@ export function ConvertDomain_OpCaseQuantumFromJson_Z3E28EAD9(json) {
                 break;
             }
             case "P3": {
-                FableConverterHelpers_ifString((v_2) => {
+                FsharpFableHelpers_ifString((v_2) => {
                     p3 = v_2;
                 }, pair[1]);
                 break;
@@ -181,7 +181,7 @@ export function ConvertDomain_OpCaseQuantumFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Op(6, [p1, p2, p3]);
 }
 
@@ -195,11 +195,11 @@ export function ConvertDomain_OpCaseImagineFromJson_Z3E28EAD9(json) {
     let p1 = void 0;
     iterate((pair) => {
         if (pair[0] === "P1Value") {
-            FableConverterHelpers_ifNumber((v) => {
+            FsharpFableHelpers_ifNumber((v) => {
                 p1 = v;
             }, pair[1]);
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Op(7, [p1]);
 }
 
@@ -222,19 +222,19 @@ export function ConvertDomain_OpErrorFromJson_Z3E28EAD9(json) {
         const matchValue = pair[0];
         switch (matchValue) {
             case "General": {
-                FableConverterHelpers_ifString((v) => {
+                FsharpFableHelpers_ifString((v) => {
                     y = (new OpError(1, [v]));
                 }, pair[1]);
                 break;
             }
             case "DivisionByZero": {
-                FableConverterHelpers_ifBool((v_1) => {
+                FsharpFableHelpers_ifBool((v_1) => {
                     y = (new OpError(2, []));
                 }, pair[1]);
                 break;
             }
             case "NotSupported": {
-                FableConverterHelpers_ifBool((v_2) => {
+                FsharpFableHelpers_ifBool((v_2) => {
                     y = (new OpError(3, []));
                 }, pair[1]);
                 break;
@@ -242,7 +242,7 @@ export function ConvertDomain_OpErrorFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return y;
 }
 
@@ -258,7 +258,7 @@ export function ConvertDomain_OpResultFromJson_Z3E28EAD9(json) {
         const matchValue = pair[0];
         switch (matchValue) {
             case "Success": {
-                FableConverterHelpers_ifNumber((v) => {
+                FsharpFableHelpers_ifNumber((v) => {
                     y = (new OpResult(1, [v]));
                 }, pair[1]);
                 break;
@@ -270,7 +270,7 @@ export function ConvertDomain_OpResultFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return y;
 }
 
@@ -280,10 +280,6 @@ export function ConvertDomain_OpResultToJson_5687C0FD(x) {
     })]);
 }
 
-export function ConvertDomain_get_DefaultRequest() {
-    return new Lazy(() => (new Request("", new Op(0, []))));
-}
-
 export function ConvertDomain_RequestFromJson_Z3E28EAD9(json) {
     let vToken = "";
     let vOperation = new Op(0, []);
@@ -291,7 +287,7 @@ export function ConvertDomain_RequestFromJson_Z3E28EAD9(json) {
         const matchValue = pair[0];
         switch (matchValue) {
             case "Token": {
-                FableConverterHelpers_ifString((v) => {
+                FsharpFableHelpers_ifString((v) => {
                     vToken = v;
                 }, pair[1]);
                 break;
@@ -303,7 +299,7 @@ export function ConvertDomain_RequestFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Request(vToken, vOperation);
 }
 
@@ -313,12 +309,6 @@ export function ConvertDomain_RequestToJson_Z65DB4746(x) {
     })]);
 }
 
-export function ConvertDomain_get_DefaultResponse() {
-    return new Lazy(() => (new Response("", new OpResult(0, []), 0, void 0, minValue(), empty_1({
-        Compare: comparePrimitives,
-    }), ConvertDomainSubdomain_get_DefaultStatus().Value)));
-}
-
 export function ConvertDomain_ResponseFromJson_Z3E28EAD9(json) {
     let vToken = "";
     let vResult = new OpResult(0, []);
@@ -326,12 +316,12 @@ export function ConvertDomain_ResponseFromJson_Z3E28EAD9(json) {
     let vExtra = void 0;
     let vSince = minValue();
     let vTags = [];
-    let vStatus = ConvertDomainSubdomain_get_DefaultStatus().Value;
+    let vStatus = 0;
     iterate((pair) => {
         const matchValue = pair[0];
         switch (matchValue) {
             case "Token": {
-                FableConverterHelpers_ifString((v) => {
+                FsharpFableHelpers_ifString((v) => {
                     vToken = v;
                 }, pair[1]);
                 break;
@@ -341,27 +331,27 @@ export function ConvertDomain_ResponseFromJson_Z3E28EAD9(json) {
                 break;
             }
             case "ExecutionTime": {
-                FableConverterHelpers_ifString((v_2) => {
-                    vExecutionTime = FableConverterHelpers_toTimeSpan(v_2);
+                FsharpFableHelpers_ifString((v_2) => {
+                    vExecutionTime = FsharpFableHelpers_toTimeSpan(v_2);
                 }, pair[1]);
                 break;
             }
             case "ExtraValue": {
-                FableConverterHelpers_ifString((v_4) => {
+                FsharpFableHelpers_ifString((v_4) => {
                     vExtra = v_4;
                 }, pair[1]);
                 break;
             }
             case "Since": {
-                FableConverterHelpers_ifString((v_5) => {
-                    vSince = FableConverterHelpers_toDateTime(v_5);
+                FsharpFableHelpers_ifString((v_5) => {
+                    vSince = FsharpFableHelpers_toDateTime(v_5);
                 }, pair[1]);
                 break;
             }
             case "Tags": {
-                FableConverterHelpers_ifObject((table) => {
+                FsharpFableHelpers_ifObject((table) => {
                     iterate_1((key, _arg_4) => {
-                        FableConverterHelpers_ifString((v_7) => {
+                        FsharpFableHelpers_ifString((v_7) => {
                             void (vTags.push([key, v_7]));
                         }, _arg_4);
                     }, table);
@@ -369,7 +359,7 @@ export function ConvertDomain_ResponseFromJson_Z3E28EAD9(json) {
                 break;
             }
             case "Status": {
-                FableConverterHelpers_ifString((v_9) => {
+                FsharpFableHelpers_ifString((v_9) => {
                     vStatus = (ConvertDomainSubdomain_get_StatusFromString()(v_9) | 0);
                 }, pair[1]);
                 break;
@@ -377,16 +367,16 @@ export function ConvertDomain_ResponseFromJson_Z3E28EAD9(json) {
             default:
                 0;
         }
-    }, FableConverterHelpers_getProps(json));
+    }, FsharpFableHelpers_getProps(json));
     return new Response(vToken, vResult, vExecutionTime, vExtra, vSince, ofSeq(vTags, {
         Compare: comparePrimitives,
     }), vStatus);
 }
 
 export function ConvertDomain_ResponseToJson_Z135E8A98(x) {
-    return new Json(5, [ofList(toList(delay(() => append(singleton_1(["Token", new Json(1, [x.Token])]), delay(() => append(singleton_1(["Result", ConvertDomain_OpResultToJson_5687C0FD(x.Result)]), delay(() => append(singleton_1(["ExecutionTime", new Json(1, [FableConverterHelpers_fromTimeSpan(x.ExecutionTime)])]), delay(() => {
+    return new Json(5, [ofList(toList(delay(() => append(singleton_1(["Token", new Json(1, [x.Token])]), delay(() => append(singleton_1(["Result", ConvertDomain_OpResultToJson_5687C0FD(x.Result)]), delay(() => append(singleton_1(["ExecutionTime", new Json(1, [FsharpFableHelpers_fromTimeSpan(x.ExecutionTime)])]), delay(() => {
         let matchValue;
-        return append((matchValue = x.Extra, (matchValue == null) ? (empty()) : singleton_1(["ExtraValue", new Json(1, [matchValue])])), delay(() => append(singleton_1(["Since", new Json(1, [FableConverterHelpers_fromDateTime(x.Since)])]), delay(() => append(singleton_1(["Tags", new Json(5, [map((_arg, v_3) => (new Json(1, [v_3])), x.Tags)])]), delay(() => singleton_1(["Status", new Json(1, [ConvertDomainSubdomain_get_StatusToString()(x.Status)])])))))));
+        return append((matchValue = x.Extra, (matchValue == null) ? (empty()) : singleton_1(["ExtraValue", new Json(1, [matchValue])])), delay(() => append(singleton_1(["Since", new Json(1, [FsharpFableHelpers_fromDateTime(x.Since)])]), delay(() => append(singleton_1(["Tags", new Json(5, [map((_arg, v_3) => (new Json(1, [v_3])), x.Tags)])]), delay(() => singleton_1(["Status", new Json(1, [ConvertDomainSubdomain_get_StatusToString()(x.Status)])])))))));
     })))))))), {
         Compare: comparePrimitives,
     })]);

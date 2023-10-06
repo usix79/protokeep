@@ -21,12 +21,12 @@ let gen _ =
 
             do!
                 protokeep
-                    $"{fullFileName} fsharp-json-converters -o {serverDir}{file}Converters.fs --update-commons -ns Domain.JsonConverters"
+                    $"{fullFileName} fsharp-json -o {serverDir}{file}Json.fs --update-commons -ns Domain.JsonConverters"
                     __SOURCE_DIRECTORY__
 
             do!
                 protokeep
-                    $"{fullFileName} fable-converters -o {clientDir}{file}Converters.fs --update-commons -ns Domain.JsonConverters"
+                    $"{fullFileName} fsharp-fable -o {clientDir}{file}Json.fs --update-commons -ns Domain.JsonConverters"
                     __SOURCE_DIRECTORY__
     }
 

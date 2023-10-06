@@ -23,17 +23,17 @@ let gen _ =
 
             do!
                 protokeep
-                    $"{fullFileName} fsharp-proto-converters -o {fsharpDir}{file}ProtoConverters.fs --update-commons"
+                    $"{fullFileName} fsharp-proto -o {fsharpDir}{file}Proto.fs --update-commons"
                     __SOURCE_DIRECTORY__
 
             do!
                 protokeep
-                    $"{fullFileName} fsharp-json-converters -o {fsharpDir}{file}JsonConverters.fs --update-commons"
+                    $"{fullFileName} fsharp-json -o {fsharpDir}{file}Json.fs --update-commons"
                     __SOURCE_DIRECTORY__
 
             do!
                 protokeep
-                    $"{fullFileName} fable-converters -o {fableDir}{file}FableConverters.fs --update-commons"
+                    $"{fullFileName} fsharp-fable -o {fableDir}{file}Fable.fs --update-commons"
                     __SOURCE_DIRECTORY__
 
     }

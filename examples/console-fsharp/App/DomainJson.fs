@@ -1,23 +1,28 @@
-namespace Protokeep.FsharpJsonConverters
+namespace Protokeep.FsharpJson
+
 open System.Text.Json
-open Protokeep.FsharpJsonConvertersHelpers
-type ConvertDomain () =
-    static member DefaultTrafficLight =
-        lazy Domain.TrafficLight.Unknown
-    static member TrafficLightFromString = function
+open Protokeep
+
+type ConvertDomain() =
+
+    static member TrafficLightFromString =
+        function
         | "TrafficLightRed" -> Domain.TrafficLight.Red
         | "TrafficLightYellow" -> Domain.TrafficLight.Yellow
         | "TrafficLightGreen" -> Domain.TrafficLight.Green
         | _ -> Domain.TrafficLight.Unknown
-    static member TrafficLightToString = function
+
+    static member TrafficLightToString =
+        function
         | Domain.TrafficLight.Red -> "TrafficLightRed"
         | Domain.TrafficLight.Yellow -> "TrafficLightYellow"
         | Domain.TrafficLight.Green -> "TrafficLightGreen"
         | _ -> "Unknown"
-    static member LightStatusFromJson (reader: byref<Utf8JsonReader>): Domain.LightStatus =
+
+    static member LightStatusFromJson(reader: byref<Utf8JsonReader>): Domain.LightStatus =
         let mutable y = Domain.LightStatus.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Normal")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.True
@@ -44,31 +49,22 @@ type ConvertDomain () =
             writer.WriteNumberValue(errorsCount)
         | Domain.LightStatus.OutOfOrder (since) ->
             writer.WritePropertyName("OutOfOrder")
-            writer.WriteStringValue(since |> fromDateTime)
+            writer.WriteStringValue(since |> FsharpJsonHelpers.fromDateTime)
         | _ ->
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member DefaultCrossroad: Lazy<Domain.Crossroad> =
-        lazy {
-            Id = 0
-            Street1 = ""
-            Street2 = ""
-            Light = ConvertDomain.DefaultTrafficLight.Value
-            LightStatus = Domain.LightStatus.Unknown
-            History = List.empty
-            Lirycs = List.empty
-        }
-    static member CrossroadFromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad =
+
+    static member CrossroadFromJson(reader: byref<Utf8JsonReader>): Domain.Crossroad =
         let mutable vId = 0
         let mutable vStreet1 = ""
         let mutable vStreet2 = ""
-        let mutable vLight = ConvertDomain.DefaultTrafficLight.Value
+        let mutable vLight = Domain.TrafficLight.Unknown
         let mutable vLightStatus = Domain.LightStatus.Unknown
         let mutable vHistory = ResizeArray()
         let mutable vLirycs = ResizeArray()
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Id")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -129,26 +125,8 @@ type ConvertDomain () =
         writer.WritePropertyName("Lirycs")
         writer.WriteStartArray(); (for v in x.Lirycs do writer.WriteStringValue(v)); writer.WriteEndArray()
         writer.WriteEndObject()
-    static member DefaultCrossroad2: Lazy<Domain.Crossroad2> =
-        lazy {
-            Id = 0
-            LongId = 0L
-            AltId = System.Guid.Empty
-            Street1 = ""
-            Street2 = ""
-            IsMonitored = false
-            Xpos = 0.f
-            Ypos = 0.
-            Ratio = 0m
-            LastChecked = System.DateTime.MinValue
-            ServiceInterval = System.TimeSpan.Zero
-            CurrentLight = ConvertDomain.DefaultTrafficLight.Value
-            Nickname = None
-            Img = Array.empty
-            Notes = Array.empty
-            Props = Map.empty
-        }
-    static member Crossroad2FromJson (reader: byref<Utf8JsonReader>): Domain.Crossroad2 =
+
+    static member Crossroad2FromJson(reader: byref<Utf8JsonReader>): Domain.Crossroad2 =
         let mutable vId = 0
         let mutable vLongId = 0L
         let mutable vAltId = System.Guid.Empty
@@ -160,13 +138,13 @@ type ConvertDomain () =
         let mutable vRatio = 0m
         let mutable vLastChecked = System.DateTime.MinValue
         let mutable vServiceInterval = System.TimeSpan.Zero
-        let mutable vCurrentLight = ConvertDomain.DefaultTrafficLight.Value
+        let mutable vCurrentLight = Domain.TrafficLight.Unknown
         let mutable vNickname = None
         let mutable vImg = Array.empty
         let mutable vNotes = ResizeArray()
         let mutable vProps = ResizeArray()
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Id")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -210,7 +188,7 @@ type ConvertDomain () =
                     else reader.Skip()
                 else if (reader.ValueTextEquals("ServiceInterval")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vServiceInterval <- reader.GetString() |> toTimeSpan
+                    then vServiceInterval <- reader.GetString() |> FsharpJsonHelpers.toTimeSpan
                     else reader.Skip()
                 else if (reader.ValueTextEquals("CurrentLight")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.String
@@ -233,7 +211,7 @@ type ConvertDomain () =
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Props")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-                        while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
+                        while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                             let propName = reader.GetString()
                             if reader.Read() && reader.TokenType = JsonTokenType.String then
                                 vProps.Add((propName, reader.GetString()))
@@ -279,9 +257,9 @@ type ConvertDomain () =
         writer.WritePropertyName("Ratio")
         writer.WriteNumberValue(x.Ratio * 100m |> System.Decimal.Truncate)
         writer.WritePropertyName("LastChecked")
-        writer.WriteStringValue(x.LastChecked |> fromDateTime)
+        writer.WriteStringValue(x.LastChecked |> FsharpJsonHelpers.fromDateTime)
         writer.WritePropertyName("ServiceInterval")
-        writer.WriteStringValue(x.ServiceInterval |> fromTimeSpan)
+        writer.WriteStringValue(x.ServiceInterval |> FsharpJsonHelpers.fromTimeSpan)
         writer.WritePropertyName("CurrentLight")
         writer.WriteStringValue(x.CurrentLight |> ConvertDomain.TrafficLightToString)
         match x.Nickname with
@@ -296,3 +274,4 @@ type ConvertDomain () =
         writer.WritePropertyName("Props")
         writer.WriteStartObject(); (for pair in x.Props do writer.WritePropertyName(pair.Key); writer.WriteStringValue(pair.Value)); writer.WriteEndObject()
         writer.WriteEndObject()
+

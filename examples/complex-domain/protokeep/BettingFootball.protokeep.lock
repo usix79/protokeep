@@ -27,3 +27,4 @@ record Betting.Football.MarketItem
     field Period Betting.Football.Period = 2
     field Market Betting.Football.Market = 3
     field Status Betting.Football.Status = 4
+    field Version int = 5

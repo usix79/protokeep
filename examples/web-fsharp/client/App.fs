@@ -3,7 +3,7 @@
 open Browser
 open Fetch
 open Domain
-open Protokeep.FableConverters
+open Protokeep.FsharpFableHelpers
 open Fable.SimpleJson
 
 promise {
@@ -12,7 +12,7 @@ promise {
           Operation = Sum(Val 2, Sum(Imagine(Some 40), Mul(Val 100500, Zero))) }
 
     document.getElementById("reqObj").innerText <- sprintf "%A" req
-    let json = ConvertDomain.RequestToJson req
+    let json = JsonConverters.ConvertDomain.RequestToJson req
     let jsonTxt = SimpleJson.toString json
     document.getElementById("reqJson").innerText <- jsonTxt
 
@@ -27,7 +27,7 @@ promise {
     document.getElementById("respJson").innerText <- respJsonTxt
 
     let respJson = SimpleJson.parse respJsonTxt
-    let resp = ConvertDomain.ResponseFromJson respJson
+    let resp = JsonConverters.ConvertDomain.ResponseFromJson respJson
     document.getElementById("respObj").innerText <- sprintf "%A" resp
 }
 |> Promise.start

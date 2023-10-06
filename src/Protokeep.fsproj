@@ -4,9 +4,9 @@
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <Title>Protokeep</Title>
     <Description>Protokeep is a tool for keeping evolutionary compatibility of the data schemas</Description>
-    <AssemblyVersion>0.3.9.15</AssemblyVersion>
-    <FileVersion>0.3.9.15</FileVersion>
-    <Version>0.3.9.15</Version>
+    <AssemblyVersion>0.3.9.20</AssemblyVersion>
+    <FileVersion>0.3.9.20</FileVersion>
+    <Version>0.3.9.20</Version>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>protokeep</ToolCommandName>
     <PackageOutputPath>../nupkg</PackageOutputPath>
@@ -20,17 +20,23 @@
   <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="Types.fs" />
+    <Compile Include="Infra.fs" />
     <Compile Include="Parsers.fs" />
     <Compile Include="Codegen.fs" />
     <Compile Include="FsharpTypesCmd.fs" />
-    <Compile Include="FableConvertersCmd.fs" />
-    <Compile Include="FsharpProtoConvertersCmd.fs" />
-    <Compile Include="FsharpJsonConvertersCmd.fs" />
+    <Compile Include="FsharpFableCmd.fs" />
+    <Compile Include="FsharpProtoCmd.fs" />
+    <Compile Include="FsharpJsonCmd.fs" />
     <Compile Include="FsharpMongoCmd.fs" />
     <Compile Include="ProtoCmd.fs" />
     <Compile Include="LockCmd.fs" />
     <Compile Include="CheckCmd.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="embedded\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FParsec" Version="2.0.0-beta2" />

@@ -6,22 +6,21 @@ open Shared
 
 let protokeepFileName = "./Domain.protokeep"
 let fsharpTypesFile = "./Domain.fs"
-let fsharpMongoFile = "./DomainMongoConverters.fs"
-let fsharpJsonConvertersFile = "./DomainJsonConverters.fs"
+let fsharpMongoFile = "./DomainMongo.fs"
 
 let gen _ =
     result {
         do! protokeep $"{protokeepFileName} lock" __SOURCE_DIRECTORY__
 
-        do! protokeep $"{protokeepFileName} fsharp-types -o {fsharpTypesFile} --update-commons" __SOURCE_DIRECTORY__
+        do!
+            protokeep
+                $"{protokeepFileName} fsharp-types -ns Domain  -o {fsharpTypesFile} --update-commons"
+                __SOURCE_DIRECTORY__
 
         do!
             protokeep
-                $"{protokeepFileName} fsharp-json-converters -o {fsharpJsonConvertersFile} --update-commons"
+                $"{protokeepFileName} fsharp-mongo -ns Domain -o {fsharpMongoFile} --update-commons"
                 __SOURCE_DIRECTORY__
-
-        do! protokeep $"{protokeepFileName} fsharp-mongo -o {fsharpMongoFile} --update-commons" __SOURCE_DIRECTORY__
-
     }
 
 let clean _ =
@@ -32,16 +31,19 @@ let clean _ =
         do! rm fsharpMongoFile __SOURCE_DIRECTORY__
     }
 
+let build _ = dotnet "build" __SOURCE_DIRECTORY__
+
 let rebuild _ =
     result {
         do! clean ()
         do! gen ()
+        do! build ()
     }
 
 
 [ ("CLEAN", clean)
   ("GEN", gen)
-  ("BUILD", (fun _ -> dotnet "build" __SOURCE_DIRECTORY__))
+  ("BUILD", build)
   ("REBUILD", rebuild)
-  ("RUN", (fun _ -> dotnet "run --project App" __SOURCE_DIRECTORY__)) ]
+  ("RUN", (fun _ -> dotnet "run" __SOURCE_DIRECTORY__)) ]
 |> make "Protokeep - Fsharp Console Example"

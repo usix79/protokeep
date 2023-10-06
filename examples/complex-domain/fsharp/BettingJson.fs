@@ -1,25 +1,30 @@
-namespace Protokeep.FsharpJsonConverters
+namespace Protokeep.FsharpJson
+
 open System.Text.Json
-open Protokeep.FsharpJsonConvertersHelpers
-type ConvertBetting () =
-    static member DefaultOutcomeResult =
-        lazy Betting.OutcomeResult.Unknown
-    static member OutcomeResultFromString = function
+open Protokeep
+
+type ConvertBetting() =
+
+    static member OutcomeResultFromString =
+        function
         | "OutcomeResultWin" -> Betting.OutcomeResult.Win
         | "OutcomeResultLose" -> Betting.OutcomeResult.Lose
         | "OutcomeResultVoid" -> Betting.OutcomeResult.Void
         | "OutcomeResultCanceled" -> Betting.OutcomeResult.Canceled
         | _ -> Betting.OutcomeResult.Unknown
-    static member OutcomeResultToString = function
+
+    static member OutcomeResultToString =
+        function
         | Betting.OutcomeResult.Win -> "OutcomeResultWin"
         | Betting.OutcomeResult.Lose -> "OutcomeResultLose"
         | Betting.OutcomeResult.Void -> "OutcomeResultVoid"
         | Betting.OutcomeResult.Canceled -> "OutcomeResultCanceled"
         | _ -> "Unknown"
-    static member OutcomeFromJson (reader: byref<Utf8JsonReader>): Betting.Outcome =
+
+    static member OutcomeFromJson(reader: byref<Utf8JsonReader>): Betting.Outcome =
         let mutable y = Betting.Outcome.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Empty")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.True
@@ -56,11 +61,11 @@ type ConvertBetting () =
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
         writer.WriteEndObject()
-    static member OutcomeCasePricedWithProbFromJson (reader: byref<Utf8JsonReader>) =
+    static member OutcomeCasePricedWithProbFromJson(reader: byref<Utf8JsonReader>) =
         let mutable price = 0m
         let mutable prob = 0.f
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Price")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -79,18 +84,13 @@ type ConvertBetting () =
         writer.WritePropertyName("Prob")
         writer.WriteNumberValue(prob)
         writer.WriteEndObject()
-    static member DefaultWinner3Way: Lazy<Betting.Winner3Way> =
-        lazy {
-            Win1 = Betting.Outcome.Unknown
-            Draw = Betting.Outcome.Unknown
-            Win2 = Betting.Outcome.Unknown
-        }
-    static member Winner3WayFromJson (reader: byref<Utf8JsonReader>): Betting.Winner3Way =
+
+    static member Winner3WayFromJson(reader: byref<Utf8JsonReader>): Betting.Winner3Way =
         let mutable vWin1 = Betting.Outcome.Unknown
         let mutable vDraw = Betting.Outcome.Unknown
         let mutable vWin2 = Betting.Outcome.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Win1")) then
                     vWin1 <- ConvertBetting.OutcomeFromJson(&reader)
@@ -113,18 +113,13 @@ type ConvertBetting () =
         writer.WritePropertyName("Win2")
         ConvertBetting.OutcomeToJson(&writer, x.Win2)
         writer.WriteEndObject()
-    static member DefaultHandicap: Lazy<Betting.Handicap> =
-        lazy {
-            Value = 0m
-            Win1 = Betting.Outcome.Unknown
-            Win2 = Betting.Outcome.Unknown
-        }
-    static member HandicapFromJson (reader: byref<Utf8JsonReader>): Betting.Handicap =
+
+    static member HandicapFromJson(reader: byref<Utf8JsonReader>): Betting.Handicap =
         let mutable vValue = 0m
         let mutable vWin1 = Betting.Outcome.Unknown
         let mutable vWin2 = Betting.Outcome.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Value")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -149,18 +144,13 @@ type ConvertBetting () =
         writer.WritePropertyName("Win2")
         ConvertBetting.OutcomeToJson(&writer, x.Win2)
         writer.WriteEndObject()
-    static member DefaultTotal: Lazy<Betting.Total> =
-        lazy {
-            Value = 0m
-            Over = Betting.Outcome.Unknown
-            Under = Betting.Outcome.Unknown
-        }
-    static member TotalFromJson (reader: byref<Utf8JsonReader>): Betting.Total =
+
+    static member TotalFromJson(reader: byref<Utf8JsonReader>): Betting.Total =
         let mutable vValue = 0m
         let mutable vOver = Betting.Outcome.Unknown
         let mutable vUnder = Betting.Outcome.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Value")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -185,16 +175,12 @@ type ConvertBetting () =
         writer.WritePropertyName("Under")
         ConvertBetting.OutcomeToJson(&writer, x.Under)
         writer.WriteEndObject()
-    static member DefaultScore: Lazy<Betting.Score> =
-        lazy {
-            S1 = 0
-            S2 = 0
-        }
-    static member ScoreFromJson (reader: byref<Utf8JsonReader>): Betting.Score =
+
+    static member ScoreFromJson(reader: byref<Utf8JsonReader>): Betting.Score =
         let mutable vS1 = 0
         let mutable vS2 = 0
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("S1")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -216,16 +202,12 @@ type ConvertBetting () =
         writer.WritePropertyName("S2")
         writer.WriteNumberValue(x.S2)
         writer.WriteEndObject()
-    static member DefaultScoreOutcome: Lazy<Betting.ScoreOutcome> =
-        lazy {
-            Score = ConvertBetting.DefaultScore.Value
-            Outcome = Betting.Outcome.Unknown
-        }
-    static member ScoreOutcomeFromJson (reader: byref<Utf8JsonReader>): Betting.ScoreOutcome =
+
+    static member ScoreOutcomeFromJson(reader: byref<Utf8JsonReader>): Betting.ScoreOutcome =
         let mutable vScore = ConvertBetting.DefaultScore.Value
         let mutable vOutcome = Betting.Outcome.Unknown
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Score")) then
                     vScore <- ConvertBetting.ScoreFromJson(&reader)
@@ -243,14 +225,11 @@ type ConvertBetting () =
         writer.WritePropertyName("Outcome")
         ConvertBetting.OutcomeToJson(&writer, x.Outcome)
         writer.WriteEndObject()
-    static member DefaultCorrectScore: Lazy<Betting.CorrectScore> =
-        lazy {
-            Scores = List.empty
-        }
-    static member CorrectScoreFromJson (reader: byref<Utf8JsonReader>): Betting.CorrectScore =
+
+    static member CorrectScoreFromJson(reader: byref<Utf8JsonReader>): Betting.CorrectScore =
         let mutable vScores = ResizeArray()
-        if reader.TokenType = JsonTokenType.StartObject || reader.Read() && reader.TokenType = JsonTokenType.StartObject then
-            while (reader.Read() && reader.TokenType <> JsonTokenType.EndObject) do
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Scores")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.StartArray then
@@ -268,3 +247,4 @@ type ConvertBetting () =
         writer.WritePropertyName("Scores")
         writer.WriteStartArray(); (for v in x.Scores do ConvertBetting.ScoreOutcomeToJson(&writer, v)); writer.WriteEndArray()
         writer.WriteEndObject()
+

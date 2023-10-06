@@ -7,10 +7,10 @@ let commands: Command list =
       Protokeep.LockCmd.Instance
       Protokeep.ProtoCmd.Instance
       Protokeep.FsharpTypesCmd.Instance
-      Protokeep.FsharpProtoConvertersCmd.Instance
-      Protokeep.FsharpJsonConvertersCmd.Instance
-      Protokeep.FsharpMongoConvertersCmd.Instance
-      Protokeep.FableConvertersCmd.Instance ]
+      Protokeep.FsharpProtoCmd.Instance
+      Protokeep.FsharpJsonCmd.Instance
+      Protokeep.FsharpMongoCmd.Instance
+      Protokeep.FsharpFableCmd.Instance ]
 
 let processImports rootPath (module': Module) : Result<Module * TypesCache, string> =
     let prosessedFiles = Collections.Generic.HashSet<string>()
@@ -65,7 +65,7 @@ Protokeeper tool
     Usage:
         protokeep --help | -H
         protokeep --version | -V
-        protokeep <ProtokeepFileName> COMMAND ARGUMENTS
+        protokeep <ProtokeepFileName> COMMAND [-ns | --namespace namespace] [-o | --output] outputFile [--update-commons | --update-commons-in commonsFile] 
     Commands:
 """
 

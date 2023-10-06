@@ -4,13 +4,12 @@ open System.IO
 open MongoDB.Bson
 open MongoDB.Bson.IO
 open Domain
-open Protokeep.FsharpMongo
 
 
 [<EntryPoint>]
 let main argv =
 
-    Serializers.registerConverters ()
+    ConvertDomain.RegisterSerializers()
 
     let crossroad =
         { Id = 124

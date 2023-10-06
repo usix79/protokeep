@@ -1,25 +1,37 @@
-namespace Protokeep
+module FsharpFableHelpers =
+    open Fable.SimpleJson
 
-module FsharpTypes =
-    type Key =
-        | Value of string
-        | Items of Key list
-        | Inner of Key
+    let getProps =
+        function
+        | JObject p -> p
+        | _ -> Map.empty
 
-        override x.ToString() =
-            match x with
-            | Value v -> v
-            | Items keys -> keys |> List.map (fun key -> key.ToString()) |> String.concat ","
-            | Inner key -> $"({key})"
+    let ifBool action =
+        function
+        | (JBool v) -> action v
+        | _ -> ()
 
-    let (|TryFind|_|) f key = f key
+    let ifString action =
+        function
+        | (JString v) -> action v
+        | _ -> ()
 
-    type IVersioned =
-        abstract member Version: int with get, set
+    let ifNumber action =
+        function
+        | (JNumber v) -> action v
+        | _ -> ()
 
-module FsharpJsonHelpers =
-    open System.Text.Json
+    let ifObject action =
+        function
+        | (JObject v) -> action v
+        | _ -> ()
 
+    let ifArray action =
+        function
+        | (JArray v) -> action v
+        | _ -> ()
+
+    let toDateTime (v: string) = System.DateTime.Parse v
     let fromDateTime (v: System.DateTime) = v.ToString("O")
 
     let durationRegex =
@@ -64,11 +76,3 @@ module FsharpJsonHelpers =
 
     let fromTimeSpan (v: System.TimeSpan) =
         sprintf "%d.%ds" (int64 v.TotalSeconds) v.Milliseconds
-
-    let moveToStartObject (reader: byref<Utf8JsonReader>) =
-        reader.TokenType = JsonTokenType.StartObject
-        || reader.Read() && reader.TokenType = JsonTokenType.StartObject
-
-    let moveToEndObject (reader: byref<Utf8JsonReader>) =
-        reader.Read() = false || reader.TokenType = JsonTokenType.EndObject
-

@@ -3,7 +3,7 @@ module Protokeep.Codegen
 open System
 open System.Text
 open Types
-
+open Infra
 
 let line (txt: StringBuilder) (l: string) = txt.AppendLine(l) |> ignore
 
@@ -43,58 +43,79 @@ let firstCharToLower (name: string) =
         name
 
 
-module Program =
-    let checkLock module' locks typesCache =
-        Types.lock module' locks typesCache
-        |> Result.mapError (sprintf "When try to check current lock: %A")
-        |> Result.bind (fun newlocks ->
-            if locks.HasChanges newlocks then
-                Error "Lock file is not corresponded to types definition. Run Protokeep lock first."
-            else
-                Ok())
+module FsharpHelpers =
+    open FParsec
 
-    let rec checkArgUpdateCommons defaultName =
-        function
-        | [] -> None
-        | "--update-commons" :: _ -> Some defaultName
-        | "--update-commons-in" :: fileName :: _ -> Some fileName
-        | _ :: tail -> checkArgUpdateCommons defaultName tail
+    type ModuleDefinition = { Name: string; Body: string }
 
-    let rec checkArgNamespace =
-        function
-        | [] -> None
-        | "--namespace" :: ns :: _
-        | "-ns" :: ns :: _ -> Some ns
-        | _ :: tail -> checkArgNamespace tail
+    type FileDefinition =
+        { Namespace: string
+          Modules: ModuleDefinition list }
 
-module CoreFsharp =
-    let construct (modules: (string * string) seq) =
+    let ws<'u> : Parser<_, 'u> = skipMany (skipAnyOf " \t")
+    let wsnl<'u> : Parser<_, 'u> = ws >>. many (skipNewline <|> eof)
+
+    let identifier =
+        many1Satisfy (fun c -> isLetter c || isDigit c || c = '.' || c = '_')
+        |>> System.String
+
+    let namespaceParser = pstring "namespace" >>. ws >>. identifier
+
+    let moduleBodyParser =
+        many1Till (restOfLine true) (lookAhead ^ pstring "module" <|> (eof >>% ""))
+        |>> fun lines -> String.concat "\n" lines
+
+    let moduleParser =
+        pstring "module" >>. ws >>. identifier .>> ws .>> pstring "=" .>> wsnl
+        .>>. moduleBodyParser
+        |>> fun (name, body) ->
+            { Name = name
+              Body = $"module {name} =\n" + body }
+
+    let fileParser =
+        namespaceParser .>> wsnl .>>. many1 moduleParser
+        |>> fun (ns, modules) -> { Namespace = ns; Modules = modules }
+
+
+    let construct (ns: string) (modules: string seq) =
         let txt = StringBuilder()
-        line txt "namespace Protokeep"
+        line txt $"namespace {ns}"
+        line txt ""
 
-        for moduleName, moduleBody in modules do
-            line txt $"module {moduleName} ="
-            line txt moduleBody
+        for moduleBody in modules do
+            line txt ^ moduleBody.TrimEnd()
+            line txt ""
 
         txt.ToString()
 
-    let update (coreTxt: string) moduleName moduleBody : string =
-        let modules =
-            match coreTxt with
-            | txt when String.IsNullOrWhiteSpace txt -> [ moduleName, moduleBody ]
+    let update moduleName (text: string) : string =
+        let embeddedBody = loadEmbeddedFile $"{moduleName}.fs"
+
+        let ns, modules =
+            match text with
+            | txt when String.IsNullOrWhiteSpace txt -> "Protokeep", [ embeddedBody ]
             | txt ->
-                match Parsers.parseFsharpCoreDoc txt with
-                | Ok modules ->
-                    match modules |> List.tryFind (fun (name, _) -> name = moduleName) with
+                match run fileParser txt with
+                | Success(fileDefinition, _, _) ->
+                    match
+                        fileDefinition.Modules
+                        |> List.tryFind ^ fun module' -> module'.Name = moduleName
+                    with
                     | Some _ ->
-                        modules
-                        |> List.map (fun (name, body) ->
-                            if name = moduleName then
-                                (name, moduleBody)
-                            else
-                                (name, body))
-                    | None -> modules @ [ moduleName, moduleBody ]
+                        fileDefinition.Namespace,
+                        fileDefinition.Modules
+                        |> List.map
+                           ^ fun moduleDefinition ->
+                               if moduleDefinition.Name = moduleName then
+                                   embeddedBody
+                               else
+                                   moduleDefinition.Body
+                    | None ->
+                        fileDefinition.Namespace,
+                        fileDefinition.Modules
+                        |> List.map ^ fun moduleDefinition -> moduleDefinition.Body
+                        |> fun lst -> lst @ [ embeddedBody ]
 
-                | Error err -> failwithf "Parse Core File: %s" err
+                | Failure(err, _, _) -> failwithf "Parse common file: %s" err
 
-        construct modules
+        construct ns modules

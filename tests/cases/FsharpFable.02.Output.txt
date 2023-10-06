@@ -1,6 +1,6 @@
-namespace Protokeep.FableConverters
+namespace Tests.FsharpFable
 open Fable.SimpleJson
-open Protokeep.FableConverterHelpers
+open Protokeep.FsharpFable
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown

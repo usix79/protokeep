@@ -9,6 +9,8 @@ module private Impl =
     let ws<'u> : Parser<_, 'u> = skipMany (skipAnyOf " \t")
     let ws1<'u> : Parser<_, 'u> = skipMany1 (skipAnyOf " \t")
     let ts<'u> : Parser<_, 'u> = ws >>. (skipNewline <|> eof) // trailing spaces
+
+
     let keyword name = pstring name >>. ws1
 
     let boolOfOpt = Option.map (fun _ -> true) >> Option.defaultValue false
@@ -30,37 +32,39 @@ module private Impl =
             (fun name symbols -> {| Name = name; Symbols = symbols |})
 
     let type' =
-        choice[skipString "bool" |>> (fun () -> Bool)
-               skipString "string" |>> (fun () -> String)
-               skipString "int" |>> (fun () -> Int)
-               skipString "long" |>> (fun () -> Long)
-               skipString "float" |>> (fun () -> Float)
-               skipString "double" |>> (fun () -> Double)
-               skipString "bytes" |>> (fun () -> Bytes)
-               skipString "timestamp" |>> (fun () -> Timestamp)
-               skipString "duration" |>> (fun () -> Duration)
-               skipString "guid" |>> (fun () -> Guid)
+        choice
+            [ skipString "bool" |>> (fun () -> Bool)
+              skipString "string" |>> (fun () -> String)
+              skipString "int" |>> (fun () -> Int)
+              skipString "long" |>> (fun () -> Long)
+              skipString "float" |>> (fun () -> Float)
+              skipString "double" |>> (fun () -> Double)
+              skipString "bytes" |>> (fun () -> Bytes)
+              skipString "timestamp" |>> (fun () -> Timestamp)
+              skipString "duration" |>> (fun () -> Duration)
+              skipString "guid" |>> (fun () -> Guid)
 
-               skipString "decimal" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
-               |>> Decimal
+              skipString "decimal" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
+              |>> Decimal
 
-               complexName |>> Complex]
+              complexName |>> Complex ]
 
     let fullType' =
         type'
         >>= (fun t ->
             ws
             >>? opt (
-                choice[skipString "option" |>> (fun () -> Optional t)
-                       skipString "array" |>> (fun () -> Array t)
-                       skipString "list" |>> (fun () -> List t)
-                       skipString "map" |>> (fun () -> Map t)]
+                choice
+                    [ skipString "option" |>> (fun () -> Optional t)
+                      skipString "array" |>> (fun () -> Array t)
+                      skipString "list" |>> (fun () -> List t)
+                      skipString "map" |>> (fun () -> Map t) ]
             )
             |>> (Option.defaultValue t))
 
-    let indexKey' = choice[skipChar '.' >>. identifier |>> IndexKey.FieldKey]
+    let indexKey' = choice [ skipChar '.' >>. identifier |>> IndexKey.FieldKey ]
 
-    let indexValue' = choice[skipChar '.' >>. identifier |>> IndexValue.Field]
+    let indexValue' = choice [ skipChar '.' >>. identifier |>> IndexValue.Field ]
 
     let indexDefinition' =
         pipe2 (opt (indexKey' .>>? (between ws ws (skipString "=>")))) indexValue' (fun ikey ival ->
@@ -223,21 +227,6 @@ module private Impl =
     let lockDocument =
         spaces >>. many (choice [ enumLock; recordLock; unionLock ] .>> spaces) .>> eof
 
-    let fsharpCoreDocument =
-        spaces
-        >>. pstring "namespace"
-        >>. ws1
-        >>. pstring "Protokeep"
-        >>. skipRestOfLine true
-        >>. pstring "module"
-        >>. many (
-            pipe2
-                (ws1 >>. identifier .>> ws1 .>> pchar '=' .>> ts)
-                (many1Till (restOfLine true) (skipString "module" <|> eof))
-                (fun moduleName moduleBody -> moduleName, moduleBody |> String.concat "\n")
-        )
-        .>> eof
-
 let parsePkDoc input =
     match run Impl.pkDocument input with
     | Success(model, _, _) -> Result.Ok model
@@ -245,10 +234,5 @@ let parsePkDoc input =
 
 let parseLockDoc input =
     match run Impl.lockDocument input with
-    | Success(model, _, _) -> Result.Ok model
-    | Failure(err, _, _) -> Result.Error err
-
-let parseFsharpCoreDoc input =
-    match run Impl.fsharpCoreDocument input with
     | Success(model, _, _) -> Result.Ok model
     | Failure(err, _, _) -> Result.Error err

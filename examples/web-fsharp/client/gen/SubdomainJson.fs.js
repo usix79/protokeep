@@ -1,5 +1,4 @@
 import { class_type } from "../fable_modules/fable-library.4.1.4/Reflection.js";
-import { Lazy } from "../fable_modules/fable-library.4.1.4/Util.js";
 
 export class ConvertDomainSubdomain {
     constructor() {
@@ -7,15 +6,11 @@ export class ConvertDomainSubdomain {
 }
 
 export function ConvertDomainSubdomain_$reflection() {
-    return class_type("Protokeep.FableConverters.ConvertDomainSubdomain", void 0, ConvertDomainSubdomain);
+    return class_type("Domain.JsonConverters.ConvertDomainSubdomain", void 0, ConvertDomainSubdomain);
 }
 
 export function ConvertDomainSubdomain_$ctor() {
     return new ConvertDomainSubdomain();
-}
-
-export function ConvertDomainSubdomain_get_DefaultStatus() {
-    return new Lazy(() => 0);
 }
 
 export function ConvertDomainSubdomain_get_StatusFromString() {
