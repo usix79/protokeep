@@ -33,7 +33,7 @@ let rec typeToString (type': Type) =
     | String -> "string"
     | Int -> "int"
     | Long -> "long"
-    | Float -> "float"
+    | Single -> "float"
     | Double -> "double"
     | Money scale -> $"money({scale})"
     | Bytes -> "bytes"

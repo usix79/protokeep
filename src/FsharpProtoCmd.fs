@@ -193,7 +193,7 @@ let rec fieldFromProtobuf type' =
     | String
     | Int
     | Long
-    | Float
+    | Single
     | Double -> None
     | Money scale -> Some $"fun v -> (decimal v) / {10. ** float (scale)}m"
     | Bytes -> Some "fun v -> v.ToByteArray()"
@@ -224,7 +224,7 @@ let rec fieldToProtobuf type' =
     | String
     | Int
     | Long
-    | Float
+    | Single
     | Double -> None
     | Money scale -> Some $"fun v -> int (v * {10. ** float (scale)}m)"
     | Bytes -> Some "Google.Protobuf.ByteString.CopyFrom"

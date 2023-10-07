@@ -268,7 +268,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | String -> $"{helpers}.readString(&reader)"
     | Int -> $"{helpers}.readInt(&reader)"
     | Long -> $"{helpers}.readLong(&reader)"
-    | Float -> $"{helpers}.readSingle(&reader)"
+    | Single -> $"{helpers}.readSingle(&reader)"
     | Double -> $"{helpers}.readDouble(&reader)"
     | Money scale -> $"{helpers}.readMoney(&reader, {scale})"
     | Bytes -> $"{helpers}.readBytes(&reader)"
@@ -295,7 +295,7 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         | String -> $"writer.WriteStringValue({vName})"
         | Int
         | Long
-        | Float
+        | Single
         | Double
         | Money _ -> $"writer.WriteNumberValue({vName})"
         | Bytes -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"

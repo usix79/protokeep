@@ -214,7 +214,7 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         | String -> $"{helpers}.ifString (fun v -> {leftOp}v{rightOp})"
         | Int
         | Long
-        | Float
+        | Single
         | Double -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Money scale -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Bytes -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
@@ -248,7 +248,7 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         | String -> $"JString ({vName})"
         | Int
         | Long
-        | Float
+        | Single
         | Double -> $"JNumber (unbox {vName})"
         | Money _ -> $"JNumber (unbox {vName})"
         | Bytes -> $"JString ({vName} |> System.Convert.ToBase64String)"

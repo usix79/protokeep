@@ -4,7 +4,7 @@ open FsToolkit.ErrorHandling
 open Shared
 
 
-let protokeepDir = "./protokeep/"
+let protokeepDir = "./schema/"
 
 let inputFiles = [ "Betting"; "BettingFootball" ] |> List.map (fun x -> $"{x}")
 

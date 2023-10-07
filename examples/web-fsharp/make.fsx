@@ -5,7 +5,7 @@ open FsToolkit.ErrorHandling
 open Shared
 
 
-let protokeepDir = "./domain/"
+let protokeepDir = "./schema/"
 let inputFiles = [ "Domain"; "Subdomain" ]
 let serverDir = "./server/gen/"
 let clientDir = "./client/gen/"

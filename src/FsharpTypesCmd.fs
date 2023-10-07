@@ -37,6 +37,9 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
             line txt $""
         | Record info ->
+            if info.IsStruct then
+                line txt $"[<Struct>]"
+
             line txt $"type {firstName info.Name} = {{"
 
             for field in info.Fields do
@@ -79,6 +82,9 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
 
         | Union info ->
+            if info.IsStruct then
+                line txt $"[<Struct>]"
+
             line txt $"type {firstName info.Name} ="
             line txt $"    | Unknown"
 
@@ -86,7 +92,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                 let fieldsStr =
                     case.Fields
                     |> List.map (fun field -> $"{field.Name}: {typeToString ns field.Type}")
-                    |> String.concat "*"
+                    |> String.concat " * "
                     |> (fun str -> if str <> "" then " of " + str else str)
 
                 line txt $"    | {firstName case.Name}{fieldsStr}"
@@ -115,7 +121,7 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | String -> "string"
     | Int -> "int"
     | Long -> "int64"
-    | Float -> "float32"
+    | Single -> "float32"
     | Double -> "float"
     | Money _ -> "decimal"
     | Bytes -> "byte array"
@@ -150,7 +156,7 @@ let caseParams (fields: FieldInfo list) =
         fields
         |> List.map ^ fun info -> $"{info.Name}'"
         |> String.concat ", "
-        |> fun txt -> $" ({txt})"
+        |> fun txt -> $"({txt})"
 
 let keyExpression (typesCache: TypesCache) (keyFields: FieldInfo list) =
     keyFields
@@ -195,7 +201,7 @@ let recordKeyMembers ns (typesCache: TypesCache) txt typeName keyFields =
     line txt $""
 
 let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (info: UnionInfo) =
-    line txt "    static member MakeUnknownKey () = Key.Value \"0\""
+    line txt "    static member MakeUnknownKey() = Key.Value \"0\""
 
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Keys
@@ -205,12 +211,13 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
             | [] -> $"Key.Value \"{caseLock.Num}\""
             | keyFields -> $"Key.Items [Key.Value \"{caseLock.Num}\"; {keyExpression typesCache keyFields}]"
 
-        line txt $"    static member Make{caseLock.Name}Key ({keyParams ns typesCache keyFields}) = {keyExpression}"
+        line txt $"    static member Make{caseLock.Name}Key({keyParams ns typesCache keyFields}) = {keyExpression}"
 
+    line txt $""
     line txt $"    interface IEntity with"
     line txt $"        member x.Key ="
     line txt $"            match x with"
-    line txt $"            | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
+    line txt $"            | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey()"
 
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
@@ -219,7 +226,7 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
         let leftSide =
             $"{firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields}"
 
-        line txt $"            | {leftSide} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+        line txt $"            | {leftSide} -> {firstName info.Name}.Make{caseLock.Name}Key({keyArgs})"
 
     line txt $""
 
@@ -403,7 +410,7 @@ let defValue isMutable =
     | String -> "\"\""
     | Int -> "0"
     | Long -> "0L"
-    | Float -> "0.f"
+    | Single -> "0.f"
     | Double -> "0."
     | Money _ -> "0m"
     | Bytes -> "Array.empty"

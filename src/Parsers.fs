@@ -13,6 +13,9 @@ module private Impl =
 
     let keyword name = pstring name >>. ws1
 
+    let modifier name =
+        (keyword name >>% true) <|> (preturn false)
+
     let boolOfOpt = Option.map (fun _ -> true) >> Option.defaultValue false
 
     let identifier =
@@ -37,13 +40,12 @@ module private Impl =
               skipString "string" |>> (fun () -> String)
               skipString "int" |>> (fun () -> Int)
               skipString "long" |>> (fun () -> Long)
-              skipString "float" |>> (fun () -> Float)
+              skipString "single" |>> (fun () -> Single)
               skipString "double" |>> (fun () -> Double)
               skipString "bytes" |>> (fun () -> Bytes)
               skipString "timestamp" |>> (fun () -> Timestamp)
               skipString "duration" |>> (fun () -> Duration)
               skipString "guid" |>> (fun () -> Guid)
-
               skipString "money" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
               |>> Money
 
@@ -93,11 +95,15 @@ module private Impl =
                    Indexes = idxs |})
 
     let record' =
-        keyword "record"
-        >>. pipe2
-            (identifier .>> ws .>> skipChar '=' .>> spaces)
-            (between (pchar '{') (pchar '}' .>> spaces) (sepEndBy field' (pchar ';' <|> newline)))
-            (fun name fields -> {| Name = name; Fields = fields |})
+        keyword "record" >>. modifier "struct"
+        >>= fun isStruct ->
+            pipe2
+                (identifier .>> ws .>> skipChar '=' .>> spaces)
+                (between (pchar '{') (pchar '}' .>> spaces) (sepEndBy field' (pchar ';' <|> newline)))
+                (fun name fields ->
+                    {| Name = name
+                       IsStruct = isStruct
+                       Fields = fields |})
 
     let unionCaseField' =
         pipe3
@@ -114,11 +120,15 @@ module private Impl =
             {| Name = name; Fields = fields |})
 
     let union' =
-        keyword "union"
-        >>. pipe2
-            (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
-            (sepBy1 (between spaces spaces unionCase') (pchar '|'))
-            (fun name cases -> {| Name = name; Cases = cases |})
+        keyword "union" >>. modifier "struct"
+        >>= fun isStruct ->
+            pipe2
+                (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
+                (sepBy1 (between spaces spaces unionCase') (pchar '|'))
+                (fun name cases ->
+                    {| Name = name
+                       IsSturuct = isStruct
+                       Cases = cases |})
 
     let imports' =
         let normalCharSnippet = manySatisfy (fun c -> c <> '"' && c <> '\n')
@@ -145,6 +155,7 @@ module private Impl =
                               |>> (fun r ->
                                   Record
                                       { Name = Types.mergeName moduleName r.Name
+                                        IsStruct = r.IsStruct
                                         Fields =
                                           r.Fields
                                           |> List.map (fun fr ->
@@ -164,10 +175,12 @@ module private Impl =
 
                                   Union
                                       { Name = unionName
+                                        IsStruct = r.IsSturuct
                                         Cases =
                                           r.Cases
                                           |> List.map (fun cr ->
                                               { Name = Types.mergeName unionName cr.Name
+                                                IsStruct = r.IsSturuct
                                                 Fields =
                                                   cr.Fields
                                                   |> Option.map (fun fieldsList ->

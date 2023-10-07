@@ -6,7 +6,7 @@ enum OutcomeResult =
     | Void
     | Canceled
 
-union Outcome =
+union struct Outcome =
     | Empty
     | Priced of price: money(3)
     | PricedWithProb of price: money(3) * prob: float
@@ -30,7 +30,7 @@ record Total = {
     Under: Outcome idx
 }
 
-record Score = {
+record struct Score = {
     S1 : int key
     S2 : int key
 }

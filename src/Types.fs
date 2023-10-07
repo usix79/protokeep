@@ -10,7 +10,7 @@ type Type =
     | Int
     | Long
     | Money of scale: int
-    | Float
+    | Single
     | Double
     | Bytes
     | Timestamp
@@ -49,7 +49,8 @@ type FieldInfo =
 
 type RecordInfo =
     { Name: ComplexName
-      Fields: FieldInfo list }
+      Fields: FieldInfo list
+      IsStruct: bool }
 
     member x.HasKey = x.Fields |> List.exists ^ fun f -> f.IsKey
     member x.Keys = x.Fields |> List.filter ^ fun x -> x.IsKey
@@ -63,7 +64,8 @@ type RecordInfo =
 
 type UnionInfo =
     { Name: ComplexName
-      Cases: RecordInfo list }
+      Cases: RecordInfo list
+      IsStruct: bool }
 
     member x.Indexes typesCache =
         x.Cases
@@ -371,8 +373,8 @@ module Types =
         | Int, Bool -> true
         | Long, Int -> true
         | Long, Bool -> true
-        | Double, Float -> true
-        | Float, Double -> true
+        | Double, Single -> true
+        | Single, Double -> true
         | _ -> from = to'
 
     let lockRecord

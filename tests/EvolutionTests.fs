@@ -105,6 +105,7 @@ let ``Simple Record`` () =
           Items =
             [ Record
                   { Name = ComplexName [ "Crossroad"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Int
@@ -148,6 +149,7 @@ let ``Union`` () =
           Items =
             [ Record
                   { Name = ComplexName [ "Log"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Int
@@ -161,10 +163,13 @@ let ``Union`` () =
                           Indexes = [] } ] }
               Union
                   { Name = ComplexName [ "ServiceCheck"; "Domain" ]
+                    IsStruct = false
                     Cases =
                       [ { Name = ComplexName [ "Random"; "ServiceCheck"; "Domain" ]
+                          IsStruct = false
                           Fields = [] }
                         { Name = ComplexName [ "Planned"; "ServiceCheck"; "Domain" ]
+                          IsStruct = false
                           Fields =
                             [ { Name = "What"
                                 Type = String
@@ -222,6 +227,7 @@ let ``Missed Field Record`` () =
           Items =
             [ Record
                   { Name = ComplexName [ "Crossroad"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Int
@@ -260,6 +266,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
           Items =
             [ Record
                   { Name = ComplexName [ "Crossroad"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Long
@@ -302,6 +309,7 @@ let UnacceptableEvolutionOfAFieldType () =
           Items =
             [ Record
                   { Name = ComplexName [ "Crossroad"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Guid
@@ -345,6 +353,7 @@ let MissedFieldInUnion () =
           Items =
             [ Record
                   { Name = ComplexName [ "Log"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Int
@@ -358,8 +367,10 @@ let MissedFieldInUnion () =
                           Indexes = [] } ] }
               ModuleItem.Union
                   { Name = ComplexName [ "ServiceCheck"; "Domain" ]
+                    IsStruct = false
                     Cases =
                       [ { Name = ComplexName [ "Random"; "ServiceCheck"; "Domain" ]
+                          IsStruct = false
                           Fields = [] } ] } ] }
 
     let lock =
@@ -387,6 +398,7 @@ let AddFieldInUnion () =
           Items =
             [ Record
                   { Name = ComplexName [ "Log"; "Domain" ]
+                    IsStruct = false
                     Fields =
                       [ { Name = "Id"
                           Type = Int
@@ -400,10 +412,13 @@ let AddFieldInUnion () =
                           Indexes = [] } ] }
               ModuleItem.Union
                   { Name = ComplexName [ "ServiceCheck"; "Domain" ]
+                    IsStruct = false
                     Cases =
                       [ { Name = ComplexName [ "Random"; "ServiceCheck"; "Domain" ]
+                          IsStruct = false
                           Fields = [] }
                         { Name = ComplexName [ "Planned"; "ServiceCheck"; "Domain" ]
+                          IsStruct = false
                           Fields =
                             [ { Name = "What"
                                 Type = String
@@ -421,6 +436,7 @@ let AddFieldInUnion () =
                                 IsVersion = false
                                 Indexes = [] } ] }
                         { Name = ComplexName [ "NewCase"; "ServiceCheck"; "Domain" ]
+                          IsStruct = false
                           Fields = [] } ] } ] }
 
     let lock = []
