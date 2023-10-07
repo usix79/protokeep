@@ -105,7 +105,7 @@ let rec typeToString (type': Type) =
     | Long -> "int64"
     | Float -> "float"
     | Double -> "double"
-    | Decimal _ -> "int64"
+    | Money _ -> "int32"
     | Bytes -> "bytes"
     | Timestamp -> "google.protobuf.Timestamp"
     | Duration -> "google.protobuf.Duration"

@@ -44,8 +44,8 @@ module private Impl =
               skipString "duration" |>> (fun () -> Duration)
               skipString "guid" |>> (fun () -> Guid)
 
-              skipString "decimal" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
-              |>> Decimal
+              skipString "money" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
+              |>> Money
 
               complexName |>> Complex ]
 

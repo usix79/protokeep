@@ -89,10 +89,10 @@ type ConvertBettingFootball() =
         | _ -> "Unknown"
 
     static member MarketItemFromJson(reader: byref<Utf8JsonReader>): Betting.Football.MarketItem =
-        let mutable vStatistic = ConvertBettingFootball.DefaultStatistic.Value
-        let mutable vPeriod = ConvertBettingFootball.DefaultPeriod.Value
+        let mutable vStatistic = Betting.Football.Statistic.Unknown
+        let mutable vPeriod = Betting.Football.Period.Unknown
         let mutable vMarket = Betting.Football.Market.Unknown
-        let mutable vStatus = ConvertBettingFootball.DefaultStatus.Value
+        let mutable vStatus = Betting.Football.Status.Unknown
         let mutable vVersion = 0
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do

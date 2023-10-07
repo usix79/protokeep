@@ -4,9 +4,9 @@
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <Title>Protokeep</Title>
     <Description>Protokeep is a tool for keeping evolutionary compatibility of the data schemas</Description>
-    <AssemblyVersion>0.3.9.24</AssemblyVersion>
-    <FileVersion>0.3.9.24</FileVersion>
-    <Version>0.3.9.24</Version>
+    <AssemblyVersion>0.3.9.25</AssemblyVersion>
+    <FileVersion>0.3.9.25</FileVersion>
+    <Version>0.3.9.25</Version>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>protokeep</ToolCommandName>
     <PackageOutputPath>../nupkg</PackageOutputPath>
@@ -14,7 +14,7 @@
     <Authors>usix79</Authors>
     <PackageTags>Schema;Codegen;Fsharp;Fable;Protobuf;MongoDb;Binary;Json;Bson</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/usix79/protokeeper</RepositoryUrl>
+    <RepositoryUrl>https://github.com/usix79/protokeep</RepositoryUrl>
     <PackageReleaseNotesFile>./RELESE_NOTES.md</PackageReleaseNotesFile>
   </PropertyGroup>
   <ItemGroup>

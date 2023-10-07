@@ -77,7 +77,7 @@ type ConvertDomain() =
         y.IsMonitored <- x.IsMonitored
         y.Xpos <- x.Xpos
         y.Ypos <- x.Ypos
-        y.Ratio <- x.Ratio |> fun v -> int64(v * 100m)
+        y.Ratio <- x.Ratio |> fun v -> int (v * 100m)
         y.LastChecked <- x.LastChecked |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime
         y.ServiceInterval <- x.ServiceInterval |> Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan
         y.CurrentLight <- x.CurrentLight |> ConvertDomain.ToProtobuf

@@ -10,9 +10,9 @@ union Betting.Outcome
     case Resulted = 4
 record Betting.Outcome.Empty
 record Betting.Outcome.Priced
-    field price decimal(3) = 1
+    field price money(3) = 1
 record Betting.Outcome.PricedWithProb
-    field price decimal(3) = 1
+    field price money(3) = 1
     field prob float = 2
 record Betting.Outcome.Resulted
     field result Betting.OutcomeResult = 1
@@ -21,11 +21,11 @@ record Betting.Winner3Way
     field Draw Betting.Outcome = 2
     field Win2 Betting.Outcome = 3
 record Betting.Handicap
-    field Value decimal(2) = 1
+    field Value money(2) = 1
     field Win1 Betting.Outcome = 2
     field Win2 Betting.Outcome = 3
 record Betting.Total
-    field Value decimal(2) = 1
+    field Value money(2) = 1
     field Over Betting.Outcome = 2
     field Under Betting.Outcome = 3
 record Betting.Score

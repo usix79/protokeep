@@ -8,8 +8,8 @@ enum OutcomeResult =
 
 union Outcome =
     | Empty
-    | Priced of price: decimal(3)
-    | PricedWithProb of price: decimal(3) * prob: float
+    | Priced of price: money(3)
+    | PricedWithProb of price: money(3) * prob: float
     | Resulted of result: OutcomeResult
 
 record Winner3Way = {
@@ -19,13 +19,13 @@ record Winner3Way = {
 }
 
 record Handicap = {
-    Value:decimal(2) key
+    Value:money(2) key
     Win1: Outcome idx
     Win2: Outcome idx
 }
 
 record Total = {
-    Value:decimal(2) key
+    Value:money(2) key
     Over: Outcome idx
     Under: Outcome idx
 }

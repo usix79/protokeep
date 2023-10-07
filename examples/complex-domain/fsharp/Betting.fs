@@ -21,13 +21,15 @@ type Outcome =
     static member MakePricedKey () = Key.Value "2"
     static member MakePricedWithProbKey () = Key.Value "3"
     static member MakeResultedKey () = Key.Value "4"
-    member x.Key =
-        match x with
-        | Outcome.Unknown -> Outcome.MakeUnknownKey ()
-        | Outcome.Empty -> Outcome.MakeEmptyKey ()
-        | Outcome.Priced (price') -> Outcome.MakePricedKey ()
-        | Outcome.PricedWithProb (price', prob') -> Outcome.MakePricedWithProbKey ()
-        | Outcome.Resulted (result') -> Outcome.MakeResultedKey ()
+    interface IEntity with
+        member x.Key =
+            match x with
+            | Outcome.Unknown -> Outcome.MakeUnknownKey ()
+            | Outcome.Empty -> Outcome.MakeEmptyKey ()
+            | Outcome.Priced (price') -> Outcome.MakePricedKey ()
+            | Outcome.PricedWithProb (price', prob') -> Outcome.MakePricedWithProbKey ()
+            | Outcome.Resulted (result') -> Outcome.MakeResultedKey ()
+
 
 type Winner3Way = {
     Win1 : Outcome
@@ -41,15 +43,20 @@ with
             Draw = Outcome.Unknown
             Win2 = Outcome.Unknown
         }
+
     member x.ItemValues () =
         [| x.Win1; x.Draw; x.Win2 |]
+
     member x.ItemIndexes () =
         [| Key.Value "1"; Key.Value "2"; Key.Value "3" |]
+
+
     member x.Item = function
         | Key.Value "1" -> Some x.Win1
         | Key.Value "2" -> Some x.Draw
         | Key.Value "3" -> Some x.Win2
         | _ -> None
+
     member x.WithItems (items:Map<Key,_>) =
         {x with
             Win1 = items.TryFind(Key.Value "1") |> Option.defaultValue x.Win1
@@ -69,17 +76,25 @@ with
             Win1 = Outcome.Unknown
             Win2 = Outcome.Unknown
         }
+
     static member MakeKey (value': decimal) =
         Key.Value (value'.ToString())
-    member x.Key = Handicap.MakeKey (x.Value)
+
+    interface IEntity with
+        member x.Key = Handicap.MakeKey (x.Value)
+
     member x.ItemValues () =
         [| x.Win1; x.Win2 |]
+
     member x.ItemIndexes () =
         [| Key.Value "2"; Key.Value "3" |]
+
+
     member x.Item = function
         | Key.Value "2" -> Some x.Win1
         | Key.Value "3" -> Some x.Win2
         | _ -> None
+
     member x.WithItems (items:Map<Key,_>) =
         {x with
             Win1 = items.TryFind(Key.Value "2") |> Option.defaultValue x.Win1
@@ -98,17 +113,25 @@ with
             Over = Outcome.Unknown
             Under = Outcome.Unknown
         }
+
     static member MakeKey (value': decimal) =
         Key.Value (value'.ToString())
-    member x.Key = Total.MakeKey (x.Value)
+
+    interface IEntity with
+        member x.Key = Total.MakeKey (x.Value)
+
     member x.ItemValues () =
         [| x.Over; x.Under |]
+
     member x.ItemIndexes () =
         [| Key.Value "2"; Key.Value "3" |]
+
+
     member x.Item = function
         | Key.Value "2" -> Some x.Over
         | Key.Value "3" -> Some x.Under
         | _ -> None
+
     member x.WithItems (items:Map<Key,_>) =
         {x with
             Over = items.TryFind(Key.Value "2") |> Option.defaultValue x.Over
@@ -125,9 +148,12 @@ with
             S1 = 0
             S2 = 0
         }
+
     static member MakeKey (s1': int, s2': int) =
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
-    member x.Key = Score.MakeKey (x.S1, x.S2)
+
+    interface IEntity with
+        member x.Key = Score.MakeKey (x.S1, x.S2)
 
 type ScoreOutcome = {
     Score : Score
@@ -148,15 +174,20 @@ with
         lazy {
             Scores = List.empty
         }
+
     member x.ItemValues () =
         [| yield! x.Scores |> Seq.map (fun v -> v.Outcome) |]
+
     member x.ItemIndexes () =
         [| yield! x.Scores |> Seq.map (fun v -> v.Score.Key) |]
+
     member x.TryFindItemInScores (key:Key) =
         x.Scores |> Seq.tryFind (fun i -> i.Score.Key = key)
+
     member x.Item = function
         | TryFind x.TryFindItemInScores v -> Some v.Outcome
         | _ -> None
+
     member x.WithItems (items:Map<Key,_>) =
         {x with
             Scores = x.Scores |> List.map (fun v -> items.TryFind v.Score.Key |> Option.map (fun i -> {v with Outcome = i}) |> Option.defaultValue v)

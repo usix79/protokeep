@@ -16,7 +16,7 @@ record Crossroad = {
     IsMonitored: bool
     Xpos: float
     Ypos: double
-    Ratio: decimal(2)
+    Ratio: money(2)
     LastChecked: timestamp
     ServiceInterval: duration
     CurrentLight: TrafficLight

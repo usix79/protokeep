@@ -9,7 +9,7 @@ type Type =
     | String
     | Int
     | Long
-    | Decimal of scale: int
+    | Money of scale: int
     | Float
     | Double
     | Bytes

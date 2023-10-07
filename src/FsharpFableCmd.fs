@@ -216,7 +216,7 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         | Long
         | Float
         | Double -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
-        | Decimal scale -> $"{helpers}.ifNumber (fun v -> {leftOp}v / {10. ** float (scale)}. |> unbox{rightOp})"
+        | Money scale -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Bytes -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
         | Timestamp -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toDateTime{rightOp})"
         | Duration -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toTimeSpan{rightOp})"
@@ -250,7 +250,7 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         | Long
         | Float
         | Double -> $"JNumber (unbox {vName})"
-        | Decimal scale -> $"JNumber ({vName} * {10. ** float (scale)}m |> System.Decimal.Truncate |> unbox)"
+        | Money _ -> $"JNumber (unbox {vName})"
         | Bytes -> $"JString ({vName} |> System.Convert.ToBase64String)"
         | Timestamp -> $"JString ({vName} |> {helpers}.fromDateTime)"
         | Duration -> $"JString ({vName} |> {helpers}.fromTimeSpan)"

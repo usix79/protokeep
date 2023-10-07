@@ -195,7 +195,7 @@ let rec fieldFromProtobuf type' =
     | Long
     | Float
     | Double -> None
-    | Decimal scale -> Some $"fun v -> (decimal v) / {10. ** float (scale)}m"
+    | Money scale -> Some $"fun v -> (decimal v) / {10. ** float (scale)}m"
     | Bytes -> Some "fun v -> v.ToByteArray()"
     | Timestamp -> Some "fun v -> v.ToDateTime()"
     | Duration -> Some "fun v -> v.ToTimeSpan()"
@@ -226,7 +226,7 @@ let rec fieldToProtobuf type' =
     | Long
     | Float
     | Double -> None
-    | Decimal scale -> Some $"fun v -> int64(v * {10. ** float (scale)}m)"
+    | Money scale -> Some $"fun v -> int (v * {10. ** float (scale)}m)"
     | Bytes -> Some "Google.Protobuf.ByteString.CopyFrom"
     | Timestamp -> Some "Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime"
     | Duration -> Some "Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan"

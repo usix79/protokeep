@@ -117,7 +117,7 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | Long -> "int64"
     | Float -> "float32"
     | Double -> "float"
-    | Decimal _ -> "decimal"
+    | Money _ -> "decimal"
     | Bytes -> "byte array"
     | Timestamp -> "System.DateTime"
     | Duration -> "System.TimeSpan"
@@ -162,7 +162,7 @@ let keyExpression (typesCache: TypesCache) (keyFields: FieldInfo list) =
            | String -> $"Key.Value ({vName})"
            | Int
            | Long
-           | Decimal _ -> $"Key.Value ({vName}.ToString())"
+           | Money _ -> $"Key.Value ({vName}.ToString())"
            | Guid -> $"Key.Value ({vName}.ToString())"
            | Types.IsRecord typesCache _
            | Types.IsUnion typesCache _ -> $"Key.Inner {firstCharToLower info.Name}Key"
@@ -405,7 +405,7 @@ let defValue isMutable =
     | Long -> "0L"
     | Float -> "0.f"
     | Double -> "0."
-    | Decimal _ -> "0m"
+    | Money _ -> "0m"
     | Bytes -> "Array.empty"
     | Timestamp -> "System.DateTime.MinValue"
     | Duration -> "System.TimeSpan.Zero"

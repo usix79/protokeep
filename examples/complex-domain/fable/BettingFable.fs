@@ -21,7 +21,7 @@ type ConvertBetting () =
         |> Seq.iter(fun pair ->
             match pair.Key with
             | "Empty" -> pair.Value |> FsharpFableHelpers.ifBool (fun v -> y <- Betting.Outcome.Empty)
-            | "Priced" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> y <- v / 1000. |> unbox |> Betting.Outcome.Priced)
+            | "Priced" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> y <- v |> unbox |> Betting.Outcome.Priced)
             | "PricedWithProb" -> pair.Value |> (fun v -> y <- v |> ConvertBetting.OutcomeCasePricedWithProbFromJson)
             | "Resulted" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> y <- v |> ConvertBetting.OutcomeResultFromString |> Betting.Outcome.Resulted)
             | _ -> () )
@@ -29,7 +29,7 @@ type ConvertBetting () =
     static member OutcomeToJson (x:Betting.Outcome) =
         match x with
         | Betting.Outcome.Empty -> "Empty", JBool (true)
-        | Betting.Outcome.Priced (price) -> "Priced", JNumber (price * 1000m |> System.Decimal.Truncate |> unbox)
+        | Betting.Outcome.Priced (price) -> "Priced", JNumber (unbox price)
         | Betting.Outcome.PricedWithProb (price,prob) -> "PricedWithProb", ConvertBetting.OutcomeCasePricedWithProbToJson (price,prob)
         | Betting.Outcome.Resulted (result) -> "Resulted", JString (result |> ConvertBetting.OutcomeResultToString)
         | _ -> "Unknown", JBool (true)
@@ -40,13 +40,13 @@ type ConvertBetting () =
         FsharpFableHelpers.getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
-            | "Price" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> price <- v / 1000. |> unbox)
+            | "Price" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> price <- v |> unbox)
             | "Prob" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> prob <- v |> unbox)
             | _ -> () )
         Betting.Outcome.PricedWithProb (price,prob)
     static member OutcomeCasePricedWithProbToJson (price,prob) =
         [
-           "Price", JNumber (price * 1000m |> System.Decimal.Truncate |> unbox)
+           "Price", JNumber (unbox price)
            "Prob", JNumber (unbox prob)
         ] |> Map.ofList |> JObject
     static member Winner3WayFromJson (json: Json): Betting.Winner3Way =
@@ -78,7 +78,7 @@ type ConvertBetting () =
         FsharpFableHelpers.getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
-            | "Value" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> vValue <- v / 100. |> unbox)
+            | "Value" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> vValue <- v |> unbox)
             | "Win1" -> pair.Value |> (fun v -> vWin1 <- v |> ConvertBetting.OutcomeFromJson)
             | "Win2" -> pair.Value |> (fun v -> vWin2 <- v |> ConvertBetting.OutcomeFromJson)
             | _ -> () )
@@ -89,7 +89,7 @@ type ConvertBetting () =
         }
     static member HandicapToJson (x: Betting.Handicap) =
         [
-           "Value", JNumber (x.Value * 100m |> System.Decimal.Truncate |> unbox)
+           "Value", JNumber (unbox x.Value)
            "Win1", (x.Win1 |> ConvertBetting.OutcomeToJson)
            "Win2", (x.Win2 |> ConvertBetting.OutcomeToJson)
         ] |> Map.ofList |> JObject
@@ -100,7 +100,7 @@ type ConvertBetting () =
         FsharpFableHelpers.getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
-            | "Value" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> vValue <- v / 100. |> unbox)
+            | "Value" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> vValue <- v |> unbox)
             | "Over" -> pair.Value |> (fun v -> vOver <- v |> ConvertBetting.OutcomeFromJson)
             | "Under" -> pair.Value |> (fun v -> vUnder <- v |> ConvertBetting.OutcomeFromJson)
             | _ -> () )
@@ -111,7 +111,7 @@ type ConvertBetting () =
         }
     static member TotalToJson (x: Betting.Total) =
         [
-           "Value", JNumber (x.Value * 100m |> System.Decimal.Truncate |> unbox)
+           "Value", JNumber (unbox x.Value)
            "Over", (x.Over |> ConvertBetting.OutcomeToJson)
            "Under", (x.Under |> ConvertBetting.OutcomeToJson)
         ] |> Map.ofList |> JObject

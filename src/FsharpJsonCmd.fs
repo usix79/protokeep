@@ -286,7 +286,7 @@ let rec checkTokenType (typesCache: Types.TypesCache) =
     | Long
     | Float
     | Double
-    | Decimal _ -> "reader.TokenType = JsonTokenType.Number"
+    | Money _ -> "reader.TokenType = JsonTokenType.Number"
     | Optional x -> checkTokenType typesCache x
     | Types.IsEnum typesCache _ -> "reader.TokenType = JsonTokenType.String"
     | Complex _ -> "reader.TokenType = JsonTokenType.StartObject"
@@ -302,7 +302,7 @@ let rec getValue (typesCache: Types.TypesCache) =
     | Long -> "reader.GetInt64()"
     | Float -> "reader.GetSingle()"
     | Double -> "reader.GetDouble()"
-    | Decimal scale -> $"decimal(float(reader.GetInt64()) / {10. ** float (scale)}.)"
+    | Money _ -> "reader.GetDecimal()"
     | Bytes -> "reader.GetBytesFromBase64()"
     | Timestamp -> "reader.GetDateTime()"
     | Duration -> $"reader.GetString() |> {helpers}.toTimeSpan"
@@ -324,7 +324,7 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
         | Long
         | Float
         | Double -> $"writer.WriteNumberValue({vName})"
-        | Decimal scale -> $"writer.WriteNumberValue({vName} * {10. ** float (scale)}m |> System.Decimal.Truncate)"
+        | Money _ -> $"writer.WriteNumberValue({vName})"
         | Bytes -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"
         | Timestamp -> $"writer.WriteStringValue({vName} |> {helpers}.fromDateTime)"
         | Duration -> $"writer.WriteStringValue({vName} |> {helpers}.fromTimeSpan)"

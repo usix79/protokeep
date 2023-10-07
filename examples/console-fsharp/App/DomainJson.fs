@@ -180,7 +180,7 @@ type ConvertDomain() =
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Ratio")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vRatio <- decimal(float(reader.GetInt64()) / 100.)
+                    then vRatio <- reader.GetDecimal()
                     else reader.Skip()
                 else if (reader.ValueTextEquals("LastChecked")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.String
@@ -255,7 +255,7 @@ type ConvertDomain() =
         writer.WritePropertyName("Ypos")
         writer.WriteNumberValue(x.Ypos)
         writer.WritePropertyName("Ratio")
-        writer.WriteNumberValue(x.Ratio * 100m |> System.Decimal.Truncate)
+        writer.WriteNumberValue(x.Ratio)
         writer.WritePropertyName("LastChecked")
         writer.WriteStringValue(x.LastChecked |> FsharpJsonHelpers.fromDateTime)
         writer.WritePropertyName("ServiceInterval")

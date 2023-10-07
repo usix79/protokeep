@@ -21,7 +21,7 @@ record Domain.Crossroad
     field IsMonitored bool = 6
     field Xpos float = 7
     field Ypos double = 8
-    field Ratio decimal(2) = 9
+    field Ratio money(2) = 9
     field LastChecked timestamp = 10
     field ServiceInterval duration = 11
     field CurrentLight Domain.TrafficLight = 12

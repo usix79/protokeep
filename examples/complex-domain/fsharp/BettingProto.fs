@@ -20,7 +20,7 @@ type ConvertBetting() =
         match x with
         | Betting.Outcome.Empty -> y.Empty <- true
         | Betting.Outcome.Priced (price) ->
-            y.Priced <- price |> fun v -> int64(v * 1000m)
+            y.Priced <- price |> fun v -> int (v * 1000m)
         | Betting.Outcome.PricedWithProb (price,prob) -> y.PricedWithProb <- ConvertBetting.OutcomeCasePricedWithProbToProtobuf(price,prob)
         | Betting.Outcome.Resulted (result) ->
             y.Resulted <- result |> ConvertBetting.ToProtobuf
@@ -32,7 +32,7 @@ type ConvertBetting() =
 
     static member OutcomeCasePricedWithProbToProtobuf (price,prob) : ProtoClasses.Betting.Outcome__PricedWithProb =
         let y = ProtoClasses.Betting.Outcome__PricedWithProb()
-        y.Price <- price |> fun v -> int64(v * 1000m)
+        y.Price <- price |> fun v -> int (v * 1000m)
         y.Prob <- prob
         y
 
@@ -60,7 +60,7 @@ type ConvertBetting() =
 
     static member ToProtobuf(x: Betting.Handicap) : ProtoClasses.Betting.Handicap =
         let y = ProtoClasses.Betting.Handicap()
-        y.Value <- x.Value |> fun v -> int64(v * 100m)
+        y.Value <- x.Value |> fun v -> int (v * 100m)
         y.Win1 <- x.Win1 |> ConvertBetting.ToProtobuf
         y.Win2 <- x.Win2 |> ConvertBetting.ToProtobuf
         y
@@ -74,7 +74,7 @@ type ConvertBetting() =
 
     static member ToProtobuf(x: Betting.Total) : ProtoClasses.Betting.Total =
         let y = ProtoClasses.Betting.Total()
-        y.Value <- x.Value |> fun v -> int64(v * 100m)
+        y.Value <- x.Value |> fun v -> int (v * 100m)
         y.Over <- x.Over |> ConvertBetting.ToProtobuf
         y.Under <- x.Under |> ConvertBetting.ToProtobuf
         y

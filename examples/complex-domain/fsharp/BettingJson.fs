@@ -32,7 +32,7 @@ type ConvertBetting() =
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Priced")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then y <- decimal(float(reader.GetInt64()) / 1000.) |> Betting.Outcome.Priced
+                    then y <- reader.GetDecimal() |> Betting.Outcome.Priced
                     else reader.Skip()
                 else if (reader.ValueTextEquals("PricedWithProb")) then
                     y <- ConvertBetting.OutcomeCasePricedWithProbFromJson(&reader)
@@ -50,7 +50,7 @@ type ConvertBetting() =
             writer.WriteBooleanValue(true)
         | Betting.Outcome.Priced (price) ->
             writer.WritePropertyName("Priced")
-            writer.WriteNumberValue(price * 1000m |> System.Decimal.Truncate)
+            writer.WriteNumberValue(price)
         | Betting.Outcome.PricedWithProb (price,prob) ->
             writer.WritePropertyName("PricedWithProb")
             ConvertBetting.OutcomeCasePricedWithProbToJson(&writer,price,prob)
@@ -69,7 +69,7 @@ type ConvertBetting() =
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Price")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then price <- decimal(float(reader.GetInt64()) / 1000.)
+                    then price <- reader.GetDecimal()
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Prob")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
@@ -80,7 +80,7 @@ type ConvertBetting() =
     static member OutcomeCasePricedWithProbToJson (writer: inref<Utf8JsonWriter>,price,prob) =
         writer.WriteStartObject()
         writer.WritePropertyName("Price")
-        writer.WriteNumberValue(price * 1000m |> System.Decimal.Truncate)
+        writer.WriteNumberValue(price)
         writer.WritePropertyName("Prob")
         writer.WriteNumberValue(prob)
         writer.WriteEndObject()
@@ -123,7 +123,7 @@ type ConvertBetting() =
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Value")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vValue <- decimal(float(reader.GetInt64()) / 100.)
+                    then vValue <- reader.GetDecimal()
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Win1")) then
                     vWin1 <- ConvertBetting.OutcomeFromJson(&reader)
@@ -138,7 +138,7 @@ type ConvertBetting() =
     static member HandicapToJson (writer: inref<Utf8JsonWriter>, x: Betting.Handicap) =
         writer.WriteStartObject()
         writer.WritePropertyName("Value")
-        writer.WriteNumberValue(x.Value * 100m |> System.Decimal.Truncate)
+        writer.WriteNumberValue(x.Value)
         writer.WritePropertyName("Win1")
         ConvertBetting.OutcomeToJson(&writer, x.Win1)
         writer.WritePropertyName("Win2")
@@ -154,7 +154,7 @@ type ConvertBetting() =
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Value")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vValue <- decimal(float(reader.GetInt64()) / 100.)
+                    then vValue <- reader.GetDecimal()
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Over")) then
                     vOver <- ConvertBetting.OutcomeFromJson(&reader)
@@ -169,7 +169,7 @@ type ConvertBetting() =
     static member TotalToJson (writer: inref<Utf8JsonWriter>, x: Betting.Total) =
         writer.WriteStartObject()
         writer.WritePropertyName("Value")
-        writer.WriteNumberValue(x.Value * 100m |> System.Decimal.Truncate)
+        writer.WriteNumberValue(x.Value)
         writer.WritePropertyName("Over")
         ConvertBetting.OutcomeToJson(&writer, x.Over)
         writer.WritePropertyName("Under")

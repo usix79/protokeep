@@ -34,7 +34,7 @@ message Crossroad2 {
     bool IsMonitored = 6;
     float Xpos = 7;
     double Ypos = 8;
-    int64 Ratio = 9;
+    int32 Ratio = 9;
     google.protobuf.Timestamp LastChecked = 10;
     google.protobuf.Duration ServiceInterval = 11;
     Domain.TrafficLight CurrentLight = 12;

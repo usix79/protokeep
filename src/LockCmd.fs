@@ -35,7 +35,7 @@ let rec typeToString (type': Type) =
     | Long -> "long"
     | Float -> "float"
     | Double -> "double"
-    | Decimal scale -> $"decimal({scale})"
+    | Money scale -> $"money({scale})"
     | Bytes -> "bytes"
     | Timestamp -> "timestamp"
     | Duration -> "duration"
