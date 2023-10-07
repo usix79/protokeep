@@ -243,10 +243,10 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             | Optional t ->
                 let inner = "v"
                 linei txt 2 $"match {vName} with"
-                linei txt 2 $"| Some v ->"
+                linei txt 2 $"| ValueSome v ->"
                 linei txt 3 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}Value\")"
                 linei txt 3 $"{writeValue typesCache inner t}"
-                linei txt 2 $"| None -> ()"
+                linei txt 2 $"| ValueNone -> ()"
             | _ ->
                 let inner = $"{vName}"
                 linei txt 2 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}\")"
@@ -281,7 +281,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Timestamp -> $"{helpers}.readTimestamp(&reader)"
     | Duration -> $"{helpers}.readDuration(&reader)"
     | Guid -> $"{helpers}.readGuid(&reader)"
-    | Optional t -> $"{readValue typesCache t} |> ValueOption.map Some"
+    | Optional t -> $"{readValue typesCache t} |> ValueOption.map ValueSome"
     | Types.IsEnum typesCache ei ->
         $"{helpers}.readString(&reader) |> ValueOption.map Convert{lastNames ei.Name |> solidName}.{firstName ei.Name}FromString"
     | Complex _

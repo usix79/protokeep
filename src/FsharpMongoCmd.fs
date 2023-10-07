@@ -224,10 +224,6 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 linei txt 5 $"reader.ReadEndDocument()"
             | Types.IsRecord typesCache _
             | Types.IsUnion typesCache _ -> linei txt 5 $"{vName} <- {getValue typesCache fieldInfo.Type}"
-            | Optional t ->
-                linei txt 5 $"match {getValue typesCache t} with"
-                linei txt 5 $"| ValueSome v -> {vName} <- Some v"
-                linei txt 5 $"| ValueNone -> ()"
             | t ->
                 linei txt 5 $"match {getValue typesCache t} with"
                 linei txt 5 $"| ValueSome v -> {vName} <- v"
@@ -251,10 +247,10 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             | Optional t ->
                 let inner = "v"
                 linei txt 2 $"match {vName} with"
-                linei txt 2 $"| Some v ->"
+                linei txt 2 $"| ValueSome v ->"
                 linei txt 3 $"writer.WriteName(\"{firstCharToUpper fieldInfo.Name}Value\")"
                 linei txt 3 $"{setValue typesCache inner t}"
-                linei txt 2 $"| None -> ()"
+                linei txt 2 $"| ValueNone -> ()"
             | _ ->
                 let inner = $"{vName}"
                 linei txt 2 $"writer.WriteName(\"{firstCharToUpper fieldInfo.Name}\")"
@@ -322,7 +318,7 @@ let rec getValue (typesCache: Types.TypesCache) =
     | Timestamp -> $"{helpers}.readTimestamp reader"
     | Duration -> $"{helpers}.readDuration reader"
     | Guid -> $"{helpers}.readGuid reader"
-    | Optional t -> $"{getValue typesCache t}"
+    | Optional t -> $"{getValue typesCache t} |> ValueOption.map ValueSome"
     | Types.IsEnum typesCache ei ->
         $"{helpers}.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v)"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}FromBson(reader)"
