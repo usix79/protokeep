@@ -36,7 +36,6 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         function
         | Enum info ->
             let fullNameTxt = info.Name |> dottedName
-
             line txt $"    static member{firstName info.Name}FromInt = function"
 
             for symbol in info.Symbols do
@@ -44,11 +43,12 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
             line txt $"        | _ -> {fullNameTxt}.Unknown"
             line txt $""
-
         | Record info ->
             let fullNameTxt = info.Name |> dottedName
 
-            line txt $"    static member {firstName info.Name}ToBson(writer: IBsonWriter, x: {fullNameTxt}) ="
+            let asEntity = if info.HasKey then ", ?asEntity: bool" else ""
+            line txt $"    static member {firstName info.Name}ToBson(writer: IBsonWriter, x: {fullNameTxt}{asEntity}) ="
+
             writeObject "x." info
             line txt $""
 
@@ -240,6 +240,10 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
     and writeObject prefix recordInfo =
         line txt $"        writer.WriteStartDocument()"
 
+        if recordInfo.HasKey then
+            line txt $"        if asEntity.IsSome then"
+            line txt $"            {helpers}.writeId (writer, {prefix}Key)"
+
         for fieldInfo in recordInfo.Fields do
             let vName = $"{prefix}{fieldInfo.Name}"
 
@@ -272,14 +276,14 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
     for item in module'.Items do
         genItem item
 
-    let typeNames =
+    let serializableTypeNames =
         module'.Items
-        |> Seq.collect (function
-            | Record info -> [ info.Name ]
-            | Union info -> [ info.Name ]
-            | _ -> [])
+        |> Seq.choose
+           ^ function
+               | Record info when info.HasKey -> Some info.Name
+               | _ -> None
 
-    for typeName in typeNames do
+    for typeName in serializableTypeNames do
         line txt $"type {typeName |> firstName}Serializer() ="
         line txt $"    inherit SerializerBase<{typeName |> dottedName}>()"
         line txt $"    override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) ="
@@ -290,7 +294,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             txt
             $"    override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: {typeName |> dottedName}) ="
 
-        line txt $"        {className}.{typeName |> firstName}ToBson(ctx.Writer, value)"
+        line txt $"        {className}.{typeName |> firstName}ToBson(ctx.Writer, value, true)"
         line txt $""
 
 
@@ -298,7 +302,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
     line txt $"    static member RegisterSerializers() ="
     line txt $"        BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3"
 
-    for typeName in typeNames do
+    for typeName in serializableTypeNames do
         line txt $"        BsonSerializer.RegisterSerializer({typeName |> firstName}Serializer())"
 
     txt.ToString()

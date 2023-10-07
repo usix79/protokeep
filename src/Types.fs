@@ -43,6 +43,7 @@ type EnumInfo =
 type FieldInfo =
     { Name: string
       Type: Type
+      IsVersion: bool
       IsKey: bool
       Indexes: Index list }
 
@@ -50,9 +51,28 @@ type RecordInfo =
     { Name: ComplexName
       Fields: FieldInfo list }
 
+    member x.HasKey = x.Fields |> List.exists ^ fun f -> f.IsKey
+    member x.Keys = x.Fields |> List.filter ^ fun x -> x.IsKey
+    member x.HasVersion = x.Fields |> List.exists ^ fun f -> f.IsVersion
+
+    member x.Indexes =
+        x.Fields
+        |> List.collect ^ fun x -> x.Indexes
+        |> List.map ^ fun i -> i.Name
+        |> List.distinct
+
 type UnionInfo =
     { Name: ComplexName
       Cases: RecordInfo list }
+
+    member x.Indexes typesCache =
+        x.Cases
+        |> List.collect
+           ^ fun i ->
+               i.Fields
+               |> List.collect (Types.referencedIndexes typesCache)
+               |> List.map ^ fun ii -> ii.Name
+        |> List.distinct
 
 type ModuleItem =
     | Enum of EnumInfo
@@ -106,8 +126,8 @@ type LocksCollection(items: LockItem list) =
     member _.TryFind(cn: ComplexName) =
         enums.TryFind cn
         |> Option.map EnumLock
-        |> Option.orElseWith (fun () -> records.TryFind cn |> Option.map RecordLock)
-        |> Option.orElseWith (fun () -> unions.TryFind cn |> Option.map UnionLock)
+        |> Option.orElseWith ^ fun () -> records.TryFind cn |> Option.map RecordLock
+        |> Option.orElseWith ^ fun () -> unions.TryFind cn |> Option.map UnionLock
 
     member _.Enum cn = enums.[cn]
     member _.Record cn = records.[cn]
@@ -119,12 +139,13 @@ type LocksCollection(items: LockItem list) =
 
     member x.HasChanges(items: LockItem list) =
         items
-        |> List.tryFind (fun item ->
-            match item with
-            | EnumLock lock -> enums.TryFind lock.Name |> Option.map ((<>) lock)
-            | RecordLock lock -> records.TryFind lock.Name |> Option.map ((<>) lock)
-            | UnionLock lock -> unions.TryFind lock.Name |> Option.map ((<>) lock)
-            |> Option.defaultValue true)
+        |> List.tryFind
+           ^ fun item ->
+               match item with
+               | EnumLock lock -> enums.TryFind lock.Name |> Option.map ((<>) lock)
+               | RecordLock lock -> records.TryFind lock.Name |> Option.map ((<>) lock)
+               | UnionLock lock -> unions.TryFind lock.Name |> Option.map ((<>) lock)
+               |> Option.defaultValue true
         |> Option.map (fun _ -> true)
         |> Option.defaultValue false
 
@@ -226,7 +247,7 @@ module Types =
     let toTypesCacheItems (module': Module) =
         module'.Items |> List.map (fun item -> moduleItemName item, item)
 
-    let referencedIndexes (typesCache: TypesCache) (field: FieldInfo) =
+    let referencedIndexes (typesCache: TypesCache) (field: FieldInfo) : Index list =
         match field.Type with
         | Complex type' ->
             match typesCache.[type'] with
@@ -254,37 +275,41 @@ module Types =
 
         let resolveRecord ns (info: RecordInfo) =
             info.Fields
-            |> traverse (fun fieldInfo ->
-                match fieldInfo.Type with
-                | Optional(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Optional)
-                | Array(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Array)
-                | List(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> List)
-                | Map(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Map)
-                | Complex typeName -> getFullName ns typeName |> Option.map Complex
-                | t -> Some t
-                |> Option.map (fun type' -> Ok { fieldInfo with Type = type' })
-                |> Option.defaultWith (fun () -> Error [ UnresolvedType fieldInfo.Type ]))
-            |> Result.map (fun fields -> { info with Fields = fields })
+            |> traverse
+               ^ fun fieldInfo ->
+                   match fieldInfo.Type with
+                   | Optional(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Optional)
+                   | Array(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Array)
+                   | List(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> List)
+                   | Map(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Map)
+                   | Complex typeName -> getFullName ns typeName |> Option.map Complex
+                   | t -> Some t
+                   |> Option.map (fun type' -> Ok { fieldInfo with Type = type' })
+                   |> Option.defaultWith ^ fun () -> Error [ UnresolvedType fieldInfo.Type ]
+            |> Result.map ^ fun fields -> { info with Fields = fields }
 
         let updateModule (module': Module) =
             let (ComplexName ns) = module'.Name
 
             module'.Items
-            |> traverse (fun item ->
-                match item with
-                | Enum _ -> Ok item
-                | Record info -> resolveRecord ns info |> Result.map Record
-                | Union info ->
-                    info.Cases
-                    |> traverse (resolveRecord ns)
-                    |> Result.map (fun cases -> Union { info with Cases = cases }))
-            |> Result.map (fun items -> { module' with Items = items })
+            |> traverse
+               ^ fun item ->
+                   match item with
+                   | Enum _ -> Ok item
+                   | Record info -> resolveRecord ns info |> Result.map Record
+                   | Union info ->
+                       info.Cases
+                       |> traverse (resolveRecord ns)
+                       |> Result.map ^ fun cases -> Union { info with Cases = cases }
+            |> Result.map ^ fun items -> { module' with Items = items }
 
         updateModule module'
-        |> Result.bind (fun module' ->
-            imports
-            |> traverse updateModule
-            |> Result.map (fun imports -> module', module' :: imports |> List.collect toTypesCacheItems |> Map.ofList))
+        |> Result.bind
+           ^ fun module' ->
+               imports
+               |> traverse updateModule
+               |> Result.map
+                  ^ fun imports -> module', module' :: imports |> List.collect toTypesCacheItems |> Map.ofList
 
     let lock
         (module': Module)
@@ -292,15 +317,17 @@ module Types =
         (typesCache: TypesCache)
         : Result<LockItem list, TypeError list> =
         module'.Items
-        |> traverse (function
-            | Enum info -> lockEnum lockCache info |> Result.map List.singleton
-            | Record info -> lockRecord lockCache typesCache false info |> Result.map List.singleton
-            | Union info ->
-                lockUnion lockCache typesCache info
-                |> Result.bind (fun unionItem ->
-                    info.Cases
-                    |> traverse (lockRecord lockCache typesCache true)
-                    |> Result.map (fun recordItems -> [ unionItem; yield! recordItems ])))
+        |> traverse
+           ^ function
+               | Enum info -> lockEnum lockCache info |> Result.map List.singleton
+               | Record info -> lockRecord lockCache typesCache false info |> Result.map List.singleton
+               | Union info ->
+                   lockUnion lockCache typesCache info
+                   |> Result.bind
+                      ^ fun unionItem ->
+                          info.Cases
+                          |> traverse (lockRecord lockCache typesCache true)
+                          |> Result.map ^ fun recordItems -> [ unionItem; yield! recordItems ]
         |> Result.map List.concat
 
     let lockEnum (lockCache: LocksCollection) info =
@@ -312,27 +339,28 @@ module Types =
 
         valuesLock
         |> tryMap getName id
-        |> Result.mapError (List.map (fun symbol -> DuplicateSymbolsInLockedEnum(info.Name, symbol)))
-        |> Result.bind (fun symbolsMap ->
-            let maxNum = valuesLock |> List.fold (fun m x -> max m x.Num) 0
+        |> Result.mapError (List.map ^ fun symbol -> DuplicateSymbolsInLockedEnum(info.Name, symbol))
+        |> Result.bind
+           ^ fun symbolsMap ->
+               let maxNum = valuesLock |> List.fold (fun m x -> max m x.Num) 0
 
-            let newValuesLock =
-                info.Symbols
-                |> List.mapFold
-                    (fun nextNum symbol ->
-                        match symbolsMap.TryFind symbol with
-                        | Some lock -> lock, nextNum
-                        | None -> { Name = symbol; Num = nextNum }, (nextNum + 1))
-                    (maxNum + 1)
-                |> fst
+               let newValuesLock =
+                   info.Symbols
+                   |> List.mapFold
+                       (fun nextNum symbol ->
+                           match symbolsMap.TryFind symbol with
+                           | Some lock -> lock, nextNum
+                           | None -> { Name = symbol; Num = nextNum }, (nextNum + 1))
+                       (maxNum + 1)
+                   |> fst
 
-            newValuesLock
-            |> checkMissedItems
-                (fun x -> x.Name)
-                (fun symbol -> DuplicateSymbolsInEnum(info.Name, symbol))
-                (fun symbol -> MissedSymbolInEnum(info.Name, symbol))
-                valuesLock
-            |> Result.map (fun values -> EnumLock { Name = info.Name; Values = values }))
+               newValuesLock
+               |> checkMissedItems
+                   (fun x -> x.Name)
+                   (fun symbol -> DuplicateSymbolsInEnum(info.Name, symbol))
+                   (fun symbol -> MissedSymbolInEnum(info.Name, symbol))
+                   valuesLock
+               |> Result.map ^ fun values -> EnumLock { Name = info.Name; Values = values }
 
     let allowedEvolution from to' =
         // TODO: allow more evolutions
@@ -362,49 +390,52 @@ module Types =
         fieldLocks
         |> tryMap getName id
         |> Result.mapError (List.map (fun fieldName -> DuplicateFieldInLockedRecord(recordInfo.Name, fieldName)))
-        |> Result.bind (fun fieldsMap ->
-            let maxNum = fieldLocks |> List.fold (fun m f -> max m f.Num) 0
+        |> Result.bind
+           ^ fun fieldsMap ->
+               let maxNum = fieldLocks |> List.fold (fun m f -> max m f.Num) 0
 
-            recordInfo.Fields
-            |> List.mapFold
-                (fun nextNum field ->
-                    match fieldsMap.TryFind field.Name with
-                    | None ->
-                        if not fieldsMap.IsEmpty && fieldsAreLocked then
-                            Error [ AddingFieldIsNotAllowed(recordInfo.Name, field.Name) ], nextNum
-                        else
-                            Ok(
-                                { Name = field.Name
-                                  Type = field.Type
-                                  Num = nextNum }
-                            ),
-                            (nextNum + 1)
-                    | Some lockedField when allowedEvolution lockedField.Type field.Type ->
-                        Ok(
-                            { Name = field.Name
-                              Type = field.Type
-                              Num = lockedField.Num }
-                        ),
-                        nextNum
-                    | Some lockedField ->
-                        Error [ UnacceptableEvolution(recordInfo.Name, field.Name, lockedField.Type, field.Type) ],
-                        nextNum)
-                (maxNum + 1)
-            |> fst
-            |> traverse id
-            |> Result.bind (fun newFields ->
-                let fName (f: RecordFieldLock) = f.Name
+               recordInfo.Fields
+               |> List.mapFold
+                   (fun nextNum field ->
+                       match fieldsMap.TryFind field.Name with
+                       | None ->
+                           if not fieldsMap.IsEmpty && fieldsAreLocked then
+                               Error [ AddingFieldIsNotAllowed(recordInfo.Name, field.Name) ], nextNum
+                           else
+                               Ok(
+                                   { Name = field.Name
+                                     Type = field.Type
+                                     Num = nextNum }
+                               ),
+                               (nextNum + 1)
+                       | Some lockedField when allowedEvolution lockedField.Type field.Type ->
+                           Ok(
+                               { Name = field.Name
+                                 Type = field.Type
+                                 Num = lockedField.Num }
+                           ),
+                           nextNum
+                       | Some lockedField ->
+                           Error [ UnacceptableEvolution(recordInfo.Name, field.Name, lockedField.Type, field.Type) ],
+                           nextNum)
+                   (maxNum + 1)
+               |> fst
+               |> traverse id
+               |> Result.bind
+                  ^ fun newFields ->
+                      let fName (f: RecordFieldLock) = f.Name
 
-                checkMissedItems
-                    fName
-                    (fun fieldName -> DuplicateFieldInRecord(recordInfo.Name, fieldName))
-                    (fun fieldName -> MissedFieldInRecord(recordInfo.Name, fieldName))
-                    fieldLocks
-                    newFields)
-            |> Result.map (fun items ->
-                RecordLock
-                    { Name = recordInfo.Name
-                      Fields = items }))
+                      checkMissedItems
+                          fName
+                          (fun fieldName -> DuplicateFieldInRecord(recordInfo.Name, fieldName))
+                          (fun fieldName -> MissedFieldInRecord(recordInfo.Name, fieldName))
+                          fieldLocks
+                          newFields
+               |> Result.map
+                  ^ fun items ->
+                      RecordLock
+                          { Name = recordInfo.Name
+                            Fields = items }
 
     let lockUnion
         (lockCache: LocksCollection)
@@ -420,28 +451,28 @@ module Types =
         caseLocks
         |> tryMap getName id
         |> Result.mapError (List.map (fun caseName -> DuplicateCaseInLockedUnion(unionInfo.Name, caseName)))
-        |> Result.bind (fun casesMap ->
-            let maxNum = caseLocks |> List.fold (fun m f -> max m f.Num) 0
+        |> Result.bind
+           ^ fun casesMap ->
+               let maxNum = caseLocks |> List.fold (fun m f -> max m f.Num) 0
 
-            unionInfo.Cases
-            |> List.mapFold
-                (fun nextNum case ->
-                    match casesMap.TryFind(firstName case.Name) with
-                    | None ->
-                        Ok(
-                            { Name = firstName case.Name
-                              Num = nextNum }
-                        ),
-                        (nextNum + 1) // new case
-                    | Some lockedCase -> Ok lockedCase, nextNum)
-                (maxNum + 1)
-            |> fst
-            |> traverse id
-            |> Result.bind (
-                checkMissedItems
-                    getName
-                    (fun fieldName -> DuplicateCaseInLockedUnion(unionInfo.Name, fieldName))
-                    (fun fieldName -> MissedCaseInUnion(unionInfo.Name, fieldName))
-                    caseLocks
-            )
-            |> Result.map (fun items -> UnionLock { Name = unionInfo.Name; Cases = items }))
+               unionInfo.Cases
+               |> List.mapFold
+                   (fun nextNum case ->
+                       match casesMap.TryFind(firstName case.Name) with
+                       | None ->
+                           Ok(
+                               { Name = firstName case.Name
+                                 Num = nextNum }
+                           ),
+                           (nextNum + 1) // new case
+                       | Some lockedCase -> Ok lockedCase, nextNum)
+                   (maxNum + 1)
+               |> fst
+               |> traverse id
+               |> Result.bind
+                  ^ checkMissedItems
+                      getName
+                      (fun fieldName -> DuplicateCaseInLockedUnion(unionInfo.Name, fieldName))
+                      (fun fieldName -> MissedCaseInUnion(unionInfo.Name, fieldName))
+                      caseLocks
+               |> Result.map ^ fun items -> UnionLock { Name = unionInfo.Name; Cases = items }

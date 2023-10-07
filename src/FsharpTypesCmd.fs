@@ -40,16 +40,12 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             line txt $"type {firstName info.Name} = {{"
 
             for field in info.Fields do
-                line txt $"    {field.Name} : {typeToString ns field.Type}"
+                if field.IsVersion then
+                    line txt $"    mutable {field.Name} : {typeToString ns field.Type}"
+                else
+                    line txt $"    {field.Name} : {typeToString ns field.Type}"
 
             line txt $"}}"
-            let keys = info.Fields |> List.filter (fun x -> x.IsKey)
-
-            let indexes =
-                info.Fields
-                |> List.collect (fun x -> x.Indexes)
-                |> List.map (fun i -> i.Name)
-                |> List.distinct
 
             line txt $"with"
             line txt $"    static member Default: Lazy<{dottedDiff ns info.Name}> ="
@@ -64,14 +60,23 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                 | _ -> line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
 
             line txt $"        }}"
+            line txt $""
 
-            if not keys.IsEmpty then
-                recordKeyMembers ns typesCache txt info.Name keys
+            if info.HasKey then
+                recordKeyMembers ns typesCache txt info.Name info.Keys
 
-            for indexName in indexes do
+            for indexName in info.Indexes do
                 recordIndexMembers locks txt indexName info
 
-            line txt $""
+            match info.Fields |> List.tryFind ^ fun x -> x.IsVersion with
+            | Some field ->
+                line txt $"    interface IVersioned with"
+                line txt $"        member x.{field.Name}"
+                line txt $"            with get () = x.{field.Name}"
+                line txt $"            and set v = x.{field.Name} <- v"
+                line txt $""
+            | None -> ()
+
 
         | Union info ->
             line txt $"type {firstName info.Name} ="
@@ -86,19 +91,10 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
                 line txt $"    | {firstName case.Name}{fieldsStr}"
 
-            // line txt $"with"
             line txt $""
             unionKeyMembers ns locks typesCache txt info
 
-            let indexes =
-                info.Cases
-                |> List.collect (fun i ->
-                    i.Fields
-                    |> List.collect (Types.referencedIndexes typesCache)
-                    |> List.map (fun ii -> ii.Name))
-                |> List.distinct
-
-            for indexName in indexes do
+            for indexName in info.Indexes typesCache do
                 unionIndexMembers typesCache txt indexName info
 
             line txt $""
@@ -131,55 +127,57 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | List v -> typeToString ns v + " list"
     | Map v -> $"Map<string,{typeToString ns v}>"
     | Complex typeName ->
-        if lastNames typeName = ns then
-            firstName typeName
-        else
-            dottedName typeName
+        match lastNames typeName with
+        | name when name = ns -> firstName typeName
+        | _ -> dottedName typeName
 
 let keyParams ns (typesCache: TypesCache) (keyFields: FieldInfo list) =
     keyFields
-    |> List.map (fun info ->
-        let pName = info.Name |> firstCharToLower
+    |> List.map
+       ^ fun info ->
+           let pName = info.Name |> firstCharToLower
 
-        match info.Type with
-        | Types.IsRecord typesCache _
-        | Types.IsUnion typesCache _ -> $"{pName}Key: Key"
-        | _ -> $"{pName}': {typeToString ns info.Type}")
+           match info.Type with
+           | Types.IsRecord typesCache _
+           | Types.IsUnion typesCache _ -> $"{pName}Key: Key"
+           | _ -> $"{pName}': {typeToString ns info.Type}"
     |> String.concat ", "
 
 let caseParams (fields: FieldInfo list) =
-    if fields.IsEmpty then
-        ""
-    else
+    match fields with
+    | [] -> ""
+    | fields ->
         fields
-        |> List.map (fun info -> $"{info.Name}'")
+        |> List.map ^ fun info -> $"{info.Name}'"
         |> String.concat ", "
-        |> (fun txt -> " (" + txt + ")")
+        |> fun txt -> $" ({txt})"
 
 let keyExpression (typesCache: TypesCache) (keyFields: FieldInfo list) =
     keyFields
-    |> List.map (fun info ->
-        let vName = $"{firstCharToLower info.Name}'"
+    |> List.map
+       ^ fun info ->
+           let vName = $"{firstCharToLower info.Name}'"
 
-        match info.Type with
-        | String -> $"Key.Value ({vName})"
-        | Int
-        | Long
-        | Decimal _ -> $"Key.Value ({vName}.ToString())"
-        | Guid -> $"Key.Value ({vName}.ToString())"
-        | Types.IsRecord typesCache _
-        | Types.IsUnion typesCache _ -> $"Key.Inner {firstCharToLower info.Name}Key"
-        | Types.IsEnum typesCache _ -> $"Key.Value ((int {vName}).ToString())"
-        | wrong -> failwithf "type not supported as key %A" wrong)
+           match info.Type with
+           | String -> $"Key.Value ({vName})"
+           | Int
+           | Long
+           | Decimal _ -> $"Key.Value ({vName}.ToString())"
+           | Guid -> $"Key.Value ({vName}.ToString())"
+           | Types.IsRecord typesCache _
+           | Types.IsUnion typesCache _ -> $"Key.Inner {firstCharToLower info.Name}Key"
+           | Types.IsEnum typesCache _ -> $"Key.Value ((int {vName}).ToString())"
+           | wrong -> failwithf "type not supported as key %A" wrong
     |> String.concat "; "
 
 let makeKeyArgs (typesCache: TypesCache) (keyFields: FieldInfo list) prefix suffix =
     keyFields
-    |> List.map (fun info ->
-        match info.Type with
-        | Types.IsRecord typesCache _
-        | Types.IsUnion typesCache _ -> $"{prefix}{info.Name}{suffix}.Key"
-        | _ -> $"{prefix}{info.Name}{suffix}")
+    |> List.map
+       ^ fun info ->
+           match info.Type with
+           | Types.IsRecord typesCache _
+           | Types.IsUnion typesCache _ -> $"{prefix}{info.Name}{suffix}.Key"
+           | _ -> $"{prefix}{info.Name}{suffix}"
     |> String.concat ", "
 
 let recordKeyMembers ns (typesCache: TypesCache) txt typeName keyFields =
@@ -190,20 +188,21 @@ let recordKeyMembers ns (typesCache: TypesCache) txt typeName keyFields =
     | [ _ ] -> line txt $"        {keyExpression typesCache keyFields}"
     | _ -> line txt $"        Key.Items [{keyExpression typesCache keyFields}]"
 
+    line txt $""
     let keyArgs = makeKeyArgs typesCache keyFields "x." ""
     line txt $"    member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
+    line txt $""
 
 let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (info: UnionInfo) =
     line txt "    static member MakeUnknownKey () = Key.Value \"0\""
 
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
-        let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
+        let keyFields = recordInfo.Keys
 
         let keyExpression =
-            if keyFields.IsEmpty then
-                $"Key.Value \"{caseLock.Num}\""
-            else
-                $"Key.Items [Key.Value \"{caseLock.Num}\"; {keyExpression typesCache keyFields}]"
+            match keyFields with
+            | [] -> $"Key.Value \"{caseLock.Num}\""
+            | keyFields -> $"Key.Items [Key.Value \"{caseLock.Num}\"; {keyExpression typesCache keyFields}]"
 
         line txt $"    static member Make{caseLock.Name}Key ({keyParams ns typesCache keyFields}) = {keyExpression}"
 
@@ -215,50 +214,56 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
         let keyArgs = makeKeyArgs typesCache keyFields "" "'"
 
-        line
-            txt
-            $"        | {firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+        let leftSide =
+            $"{firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields}"
+
+        line txt $"        | {leftSide} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
 
 let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
     let indexedFields =
         recordInfo.Fields
-        |> List.zip (locks.Record(recordInfo.Name).Fields)
-        |> List.choose (fun (fieldLock, fieldInfo) ->
-            fieldInfo.Indexes
-            |> List.tryFind (fun ii -> ii.Name = indexName)
-            |> Option.map (fun ii -> fieldInfo, ii, fieldLock))
+        |> List.zip ^ locks.Record(recordInfo.Name).Fields
+        |> List.choose
+           ^ fun (fieldLock, fieldInfo) ->
+               fieldInfo.Indexes
+               |> List.tryFind ^ fun ii -> ii.Name = indexName
+               |> Option.map ^ fun ii -> fieldInfo, ii, fieldLock
 
     line txt $"    member x.{firstCharToUpper indexName}Values () ="
 
     let values' =
         indexedFields
-        |> List.map (fun (field, idx, _) ->
-            match idx.Value with
-            | Self -> $"x.{field.Name}"
-            | IndexValue.Field name ->
-                match field.Type with
-                | Array _
-                | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name})"
-                | _ -> $"x.{field.Name}.{name}")
+        |> List.map
+           ^ fun (field, idx, _) ->
+               match idx.Value with
+               | Self -> $"x.{field.Name}"
+               | IndexValue.Field name ->
+                   match field.Type with
+                   | Array _
+                   | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name})"
+                   | _ -> $"x.{field.Name}.{name}"
         |> String.concat "; "
 
     line txt $"        [| {values'} |]"
+    line txt $""
 
     line txt $"    member x.{firstCharToUpper indexName}Indexes () ="
 
     let indexes' =
         indexedFields
-        |> List.map (fun (field, idx, fieldLock) ->
-            match idx.Key with
-            | IndexKey.Num -> $"Key.Value \"{fieldLock.Num}\""
-            | IndexKey.FieldKey name ->
-                match field.Type with
-                | Array _
-                | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name}.Key)"
-                | _ -> $"x.{field.Name}.{name}")
+        |> List.map
+           ^ fun (field, idx, fieldLock) ->
+               match idx.Key with
+               | IndexKey.Num -> $"Key.Value \"{fieldLock.Num}\""
+               | IndexKey.FieldKey name ->
+                   match field.Type with
+                   | Array _
+                   | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name}.Key)"
+                   | _ -> $"x.{field.Name}.{name}"
         |> String.concat "; "
 
     line txt $"        [| {indexes'} |]"
+    line txt $""
 
     for fieldInfo, idx, fieldLock in indexedFields do
         match idx.Key with
@@ -271,6 +276,8 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
             | _ -> ()
         | _ -> ()
 
+    line txt $""
+
     line txt $"    member x.{firstCharToUpper indexName} = function"
 
     for fieldInfo, idx, fieldLock in indexedFields do
@@ -281,6 +288,7 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
         | wrong -> failwithf "Not supported indexer %A" wrong
 
     line txt $"        | _ -> None"
+    line txt $""
 
     line txt $"    member x.With{firstCharToUpper indexName}s (items:Map<Key,_>) ="
     line txt $"        {{x with"
@@ -307,11 +315,12 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
         | wrong -> failwithf "Not supported indexer %A" wrong
 
     line txt $"        }}"
+    line txt $""
 
 let unionIndexMembers (typesCache: TypesCache) txt indexName unionInfo =
     let hasIndex field =
         Types.referencedIndexes typesCache field
-        |> List.tryFind (fun i -> i.Name = indexName)
+        |> List.tryFind ^ fun i -> i.Name = indexName
         |> (fun i -> i.IsSome)
 
     line txt $"    member x.{firstCharToUpper indexName}Values () ="

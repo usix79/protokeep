@@ -151,6 +151,7 @@ module private Impl =
                                               { Name = fr.Name
                                                 Type = fr.Type
                                                 IsKey = boolOfOpt fr.IsKey
+                                                IsVersion = fr.Name = "Version" && fr.Type = Int
                                                 Indexes =
                                                   fr.Indexes
                                                   |> List.map (fun ir ->
@@ -177,6 +178,7 @@ module private Impl =
                                                               |> Option.defaultValue (sprintf "p%d" (idx + 1))
                                                             Type = fr.Type
                                                             IsKey = boolOfOpt fr.IsKey
+                                                            IsVersion = false
                                                             Indexes = [] }))
                                                   |> Option.defaultValue [] }) }) ]
                 ))
