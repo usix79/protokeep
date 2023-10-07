@@ -52,3 +52,134 @@ module FsharpJsonHelpers =
 
     let moveToEndObject (reader: byref<Utf8JsonReader>) =
         reader.Read() = false || reader.TokenType = JsonTokenType.EndObject
+
+    let readString (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.String -> reader.GetString() |> ValueSome
+            | JsonTokenType.Number -> reader.GetDecimal().ToString() |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readInt (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number ->
+                try
+                    reader.GetInt32()
+                with _ ->
+                    reader.GetDecimal() |> int
+                |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> int |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readLong (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number ->
+                try
+                    reader.GetInt64()
+                with _ ->
+                    reader.GetDecimal() |> int64
+                |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> int64 |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readSingle (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number -> reader.GetSingle() |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> float32 |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readDouble (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number -> reader.GetDouble() |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> double |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readMoney (reader: byref<Utf8JsonReader>, scale: int) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number -> reader.GetDecimal() |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> decimal |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readBoolean (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.True -> true |> ValueSome
+            | JsonTokenType.False -> false |> ValueSome
+            | JsonTokenType.Number -> reader.GetInt32() <> 0 |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readBytes (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.String -> reader.GetBytesFromBase64() |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let writeGuid (writer: inref<Utf8JsonWriter>, value: System.Guid) =
+        writer.WriteStringValue(value.ToString())
+
+    let readGuid (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.String -> reader.GetString() |> System.Guid |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+
+    let writeTimestamp (writer: inref<Utf8JsonWriter>, value: System.DateTime) =
+        writer.WriteStringValue(fromDateTime value)
+
+    let readTimestamp (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.String -> reader.GetDateTime() |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let writeDuration (writer: inref<Utf8JsonWriter>, value: System.TimeSpan) =
+        writer.WriteStringValue(fromTimeSpan value)
+
+    let readDuration (reader: byref<Utf8JsonReader>) =
+        readString &reader |> ValueOption.map toTimeSpan

@@ -104,15 +104,12 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                     | Array _
                     | List _
                     | Map _ -> linei txt 5 $"()"
-                    | _ ->
-                        linei txt 5 $"if reader.Read() && {checkTokenType typesCache fieldInfo.Type}"
-
+                    | Complex t ->
                         linei
                             txt
                             5
-                            $"then y <- {getValue typesCache fieldInfo.Type} |> {dottedName union.Name}.{firstName case.Name}"
-
-                        linei txt 5 $"else reader.Skip()"
+                            $"y <- Convert{solidName ns}.{firstName t}FromJson(&reader) |> {dottedName union.Name}.{firstName case.Name}"
+                    | t -> readValueBlock txt 5 typesCache t $"y <- v |> {dottedName union.Name}.{firstName case.Name}"
                 | Types.MultiFieldsRecord ->
                     linei
                         txt
@@ -143,7 +140,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
                 match case with
                 | Types.EmptyRecord -> linei txt 3 $"writer.WriteBooleanValue(true)"
-                | Types.SingleFieldRecord fieldInfo -> linei txt 3 (setValue typesCache values fieldInfo.Type)
+                | Types.SingleFieldRecord fieldInfo -> linei txt 3 (writeValue typesCache values fieldInfo.Type)
                 | Types.MultiFieldsRecord ->
                     linei
                         txt
@@ -218,24 +215,21 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             | List t ->
                 linei txt 5 $"if reader.Read() && reader.TokenType = JsonTokenType.StartArray then"
                 linei txt 6 $"while reader.Read() && reader.TokenType <> JsonTokenType.EndArray do"
-                linei txt 7 $"if {checkTokenType typesCache t} then"
-                linei txt 8 $"{vName}.Add({getValue typesCache t})"
-                linei txt 7 $"else reader.Skip()"
+                readValueBlock txt 7 typesCache t $"{vName}.Add(v)"
                 linei txt 5 $"else reader.Skip()"
             | Map t ->
                 linei txt 5 $"if reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
                 linei txt 6 $"while {helpers}.moveToEndObject(&reader) = false do"
                 linei txt 7 $"let propName = reader.GetString()"
-                linei txt 7 $"if reader.Read() && {checkTokenType typesCache t} then"
-                linei txt 8 $"{vName}.Add((propName, {getValue typesCache t}))"
-                linei txt 7 $"else reader.Skip()"
+                readValueBlock txt 7 typesCache t $"{vName}.Add(propName, v)"
                 linei txt 5 $"else reader.Skip()"
-            | Types.IsRecord typesCache _
-            | Types.IsUnion typesCache _ -> linei txt 5 $"{vName} <- {getValue typesCache fieldInfo.Type}"
-            | t ->
-                linei txt 5 $"if reader.Read() && {checkTokenType typesCache t}"
-                linei txt 5 $"then {vName} <- {getValue typesCache t}"
-                linei txt 5 $"else reader.Skip()"
+            | Types.IsRecord typesCache info ->
+                let typeName = info.Name
+                linei txt 5 $"{vName} <- Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson(&reader)"
+            | Types.IsUnion typesCache info ->
+                let typeName = info.Name
+                linei txt 5 $"{vName} <- Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson(&reader)"
+            | t -> readValueBlock txt 5 typesCache t $"{vName} <- v"
 
         line txt $"                else reader.Skip()"
 
@@ -251,12 +245,12 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 linei txt 2 $"match {vName} with"
                 linei txt 2 $"| Some v ->"
                 linei txt 3 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}Value\")"
-                linei txt 3 $"{setValue typesCache inner t}"
+                linei txt 3 $"{writeValue typesCache inner t}"
                 linei txt 2 $"| None -> ()"
             | _ ->
                 let inner = $"{vName}"
                 linei txt 2 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}\")"
-                linei txt 2 $"{setValue typesCache inner fieldInfo.Type}"
+                linei txt 2 $"{writeValue typesCache inner fieldInfo.Type}"
 
         line txt $"        writer.WriteEndObject()"
 
@@ -274,48 +268,33 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
     txt.ToString()
 
 
-let rec checkTokenType (typesCache: Types.TypesCache) =
+let rec readValue (typesCache: Types.TypesCache) =
     function
-    | Bool -> "(reader.TokenType = JsonTokenType.True || reader.TokenType = JsonTokenType.False)"
-    | String
-    | Bytes
-    | Timestamp
-    | Duration
-    | Guid -> "reader.TokenType = JsonTokenType.String"
-    | Int
-    | Long
-    | Float
-    | Double
-    | Money _ -> "reader.TokenType = JsonTokenType.Number"
-    | Optional x -> checkTokenType typesCache x
-    | Types.IsEnum typesCache _ -> "reader.TokenType = JsonTokenType.String"
-    | Complex _ -> "reader.TokenType = JsonTokenType.StartObject"
-    | Array _
-    | List _
-    | Map _ -> failwith $"Collection in {nameof (checkTokenType)}"
-
-let rec getValue (typesCache: Types.TypesCache) =
-    function
-    | Bool -> "reader.GetBoolean()"
-    | String -> "reader.GetString()"
-    | Int -> "reader.GetInt32()"
-    | Long -> "reader.GetInt64()"
-    | Float -> "reader.GetSingle()"
-    | Double -> "reader.GetDouble()"
-    | Money _ -> "reader.GetDecimal()"
-    | Bytes -> "reader.GetBytesFromBase64()"
-    | Timestamp -> "reader.GetDateTime()"
-    | Duration -> $"reader.GetString() |> {helpers}.toTimeSpan"
-    | Guid -> "System.Guid(reader.GetBytesFromBase64())"
-    | Optional t -> $"{getValue typesCache t} |> Some"
+    | Bool -> $"{helpers}.readBoolean(&reader)"
+    | String -> $"{helpers}.readString(&reader)"
+    | Int -> $"{helpers}.readInt(&reader)"
+    | Long -> $"{helpers}.readLong(&reader)"
+    | Float -> $"{helpers}.readSingle(&reader)"
+    | Double -> $"{helpers}.readDouble(&reader)"
+    | Money _ -> $"{helpers}.readMoney(&reader)"
+    | Bytes -> $"{helpers}.readNytes(&reader)"
+    | Timestamp -> $"{helpers}.readTimestamp(&reader)"
+    | Duration -> $"{helpers}.readDuration(&reader)"
+    | Guid -> $"{helpers}.readGuid(&reader)"
+    | Optional t -> $"{readValue typesCache t} |> ValueOption.map Some"
     | Types.IsEnum typesCache ei ->
-        $"reader.GetString() |> Convert{lastNames ei.Name |> solidName}.{firstName ei.Name}FromString"
-    | Complex typeName -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson(&reader)"
+        $"{helpers}.readString(&reader) |> ValueOption.map Convert{lastNames ei.Name |> solidName}.{firstName ei.Name}FromString"
+    | Complex _
     | Array _
     | List _
-    | Map _ -> failwith $"Collection in {nameof (getValue)}"
+    | Map _ -> failwith $"Collection in {nameof (readValue)}"
 
-let rec setValue (typesCache: Types.TypesCache) vName type' =
+let rec readValueBlock txt ident (typesCache: Types.TypesCache) (typ: Type) expr =
+    linei txt ident $"match {readValue typesCache typ} with"
+    linei txt ident $"| ValueSome v -> {expr}"
+    linei txt ident $"| ValueNone -> ()"
+
+let rec writeValue (typesCache: Types.TypesCache) vName type' =
     let rec f vName =
         function
         | Bool -> $"writer.WriteBooleanValue({vName})"
@@ -323,20 +302,20 @@ let rec setValue (typesCache: Types.TypesCache) vName type' =
         | Int
         | Long
         | Float
-        | Double -> $"writer.WriteNumberValue({vName})"
+        | Double
         | Money _ -> $"writer.WriteNumberValue({vName})"
         | Bytes -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"
-        | Timestamp -> $"writer.WriteStringValue({vName} |> {helpers}.fromDateTime)"
-        | Duration -> $"writer.WriteStringValue({vName} |> {helpers}.fromTimeSpan)"
-        | Guid -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}.ToByteArray()))"
+        | Timestamp -> $"{helpers}.writeTimestamp(&writer, {vName})"
+        | Duration -> $"{helpers}.writeDuration(&writer, {vName})"
+        | Guid -> $"{helpers}.writeGuid(&writer, {vName})"
         | Optional _ -> failwith "cannot unpack optional field"
         | Array t
         | List t ->
             let inner = "v"
-            $"writer.WriteStartArray(); (for v in {vName} do {setValue typesCache inner t}); writer.WriteEndArray()"
+            $"writer.WriteStartArray(); (for v in {vName} do {writeValue typesCache inner t}); writer.WriteEndArray()"
         | Map t ->
             let inner = "pair.Value"
-            $"writer.WriteStartObject(); (for pair in {vName} do writer.WritePropertyName(pair.Key); {setValue typesCache inner t}); writer.WriteEndObject()"
+            $"writer.WriteStartObject(); (for pair in {vName} do writer.WritePropertyName(pair.Key); {writeValue typesCache inner t}); writer.WriteEndObject()"
         | Complex typeName ->
             match typesCache.TryFind typeName with
             | Some(Enum _) ->
