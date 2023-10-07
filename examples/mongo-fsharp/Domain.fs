@@ -1,16 +1,19 @@
 namespace Domain
+
 open Protokeep.FsharpTypes
+
 type TrafficLight =
     | Unknown = 0
     | Red = 1
     | Yellow = 2
     | Green = 3
+
 type LightStatus =
     | Unknown
     | Normal
-    | Warning of errorsCount:int*level:int
-    | OutOfOrder of since:System.DateTime
-with
+    | Warning of errorsCount: int*level: int
+    | OutOfOrder of since: System.DateTime
+
     static member MakeUnknownKey () = Key.Value "0"
     static member MakeNormalKey () = Key.Value "1"
     static member MakeWarningKey () = Key.Value "2"
@@ -22,6 +25,8 @@ with
             | LightStatus.Normal -> LightStatus.MakeNormalKey ()
             | LightStatus.Warning (errorsCount', level') -> LightStatus.MakeWarningKey ()
             | LightStatus.OutOfOrder (since') -> LightStatus.MakeOutOfOrderKey ()
+
+
 type Crossroad = {
     Id : int
     LongId : int64
@@ -35,7 +40,7 @@ type Crossroad = {
     LastChecked : System.DateTime
     ServiceInterval : System.TimeSpan
     CurrentLight : TrafficLight
-    Nickname : string option
+    Nickname : string voption
     Img : byte array
     Notes : string array
     Props : Map<string,string>
@@ -55,12 +60,15 @@ with
             LastChecked = System.DateTime.MinValue
             ServiceInterval = System.TimeSpan.Zero
             CurrentLight = TrafficLight.Unknown
-            Nickname = None
+            Nickname = ValueNone
             Img = Array.empty
             Notes = Array.empty
             Props = Map.empty
         }
+
     static member MakeKey (id': int) =
         Key.Value (id'.ToString())
+
     interface IEntity with
         member x.Key = Crossroad.MakeKey (x.Id)
+

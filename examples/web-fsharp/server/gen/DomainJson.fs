@@ -11,9 +11,9 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Val")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then y <- reader.GetInt32() |> Domain.Op.Val
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readInt(&reader) with
+                    | ValueSome v -> y <- v |> Domain.Op.Val
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Sum")) then
                     y <- ConvertDomain.OpCaseSumFromJson(&reader)
                 else if (reader.ValueTextEquals("Mul")) then
@@ -21,9 +21,7 @@ type ConvertDomain() =
                 else if (reader.ValueTextEquals("Div")) then
                     y <- ConvertDomain.OpCaseDivFromJson(&reader)
                 else if (reader.ValueTextEquals("Ln")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.StartObject
-                    then y <- ConvertDomain.OpFromJson(&reader) |> Domain.Op.Ln
-                    else reader.Skip()
+                    y <- ConvertDomain.OpFromJson(&reader) |> Domain.Op.Ln
                 else if (reader.ValueTextEquals("Quantum")) then
                     y <- ConvertDomain.OpCaseQuantumFromJson(&reader)
                 else if (reader.ValueTextEquals("Imagine")) then
@@ -72,9 +70,13 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("P1")) then
-                    p1 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("P2")) then
-                    p2 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p2 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         Domain.Op.Sum (p1,p2)
     static member OpCaseSumToJson (writer: inref<Utf8JsonWriter>,p1,p2) =
@@ -91,9 +93,13 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("P1")) then
-                    p1 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("P2")) then
-                    p2 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p2 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         Domain.Op.Mul (p1,p2)
     static member OpCaseMulToJson (writer: inref<Utf8JsonWriter>,p1,p2) =
@@ -110,9 +116,13 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("P1")) then
-                    p1 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("P2")) then
-                    p2 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p2 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         Domain.Op.Div (p1,p2)
     static member OpCaseDivToJson (writer: inref<Utf8JsonWriter>,p1,p2) =
@@ -130,13 +140,17 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("P1")) then
-                    p1 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("P2")) then
-                    p2 <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> p2 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("P3")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then p3 <- reader.GetString()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) with
+                    | ValueSome v -> p3 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         Domain.Op.Quantum (p1,p2,p3)
     static member OpCaseQuantumToJson (writer: inref<Utf8JsonWriter>,p1,p2,p3) =
@@ -149,23 +163,23 @@ type ConvertDomain() =
         writer.WriteStringValue(p3)
         writer.WriteEndObject()
     static member OpCaseImagineFromJson(reader: byref<Utf8JsonReader>) =
-        let mutable p1 = None
+        let mutable p1 = ValueNone
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("P1Value")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then p1 <- reader.GetInt32() |> Some
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readInt(&reader) |> ValueOption.map ValueSome with
+                    | ValueSome v -> p1 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         Domain.Op.Imagine (p1)
     static member OpCaseImagineToJson (writer: inref<Utf8JsonWriter>,p1) =
         writer.WriteStartObject()
         match p1 with
-        | Some v ->
+        | ValueSome v ->
             writer.WritePropertyName("P1Value")
             writer.WriteNumberValue(v)
-        | None -> ()
+        | ValueNone -> ()
         writer.WriteEndObject()
 
     static member OpErrorFromJson(reader: byref<Utf8JsonReader>): Domain.OpError =
@@ -174,9 +188,9 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("General")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then y <- reader.GetString() |> Domain.OpError.General
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) with
+                    | ValueSome v -> y <- v |> Domain.OpError.General
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("DivisionByZero")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.True
                     then y <- Domain.OpError.DivisionByZero
@@ -210,13 +224,11 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Success")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then y <- reader.GetInt32() |> Domain.OpResult.Success
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readInt(&reader) with
+                    | ValueSome v -> y <- v |> Domain.OpResult.Success
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Fail")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.StartObject
-                    then y <- ConvertDomain.OpErrorFromJson(&reader) |> Domain.OpResult.Fail
-                    else reader.Skip()
+                    y <- ConvertDomain.OpErrorFromJson(&reader) |> Domain.OpResult.Fail
                 else reader.Skip()
         y
     static member OpResultToJson (writer:inref<Utf8JsonWriter>, x: Domain.OpResult) =
@@ -240,11 +252,13 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Token")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vToken <- reader.GetString()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) with
+                    | ValueSome v -> vToken <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Operation")) then
-                    vOperation <- ConvertDomain.OpFromJson(&reader)
+                    match ConvertDomain.OpFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vOperation <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Token = vToken
@@ -262,7 +276,7 @@ type ConvertDomain() =
         let mutable vToken = ""
         let mutable vResult = Domain.OpResult.Unknown
         let mutable vExecutionTime = System.TimeSpan.Zero
-        let mutable vExtra = None
+        let mutable vExtra = ValueNone
         let mutable vSince = System.DateTime.MinValue
         let mutable vTags = ResizeArray()
         let mutable vStatus = Domain.Subdomain.Status.Unknown
@@ -270,35 +284,37 @@ type ConvertDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Token")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vToken <- reader.GetString()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) with
+                    | ValueSome v -> vToken <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Result")) then
-                    vResult <- ConvertDomain.OpResultFromJson(&reader)
+                    match ConvertDomain.OpResultFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vResult <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("ExecutionTime")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vExecutionTime <- reader.GetString() |> FsharpJsonHelpers.toTimeSpan
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readDuration(&reader) with
+                    | ValueSome v -> vExecutionTime <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("ExtraValue")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vExtra <- reader.GetString() |> Some
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) |> ValueOption.map ValueSome with
+                    | ValueSome v -> vExtra <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Since")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vSince <- reader.GetDateTime()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readTimestamp(&reader) with
+                    | ValueSome v -> vSince <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Tags")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.StartObject then
                         while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                             let propName = reader.GetString()
-                            if reader.Read() && reader.TokenType = JsonTokenType.String then
-                                vTags.Add((propName, reader.GetString()))
-                            else reader.Skip()
+                            match FsharpJsonHelpers.readString(&reader) with
+                            | ValueSome v -> vTags.Add(propName, v)
+                            | ValueNone -> ()
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Status")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vStatus <- reader.GetString() |> ConvertDomainSubdomain.StatusFromString
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) |> ValueOption.map ConvertDomainSubdomain.StatusFromString with
+                    | ValueSome v -> vStatus <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Token = vToken
@@ -316,14 +332,14 @@ type ConvertDomain() =
         writer.WritePropertyName("Result")
         ConvertDomain.OpResultToJson(&writer, x.Result)
         writer.WritePropertyName("ExecutionTime")
-        writer.WriteStringValue(x.ExecutionTime |> FsharpJsonHelpers.fromTimeSpan)
+        FsharpJsonHelpers.writeDuration(&writer, x.ExecutionTime)
         match x.Extra with
-        | Some v ->
+        | ValueSome v ->
             writer.WritePropertyName("ExtraValue")
             writer.WriteStringValue(v)
-        | None -> ()
+        | ValueNone -> ()
         writer.WritePropertyName("Since")
-        writer.WriteStringValue(x.Since |> FsharpJsonHelpers.fromDateTime)
+        FsharpJsonHelpers.writeTimestamp(&writer, x.Since)
         writer.WritePropertyName("Tags")
         writer.WriteStartObject(); (for pair in x.Tags do writer.WritePropertyName(pair.Key); writer.WriteStringValue(pair.Value)); writer.WriteEndObject()
         writer.WritePropertyName("Status")

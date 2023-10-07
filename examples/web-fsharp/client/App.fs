@@ -9,7 +9,7 @@ open Fable.SimpleJson
 promise {
     let req =
         { Token = "WebClient-123"
-          Operation = Sum(Val 2, Sum(Imagine(Some 40), Mul(Val 100500, Zero))) }
+          Operation = Sum(Val 2, Sum(Imagine(ValueSome 40), Mul(Val 100500, Zero))) }
 
     document.getElementById("reqObj").innerText <- sprintf "%A" req
     let json = JsonConverters.ConvertDomain.RequestToJson req

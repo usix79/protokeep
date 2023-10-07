@@ -31,15 +31,13 @@ type ConvertBetting() =
                     then y <- Betting.Outcome.Empty
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Priced")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then y <- reader.GetDecimal() |> Betting.Outcome.Priced
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readMoney(&reader) with
+                    | ValueSome v -> y <- v |> Betting.Outcome.Priced
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("PricedWithProb")) then
                     y <- ConvertBetting.OutcomeCasePricedWithProbFromJson(&reader)
                 else if (reader.ValueTextEquals("Resulted")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then y <- reader.GetString() |> ConvertBetting.OutcomeResultFromString |> Betting.Outcome.Resulted
-                    else reader.Skip()
+                    y <- ConvertBetting.OutcomeResultFromJson(&reader) |> Betting.Outcome.Resulted
                 else reader.Skip()
         y
     static member OutcomeToJson (writer:inref<Utf8JsonWriter>, x: Betting.Outcome) =
@@ -68,13 +66,13 @@ type ConvertBetting() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Price")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then price <- reader.GetDecimal()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readMoney(&reader) with
+                    | ValueSome v -> price <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Prob")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then prob <- reader.GetSingle()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readSingle(&reader) with
+                    | ValueSome v -> prob <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         Betting.Outcome.PricedWithProb (price,prob)
     static member OutcomeCasePricedWithProbToJson (writer: inref<Utf8JsonWriter>,price,prob) =
@@ -93,11 +91,17 @@ type ConvertBetting() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Win1")) then
-                    vWin1 <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vWin1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Draw")) then
-                    vDraw <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vDraw <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Win2")) then
-                    vWin2 <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vWin2 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Win1 = vWin1
@@ -122,13 +126,17 @@ type ConvertBetting() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Value")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vValue <- reader.GetDecimal()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readMoney(&reader) with
+                    | ValueSome v -> vValue <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Win1")) then
-                    vWin1 <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vWin1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Win2")) then
-                    vWin2 <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vWin2 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Value = vValue
@@ -153,13 +161,17 @@ type ConvertBetting() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Value")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vValue <- reader.GetDecimal()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readMoney(&reader) with
+                    | ValueSome v -> vValue <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Over")) then
-                    vOver <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vOver <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Under")) then
-                    vUnder <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vUnder <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Value = vValue
@@ -183,13 +195,13 @@ type ConvertBetting() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("S1")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vS1 <- reader.GetInt32()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readInt(&reader) with
+                    | ValueSome v -> vS1 <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("S2")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vS2 <- reader.GetInt32()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readInt(&reader) with
+                    | ValueSome v -> vS2 <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             S1 = vS1
@@ -210,9 +222,13 @@ type ConvertBetting() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Score")) then
-                    vScore <- ConvertBetting.ScoreFromJson(&reader)
+                    match ConvertBetting.ScoreFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vScore <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Outcome")) then
-                    vOutcome <- ConvertBetting.OutcomeFromJson(&reader)
+                    match ConvertBetting.OutcomeFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vOutcome <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Score = vScore
@@ -234,9 +250,9 @@ type ConvertBetting() =
                 else if (reader.ValueTextEquals("Scores")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.StartArray then
                         while reader.Read() && reader.TokenType <> JsonTokenType.EndArray do
-                            if reader.TokenType = JsonTokenType.StartObject then
-                                vScores.Add(ConvertBetting.ScoreOutcomeFromJson(&reader))
-                            else reader.Skip()
+                            match ConvertBetting.ScoreOutcomeFromJson(&reader) |> ValueSome with
+                            | ValueSome v -> vScores.Add(v)
+                            | ValueNone -> ()
                     else reader.Skip()
                 else reader.Skip()
         {

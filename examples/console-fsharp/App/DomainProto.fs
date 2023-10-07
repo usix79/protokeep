@@ -61,7 +61,7 @@ type ConvertDomain() =
             LastChecked = x.LastChecked |> fun v -> v.ToDateTime()
             ServiceInterval = x.ServiceInterval |> fun v -> v.ToTimeSpan()
             CurrentLight = x.CurrentLight |> ConvertDomain.FromProtobuf
-            Nickname = if x.NicknameCase = ProtoClasses.Domain.Crossroad2.NicknameOneofCase.NicknameValue then Some (x.NicknameValue) else None
+            Nickname = if x.NicknameCase = ProtoClasses.Domain.Crossroad2.NicknameOneofCase.NicknameValue then ValueSome (x.NicknameValue) else ValueNone
             Img = x.Img |> fun v -> v.ToByteArray()
             Notes = x.Notes |> Array.ofSeq
             Props = x.Props |> Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq
@@ -82,8 +82,8 @@ type ConvertDomain() =
         y.ServiceInterval <- x.ServiceInterval |> Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan
         y.CurrentLight <- x.CurrentLight |> ConvertDomain.ToProtobuf
         match x.Nickname with
-        | Some v -> y.NicknameValue <- v
-        | None -> ()
+        | ValueSome v -> y.NicknameValue <- v
+        | ValueNone -> ()
         y.Img <- x.Img |> Google.Protobuf.ByteString.CopyFrom
         y.Notes.AddRange(x.Notes)
         y.Props.Add(x.Props)

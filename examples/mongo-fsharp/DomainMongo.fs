@@ -74,8 +74,10 @@ type ConvertDomain() =
             | _ -> printfn "Unexpected state: %A" reader.State
         reader.ReadEndDocument()
         Domain.LightStatus.Warning (errorsCount,level)
-    static member CrossroadToBson(writer: IBsonWriter, x: Domain.Crossroad) =
+    static member CrossroadToBson(writer: IBsonWriter, x: Domain.Crossroad, ?asEntity: bool) =
         writer.WriteStartDocument()
+        if asEntity.IsSome then
+            FsharpMongoHelpers.writeId (writer, x)
         writer.WriteName("Id")
         writer.WriteInt32(x.Id)
         writer.WriteName("LongId")
@@ -101,10 +103,10 @@ type ConvertDomain() =
         writer.WriteName("CurrentLight")
         writer.WriteInt32(x.CurrentLight |> int)
         match x.Nickname with
-        | Some v ->
+        | ValueSome v ->
             writer.WriteName("NicknameValue")
             writer.WriteString(v)
-        | None -> ()
+        | ValueNone -> ()
         writer.WriteName("Img")
         writer.WriteBytes(x.Img)
         writer.WriteName("Notes")
@@ -126,7 +128,7 @@ type ConvertDomain() =
         let mutable vLastChecked = System.DateTime.MinValue
         let mutable vServiceInterval = System.TimeSpan.Zero
         let mutable vCurrentLight = Domain.TrafficLight.Unknown
-        let mutable vNickname = None
+        let mutable vNickname = ValueNone
         let mutable vImg = Array.empty
         let mutable vNotes = ResizeArray()
         let mutable vProps = ResizeArray()
@@ -185,8 +187,8 @@ type ConvertDomain() =
                     | ValueSome v -> vCurrentLight <- v
                     | ValueNone -> ()
                 | "NicknameValue" ->
-                    match FsharpMongoHelpers.readString reader with
-                    | ValueSome v -> vNickname <- Some v
+                    match FsharpMongoHelpers.readString reader |> ValueOption.map ValueSome with
+                    | ValueSome v -> vNickname <- v
                     | ValueNone -> ()
                 | "Img" ->
                     match FsharpMongoHelpers.readBytes reader with
@@ -229,13 +231,6 @@ type ConvertDomain() =
             Props = vProps |> Map.ofSeq
         }
 
-type LightStatusSerializer() =
-    inherit SerializerBase<Domain.LightStatus>()
-    override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) =
-        ConvertDomain.LightStatusFromBson(ctx.Reader)
-
-    override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: Domain.LightStatus) =
-        ConvertDomain.LightStatusToBson(ctx.Writer, value)
 
 type CrossroadSerializer() =
     inherit SerializerBase<Domain.Crossroad>()
@@ -243,10 +238,9 @@ type CrossroadSerializer() =
         ConvertDomain.CrossroadFromBson(ctx.Reader)
 
     override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: Domain.Crossroad) =
-        ConvertDomain.CrossroadToBson(ctx.Writer, value)
+        ConvertDomain.CrossroadToBson(ctx.Writer, value, true)
 
 type ConvertDomain with
     static member RegisterSerializers() =
         BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3
-        BsonSerializer.RegisterSerializer(LightStatusSerializer())
         BsonSerializer.RegisterSerializer(CrossroadSerializer())

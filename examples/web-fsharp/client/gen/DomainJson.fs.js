@@ -71,7 +71,7 @@ export function ConvertDomain_OpFromJson_Z3E28EAD9(json) {
 }
 
 export function ConvertDomain_OpToJson_777D6174(x) {
-    return new Json(5, [ofList(singleton((x.tag === 1) ? ["Val", new Json(0, [x.fields[0]])] : ((x.tag === 2) ? ["Sum", ConvertDomain_OpCaseSumToJson_1054EE80(x.fields[0], x.fields[1])] : ((x.tag === 3) ? ["Mul", ConvertDomain_OpCaseMulToJson_1054EE80(x.fields[0], x.fields[1])] : ((x.tag === 4) ? ["Div", ConvertDomain_OpCaseDivToJson_1054EE80(x.fields[0], x.fields[1])] : ((x.tag === 5) ? ["Ln", ConvertDomain_OpToJson_777D6174(x.fields[0])] : ((x.tag === 6) ? ["Quantum", ConvertDomain_OpCaseQuantumToJson_Z68EE3D45(x.fields[0], x.fields[1], x.fields[2])] : ((x.tag === 7) ? ["Imagine", ConvertDomain_OpCaseImagineToJson_71136F3F(x.fields[0])] : ((x.tag === 8) ? ["Zero", new Json(2, [true])] : ["Unknown", new Json(2, [true])])))))))), {
+    return new Json(5, [ofList(singleton((x.tag === 1) ? ["Val", new Json(0, [x.fields[0]])] : ((x.tag === 2) ? ["Sum", ConvertDomain_OpCaseSumToJson_1054EE80(x.fields[0], x.fields[1])] : ((x.tag === 3) ? ["Mul", ConvertDomain_OpCaseMulToJson_1054EE80(x.fields[0], x.fields[1])] : ((x.tag === 4) ? ["Div", ConvertDomain_OpCaseDivToJson_1054EE80(x.fields[0], x.fields[1])] : ((x.tag === 5) ? ["Ln", ConvertDomain_OpToJson_777D6174(x.fields[0])] : ((x.tag === 6) ? ["Quantum", ConvertDomain_OpCaseQuantumToJson_Z68EE3D45(x.fields[0], x.fields[1], x.fields[2])] : ((x.tag === 7) ? ["Imagine", ConvertDomain_OpCaseImagineToJson_Z28A5E458(x.fields[0])] : ((x.tag === 8) ? ["Zero", new Json(2, [true])] : ["Unknown", new Json(2, [true])])))))))), {
         Compare: comparePrimitives,
     })]);
 }
@@ -203,7 +203,7 @@ export function ConvertDomain_OpCaseImagineFromJson_Z3E28EAD9(json) {
     return new Op(7, [p1]);
 }
 
-export function ConvertDomain_OpCaseImagineToJson_71136F3F(p1) {
+export function ConvertDomain_OpCaseImagineToJson_Z28A5E458(p1) {
     return new Json(5, [ofList(toList(delay(() => {
         if (p1 == null) {
             return empty();

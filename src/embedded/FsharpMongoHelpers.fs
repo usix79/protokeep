@@ -1,7 +1,7 @@
 module FsharpMongoHelpers =
     open System
     open MongoDB.Bson
-    open Protokeep.FsharpTypes
+    open FsharpTypes
 
     let writeId (writer: IO.IBsonWriter, entity: IEntity) =
         writer.WriteName("_id")

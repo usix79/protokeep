@@ -11,21 +11,13 @@ type ConvertBettingFootball() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Winner3Way")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.StartObject
-                    then y <- ConvertBetting.Winner3WayFromJson(&reader) |> Betting.Football.Market.Winner3Way
-                    else reader.Skip()
+                    y <- ConvertBettingFootball.Winner3WayFromJson(&reader) |> Betting.Football.Market.Winner3Way
                 else if (reader.ValueTextEquals("Handicap")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.StartObject
-                    then y <- ConvertBetting.HandicapFromJson(&reader) |> Betting.Football.Market.Handicap
-                    else reader.Skip()
+                    y <- ConvertBettingFootball.HandicapFromJson(&reader) |> Betting.Football.Market.Handicap
                 else if (reader.ValueTextEquals("Total")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.StartObject
-                    then y <- ConvertBetting.TotalFromJson(&reader) |> Betting.Football.Market.Total
-                    else reader.Skip()
+                    y <- ConvertBettingFootball.TotalFromJson(&reader) |> Betting.Football.Market.Total
                 else if (reader.ValueTextEquals("CorrectScore")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.StartObject
-                    then y <- ConvertBetting.CorrectScoreFromJson(&reader) |> Betting.Football.Market.CorrectScore
-                    else reader.Skip()
+                    y <- ConvertBettingFootball.CorrectScoreFromJson(&reader) |> Betting.Football.Market.CorrectScore
                 else reader.Skip()
         y
     static member MarketToJson (writer:inref<Utf8JsonWriter>, x: Betting.Football.Market) =
@@ -98,23 +90,25 @@ type ConvertBettingFootball() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Statistic")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vStatistic <- reader.GetString() |> ConvertBettingFootball.StatisticFromString
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) |> ValueOption.map ConvertBettingFootball.StatisticFromString with
+                    | ValueSome v -> vStatistic <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Period")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vPeriod <- reader.GetString() |> ConvertBettingFootball.PeriodFromString
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) |> ValueOption.map ConvertBettingFootball.PeriodFromString with
+                    | ValueSome v -> vPeriod <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Market")) then
-                    vMarket <- ConvertBettingFootball.MarketFromJson(&reader)
+                    match ConvertBettingFootball.MarketFromJson(&reader) |> ValueSome with
+                    | ValueSome v -> vMarket <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Status")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.String
-                    then vStatus <- reader.GetString() |> ConvertBettingFootball.StatusFromString
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readString(&reader) |> ValueOption.map ConvertBettingFootball.StatusFromString with
+                    | ValueSome v -> vStatus <- v
+                    | ValueNone -> ()
                 else if (reader.ValueTextEquals("Version")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.Number
-                    then vVersion <- reader.GetInt32()
-                    else reader.Skip()
+                    match FsharpJsonHelpers.readInt(&reader) with
+                    | ValueSome v -> vVersion <- v
+                    | ValueNone -> ()
                 else reader.Skip()
         {
             Statistic = vStatistic

@@ -223,12 +223,6 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 linei txt 7 $"let propName = reader.GetString()"
                 readValueBlock txt 7 typesCache t $"{vName}.Add(propName, v)"
                 linei txt 5 $"else reader.Skip()"
-            | Types.IsRecord typesCache info ->
-                let typeName = info.Name
-                linei txt 5 $"{vName} <- Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson(&reader)"
-            | Types.IsUnion typesCache info ->
-                let typeName = info.Name
-                linei txt 5 $"{vName} <- Convert{lastNames typeName |> solidName}.{firstName typeName}FromJson(&reader)"
             | t -> readValueBlock txt 5 typesCache t $"{vName} <- v"
 
         line txt $"                else reader.Skip()"
@@ -276,15 +270,15 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Long -> $"{helpers}.readLong(&reader)"
     | Float -> $"{helpers}.readSingle(&reader)"
     | Double -> $"{helpers}.readDouble(&reader)"
-    | Money _ -> $"{helpers}.readMoney(&reader)"
-    | Bytes -> $"{helpers}.readNytes(&reader)"
+    | Money scale -> $"{helpers}.readMoney(&reader, {scale})"
+    | Bytes -> $"{helpers}.readBytes(&reader)"
     | Timestamp -> $"{helpers}.readTimestamp(&reader)"
     | Duration -> $"{helpers}.readDuration(&reader)"
     | Guid -> $"{helpers}.readGuid(&reader)"
     | Optional t -> $"{readValue typesCache t} |> ValueOption.map ValueSome"
     | Types.IsEnum typesCache ei ->
         $"{helpers}.readString(&reader) |> ValueOption.map Convert{lastNames ei.Name |> solidName}.{firstName ei.Name}FromString"
-    | Complex _
+    | Complex t -> $"Convert{lastNames t |> solidName}.{firstName t}FromJson(&reader) |> ValueSome"
     | Array _
     | List _
     | Map _ -> failwith $"Collection in {nameof (readValue)}"

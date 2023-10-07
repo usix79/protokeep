@@ -38,7 +38,7 @@ type CalcController(logger: ILogger<CalcController>) =
                     | Ok v -> Success v
                     | Error v -> Fail v
                   ExecutionTime = TimeSpan.FromMilliseconds(1341.)
-                  Extra = None
+                  Extra = ValueSome "Hello"
                   Since = DateTime.UtcNow
                   Tags = [ "tag1", "AGA"; "tag2", "BG"; "tag3333", "Hello" ] |> Map.ofList
                   Status = Subdomain.Status.Green }

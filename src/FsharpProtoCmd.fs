@@ -154,15 +154,15 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             let caseValue =
                 $"{fullNameTxt}.{firstCharToUpper fieldInfo.Name}OneofCase.{firstCharToUpper fieldInfo.Name}Value"
 
-            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then Some (x.{firstCharToUpper fieldInfo.Name}Value{convertionFrom t}) else None"
+            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then ValueSome (x.{firstCharToUpper fieldInfo.Name}Value{convertionFrom t}) else ValueNone"
         | t -> $"x.{firstCharToUpper fieldInfo.Name}{convertionFrom t}"
 
     and genFieldToProtobuf xName yName fieldInfo =
         match fieldInfo.Type with
         | Optional t ->
             line txt $"        match {xName} with"
-            line txt $"        | Some v -> {yName}Value <- v{convertionTo t}"
-            line txt $"        | None -> ()"
+            line txt $"        | ValueSome v -> {yName}Value <- v{convertionTo t}"
+            line txt $"        | ValueNone -> ()"
         | Array t
         | List t ->
             match fieldToProtobuf t with

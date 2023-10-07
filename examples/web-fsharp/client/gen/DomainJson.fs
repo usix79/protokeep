@@ -94,18 +94,18 @@ type ConvertDomain () =
            "P3", JString (p3)
         ] |> Map.ofList |> JObject
     static member OpCaseImagineFromJson (json: Json) =
-        let mutable p1 = None
+        let mutable p1 = ValueNone
         FsharpFableHelpers.getProps json
         |> Seq.iter(fun pair ->
             match pair.Key with
-            | "P1Value" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> p1 <- v |> unbox |> Some)
+            | "P1Value" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> p1 <- v |> unbox |> ValueSome)
             | _ -> () )
         Domain.Op.Imagine (p1)
     static member OpCaseImagineToJson (p1) =
         [
            match p1 with
-           | Some v -> "P1Value", JNumber (unbox v)
-           | None -> ()
+           | ValueSome v -> "P1Value", JNumber (unbox v)
+           | ValueNone -> ()
         ] |> Map.ofList |> JObject
     static member OpErrorFromJson (json: Json): Domain.OpError =
         let mutable y = Domain.OpError.Unknown
@@ -161,7 +161,7 @@ type ConvertDomain () =
         let mutable vToken = ""
         let mutable vResult = Domain.OpResult.Unknown
         let mutable vExecutionTime = System.TimeSpan.Zero
-        let mutable vExtra = None
+        let mutable vExtra = ValueNone
         let mutable vSince = System.DateTime.MinValue
         let mutable vTags = ResizeArray()
         let mutable vStatus = Domain.Subdomain.Status.Unknown
@@ -171,7 +171,7 @@ type ConvertDomain () =
             | "Token" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vToken <- v)
             | "Result" -> pair.Value |> (fun v -> vResult <- v |> ConvertDomain.OpResultFromJson)
             | "ExecutionTime" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vExecutionTime <- v |> FsharpFableHelpers.toTimeSpan)
-            | "ExtraValue" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vExtra <- v |> Some)
+            | "ExtraValue" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vExtra <- v |> ValueSome)
             | "Since" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vSince <- v |> FsharpFableHelpers.toDateTime)
             | "Tags" -> pair.Value |> FsharpFableHelpers.ifObject (Map.iter (fun key -> FsharpFableHelpers.ifString (fun v -> v |> fun v -> vTags.Add(key, v))))
             | "Status" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vStatus <- v |> ConvertDomainSubdomain.StatusFromString)
@@ -191,8 +191,8 @@ type ConvertDomain () =
            "Result", (x.Result |> ConvertDomain.OpResultToJson)
            "ExecutionTime", JString (x.ExecutionTime |> FsharpFableHelpers.fromTimeSpan)
            match x.Extra with
-           | Some v -> "ExtraValue", JString (v)
-           | None -> ()
+           | ValueSome v -> "ExtraValue", JString (v)
+           | ValueNone -> ()
            "Since", JString (x.Since |> FsharpFableHelpers.fromDateTime)
            "Tags", JObject (x.Tags |> Map.map (fun _ v -> JString (v)))
            "Status", JString (x.Status |> ConvertDomainSubdomain.StatusToString)

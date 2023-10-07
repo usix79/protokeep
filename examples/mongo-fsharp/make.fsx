@@ -14,12 +14,12 @@ let gen _ =
 
         do!
             protokeep
-                $"{protokeepFileName} fsharp-types -ns Domain  -o {fsharpTypesFile} --update-commons"
+                $"{protokeepFileName} fsharp-types -o {fsharpTypesFile} --update-commons -ns Domain"
                 __SOURCE_DIRECTORY__
 
         do!
             protokeep
-                $"{protokeepFileName} fsharp-mongo -ns Domain -o {fsharpMongoFile} --update-commons"
+                $"{protokeepFileName} fsharp-mongo -o {fsharpMongoFile} --update-commons -ns Domain"
                 __SOURCE_DIRECTORY__
     }
 

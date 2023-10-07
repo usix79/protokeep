@@ -186,9 +186,9 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
                 line
                     txt
-                    $"           | Some v -> \"{firstCharToUpper fieldInfo.Name}Value\", {packField typesCache inner t}"
+                    $"           | ValueSome v -> \"{firstCharToUpper fieldInfo.Name}Value\", {packField typesCache inner t}"
 
-                line txt $"           | None -> ()"
+                line txt $"           | ValueNone -> ()"
             | _ ->
                 line
                     txt
@@ -221,7 +221,7 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         | Timestamp -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toDateTime{rightOp})"
         | Duration -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toTimeSpan{rightOp})"
         | Guid -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
-        | Optional t -> f $"{vName} <- " " |> Some" t
+        | Optional t -> f $"{vName} <- " " |> ValueSome" t
         | Array t
         | List t ->
             let inner = f "" $" |> {vName}.Add" t

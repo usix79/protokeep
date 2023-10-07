@@ -10,7 +10,7 @@ type Op =
     | Div of p1: Op*p2: Op
     | Ln of p1: Op
     | Quantum of p1: Op*p2: Op*p3: string
-    | Imagine of p1: int option
+    | Imagine of p1: int voption
     | Zero
 
     static member MakeUnknownKey () = Key.Value "0"
@@ -86,7 +86,7 @@ type Response = {
     Token : string
     Result : OpResult
     ExecutionTime : System.TimeSpan
-    Extra : string option
+    Extra : string voption
     Since : System.DateTime
     Tags : Map<string,string>
     Status : Domain.Subdomain.Status
@@ -97,7 +97,7 @@ with
             Token = ""
             Result = OpResult.Unknown
             ExecutionTime = System.TimeSpan.Zero
-            Extra = None
+            Extra = ValueNone
             Since = System.DateTime.MinValue
             Tags = Map.empty
             Status = Subdomain.Status.Unknown

@@ -61,7 +61,7 @@ type Crossroad2 = {
     LastChecked : System.DateTime
     ServiceInterval : System.TimeSpan
     CurrentLight : TrafficLight
-    Nickname : string option
+    Nickname : string voption
     Img : byte array
     Notes : string array
     Props : Map<string,string>
@@ -81,7 +81,7 @@ with
             LastChecked = System.DateTime.MinValue
             ServiceInterval = System.TimeSpan.Zero
             CurrentLight = TrafficLight.Unknown
-            Nickname = None
+            Nickname = ValueNone
             Img = Array.empty
             Notes = Array.empty
             Props = Map.empty
