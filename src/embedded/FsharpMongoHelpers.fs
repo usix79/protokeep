@@ -3,9 +3,9 @@ module FsharpMongoHelpers =
     open MongoDB.Bson
     open Protokeep.FsharpTypes
 
-    let writeId (writer: IO.IBsonWriter, key: Key) =
+    let writeId (writer: IO.IBsonWriter, entity: IEntity) =
         writer.WriteName("_id")
-        writer.WriteString(key.ToString())
+        writer.WriteString(entity.Key.ToString())
 
     let private unixEpoch = DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
 

@@ -242,7 +242,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
         if recordInfo.HasKey then
             line txt $"        if asEntity.IsSome then"
-            line txt $"            {helpers}.writeId (writer, {prefix}Key)"
+            line txt $"            {helpers}.writeId (writer, {prefix.TrimEnd '.'})"
 
         for fieldInfo in recordInfo.Fields do
             let vName = $"{prefix}{fieldInfo.Name}"
@@ -282,6 +282,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
            ^ function
                | Record info when info.HasKey -> Some info.Name
                | _ -> None
+
+    line txt $""
 
     for typeName in serializableTypeNames do
         line txt $"type {typeName |> firstName}Serializer() ="

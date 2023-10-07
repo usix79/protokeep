@@ -12,5 +12,8 @@ module FsharpTypes =
 
     let (|TryFind|_|) f key = f key
 
+    type IEntity =
+        abstract member Key: Key
+
     type IVersioned =
         abstract member Version: int with get, set

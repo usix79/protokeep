@@ -189,8 +189,9 @@ let recordKeyMembers ns (typesCache: TypesCache) txt typeName keyFields =
     | _ -> line txt $"        Key.Items [{keyExpression typesCache keyFields}]"
 
     line txt $""
+    line txt $"    interface IEntity with"
     let keyArgs = makeKeyArgs typesCache keyFields "x." ""
-    line txt $"    member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
+    line txt $"        member x.Key = {firstName typeName}.MakeKey ({keyArgs})"
     line txt $""
 
 let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (info: UnionInfo) =
@@ -206,9 +207,10 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
 
         line txt $"    static member Make{caseLock.Name}Key ({keyParams ns typesCache keyFields}) = {keyExpression}"
 
-    line txt $"    member x.Key ="
-    line txt $"        match x with"
-    line txt $"        | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
+    line txt $"    interface IEntity with"
+    line txt $"        member x.Key ="
+    line txt $"            match x with"
+    line txt $"            | {firstName info.Name}.Unknown -> {firstName info.Name}.MakeUnknownKey ()"
 
     for recordInfo, caseLock in locks.Union(info.Name).Cases |> List.zip info.Cases do
         let keyFields = recordInfo.Fields |> List.filter (fun x -> x.IsKey)
@@ -217,7 +219,9 @@ let unionKeyMembers ns (locks: LocksCollection) (typesCache: TypesCache) txt (in
         let leftSide =
             $"{firstName info.Name}.{caseLock.Name}{caseParams recordInfo.Fields}"
 
-        line txt $"        | {leftSide} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+        line txt $"            | {leftSide} -> {firstName info.Name}.Make{caseLock.Name}Key ({keyArgs})"
+
+    line txt $""
 
 let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
     let indexedFields =
