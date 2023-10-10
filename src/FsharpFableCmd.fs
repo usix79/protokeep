@@ -219,6 +219,8 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         function
         | Bool -> $"{helpers}.ifBool (fun v -> {leftOp}v{rightOp})"
         | String -> $"{helpers}.ifString (fun v -> {leftOp}v{rightOp})"
+        | Byte
+        | Short
         | Int
         | Long
         | Single
@@ -254,6 +256,8 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         function
         | Bool -> $"JBool ({vName})"
         | String -> $"JString ({vName})"
+        | Byte
+        | Short
         | Int
         | Long
         | Single

@@ -38,6 +38,8 @@ module private Impl =
         choice
             [ skipString "bool" |>> (fun () -> Bool)
               skipString "string" |>> (fun () -> String)
+              skipString "byte" |>> (fun () -> Byte)
+              skipString "short" |>> (fun () -> Short)
               skipString "int" |>> (fun () -> Int)
               skipString "long" |>> (fun () -> Long)
               skipString "single" |>> (fun () -> Single)
@@ -49,19 +51,6 @@ module private Impl =
               skipString "money" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
               |>> Money
               complexName |>> Complex ]
-
-    // let fullType' =
-    //     type'
-    //     >>= (fun t ->
-    //         ws
-    //         >>? opt (
-    //             choice
-    //                 [ skipString "option" |>> (fun () -> Optional t)
-    //                   skipString "array" |>> (fun () -> Array t)
-    //                   skipString "list" |>> (fun () -> List t)
-    //                   skipString "map" |>> (fun () -> Map t) ]
-    //         )
-    //         |>> (Option.defaultValue t))
 
     let generic1 keyword fn =
         skipString keyword >>. ws >>. pchar '<' >>. ws >>. type' .>> ws .>> pchar '>'

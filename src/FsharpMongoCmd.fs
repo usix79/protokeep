@@ -337,6 +337,8 @@ let rec readValue (typesCache: Types.TypesCache) =
     function
     | Bool -> $"{helpers}.readBoolean reader"
     | String -> $"{helpers}.readString reader"
+    | Byte -> $"{helpers}.readByte reader"
+    | Short -> $"{helpers}.readShort reader"
     | Int -> $"{helpers}.readInt reader"
     | Long -> $"{helpers}.readLong reader"
     | Single -> $"{helpers}.readFloat reader"
@@ -359,6 +361,8 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         function
         | Bool -> $"writer.WriteBoolean({vName})"
         | String -> $"writer.WriteString({vName})"
+        | Byte -> $"writer.WriteInt32({vName})"
+        | Short -> $"writer.WriteInt32({vName})"
         | Int -> $"writer.WriteInt32({vName})"
         | Long -> $"writer.WriteInt64({vName})"
         | Single -> $"writer.WriteDouble({vName} |> double)"

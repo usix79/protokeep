@@ -119,6 +119,8 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
+    | Byte -> "sbyte"
+    | Short -> "int16"
     | Int -> "int"
     | Long -> "int64"
     | Single -> "float32"
@@ -408,6 +410,8 @@ let defValue (ns: ComplexName) isMutable =
     function
     | Bool -> "false"
     | String -> "\"\""
+    | Byte -> "0uy"
+    | Short -> "0s"
     | Int -> "0"
     | Long -> "0L"
     | Single -> "0.f"

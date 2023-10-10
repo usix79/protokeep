@@ -210,6 +210,8 @@ let rec fieldFromProtobuf ns type' =
     match type' with
     | Bool
     | String
+    | Byte
+    | Short
     | Int
     | Long
     | Single
@@ -242,6 +244,8 @@ let rec fieldToProtobuf type' =
     match type' with
     | Bool
     | String
+    | Byte
+    | Short
     | Int
     | Long
     | Single

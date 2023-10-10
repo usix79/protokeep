@@ -153,6 +153,8 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
+    | Byte -> "int32"
+    | Short -> "int32"
     | Int -> "int32"
     | Long -> "int64"
     | Single -> "float"

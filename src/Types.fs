@@ -7,6 +7,8 @@ type ComplexName = ComplexName of string list
 type Type =
     | Bool
     | String
+    | Byte
+    | Short
     | Int
     | Long
     | Money of scale: int
@@ -382,6 +384,13 @@ module Types =
         match from, to' with
         | Bool, Int -> true
         | Bool, Long -> true
+        | Byte, Bool -> true
+        | Byte, Short -> true
+        | Byte, Int -> true
+        | Byte, Long -> true
+        | Short, Bool -> true
+        | Short, Int -> true
+        | Short, Long -> true
         | Int, Long -> true
         | Int, Bool -> true
         | Long, Int -> true

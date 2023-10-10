@@ -17,79 +17,59 @@ type ConvertExampleGameDomain() =
         | Example.GameDomain.Side.Player2 -> "SidePlayer2"
         | _ -> "Unknown"
 
-    static member GameStatusFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.GameStatus voption =
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
+    static member GameStatusFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.GameStatus voption =
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
             let mutable y = Example.GameDomain.GameStatus.Unknown
-
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("InProgress")) then
                     let mutable _turn = 0
-
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> _turn <- v
                     | ValueNone -> ()
-
                     y <- _turn |> Example.GameDomain.GameStatus.InProgress
                 else if (reader.ValueTextEquals("Finnished")) then
                     y <- ConvertExampleGameDomain.GameStatusCaseFinnishedFromJson(&reader)
                 else if (reader.ValueTextEquals("Terminated")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.True then
-                        y <- Example.GameDomain.GameStatus.Terminated
-                    else
-                        reader.Skip()
-                else
-                    reader.Skip()
-
+                    if reader.Read() && reader.TokenType = JsonTokenType.True
+                    then y <- Example.GameDomain.GameStatus.Terminated
+                    else reader.Skip()
+                else reader.Skip()
             ValueSome y
-        else
-            ValueNone
-
-    static member GameStatusToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.GameStatus) =
+        else ValueNone
+    static member GameStatusToJson (writer:inref<Utf8JsonWriter>, x: Example.GameDomain.GameStatus) =
         writer.WriteStartObject()
-
         match x with
-        | Example.GameDomain.GameStatus.InProgress(turn) ->
+        | Example.GameDomain.GameStatus.InProgress (turn) ->
             writer.WritePropertyName("InProgress")
             writer.WriteNumberValue(turn)
-        | Example.GameDomain.GameStatus.Finnished(winner, turn) ->
+        | Example.GameDomain.GameStatus.Finnished (winner,turn) ->
             writer.WritePropertyName("Finnished")
-            ConvertExampleGameDomain.GameStatusCaseFinnishedToJson(&writer, winner, turn)
+            ConvertExampleGameDomain.GameStatusCaseFinnishedToJson(&writer,winner,turn)
         | Example.GameDomain.GameStatus.Terminated ->
             writer.WritePropertyName("Terminated")
             writer.WriteBooleanValue(true)
         | _ ->
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
-
         writer.WriteEndObject()
-
     static member GameStatusCaseFinnishedFromJson(reader: byref<Utf8JsonReader>) =
         let mutable winner = Example.GameDomain.Side.Unknown
         let mutable turn = 0
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Winner")) then
-                    match
-                        FsharpJsonHelpers.readString (&reader)
-                        |> ValueOption.map ConvertExampleGameDomain.SideFromString
-                    with
+                    match FsharpJsonHelpers.readString(&reader) |> ValueOption.map ConvertExampleGameDomain.SideFromString with
                     | ValueSome v -> winner <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Turn")) then
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> turn <- v
                     | ValueNone -> ()
-                else
-                    reader.Skip()
-
-        Example.GameDomain.GameStatus.Finnished(winner, turn)
-
-    static member GameStatusCaseFinnishedToJson(writer: inref<Utf8JsonWriter>, winner, turn) =
+                else reader.Skip()
+        Example.GameDomain.GameStatus.Finnished (winner,turn)
+    static member GameStatusCaseFinnishedToJson (writer: inref<Utf8JsonWriter>,winner,turn) =
         writer.WriteStartObject()
         writer.WritePropertyName("Winner")
         writer.WriteStringValue(winner |> ConvertExampleGameDomain.SideToString)
@@ -97,7 +77,7 @@ type ConvertExampleGameDomain() =
         writer.WriteNumberValue(turn)
         writer.WriteEndObject()
 
-    static member LocationToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Location) =
+    static member LocationToJson (writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Location) =
         writer.WriteStartObject()
         writer.WritePropertyName("X")
         writer.WriteNumberValue(x.X)
@@ -105,30 +85,27 @@ type ConvertExampleGameDomain() =
         writer.WriteNumberValue(x.Y)
         writer.WriteEndObject()
 
-    static member LocationFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.Location voption =
+    static member LocationFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Location voption =
         let mutable vX = 0
         let mutable vY = 0
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("X")) then
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> vX <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Y")) then
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> vY <- v
                     | ValueNone -> ()
-                else
-                    reader.Skip()
-
-            ValueSome { X = vX; Y = vY }
-        else
-            ValueNone
-
-    static member UnitToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Unit) =
+                else reader.Skip()
+            ValueSome {
+                X = vX
+                Y = vY
+            }
+        else ValueNone
+    static member UnitToJson (writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Unit) =
         writer.WriteStartObject()
         writer.WritePropertyName("Name")
         writer.WriteStringValue(x.Name)
@@ -136,40 +113,36 @@ type ConvertExampleGameDomain() =
         writer.WriteNumberValue(x.Health)
         writer.WriteEndObject()
 
-    static member UnitFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.Unit voption =
+    static member UnitFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Unit voption =
         let mutable vName = ""
         let mutable vHealth = 0
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Name")) then
-                    match FsharpJsonHelpers.readString (&reader) with
+                    match FsharpJsonHelpers.readString(&reader) with
                     | ValueSome v -> vName <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Health")) then
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> vHealth <- v
                     | ValueNone -> ()
-                else
-                    reader.Skip()
-
-            ValueSome { Name = vName; Health = vHealth }
-        else
-            ValueNone
-
-    static member GameToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Game) =
+                else reader.Skip()
+            ValueSome {
+                Name = vName
+                Health = vHealth
+            }
+        else ValueNone
+    static member GameToJson (writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Game) =
         writer.WriteStartObject()
         writer.WritePropertyName("Id")
-        FsharpJsonHelpers.writeGuid (&writer, x.Id)
+        FsharpJsonHelpers.writeGuid(&writer, x.Id)
         writer.WritePropertyName("Player")
         writer.WriteNumberValue(x.Player)
         writer.WritePropertyName("Status")
         ConvertExampleGameDomain.GameStatusToJson(&writer, x.Status)
         writer.WritePropertyName("Board")
         writer.WriteStartArray()
-
         for pair in x.Board do
             writer.WriteStartObject()
             writer.WritePropertyName("Key")
@@ -177,32 +150,29 @@ type ConvertExampleGameDomain() =
             writer.WritePropertyName("Value")
             ConvertExampleGameDomain.UnitToJson(&writer, pair.Value)
             writer.WriteEndObject()
-
         writer.WriteEndArray()
         writer.WritePropertyName("LastChange")
-        FsharpJsonHelpers.writeTimestamp (&writer, x.LastChange)
+        FsharpJsonHelpers.writeTimestamp(&writer, x.LastChange)
         writer.WritePropertyName("Version")
         writer.WriteNumberValue(x.Version)
         writer.WriteEndObject()
 
-    static member GameFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.Game voption =
+    static member GameFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Game voption =
         let mutable vId = System.Guid.Empty
         let mutable vPlayer = 0
         let mutable vStatus = Example.GameDomain.GameStatus.Unknown
         let mutable vBoard = ResizeArray()
         let mutable vLastChange = System.DateTime.MinValue
         let mutable vVersion = 0
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Id")) then
-                    match FsharpJsonHelpers.readGuid (&reader) with
+                    match FsharpJsonHelpers.readGuid(&reader) with
                     | ValueSome v -> vId <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Player")) then
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> vPlayer <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Status")) then
@@ -215,7 +185,6 @@ type ConvertExampleGameDomain() =
                             if reader.TokenType = JsonTokenType.StartObject then
                                 let mutable key = Example.GameDomain.Location.Default.Value
                                 let mutable value = Example.GameDomain.Unit.Default.Value
-
                                 while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do
                                     if (reader.ValueTextEquals("Key")) then
                                         match ConvertExampleGameDomain.LocationFromJson(&reader) with
@@ -225,91 +194,70 @@ type ConvertExampleGameDomain() =
                                         match ConvertExampleGameDomain.UnitFromJson(&reader) with
                                         | ValueSome v -> value <- v
                                         | ValueNone -> ()
-                                    else
-                                        reader.Skip()
-
+                                    else reader.Skip()
                                 vBoard.Add(key, value)
-                            else
-                                reader.Skip()
-                    else
-                        reader.Skip()
+                            else reader.Skip()
+                    else reader.Skip()
                 else if (reader.ValueTextEquals("LastChange")) then
-                    match FsharpJsonHelpers.readTimestamp (&reader) with
+                    match FsharpJsonHelpers.readTimestamp(&reader) with
                     | ValueSome v -> vLastChange <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Version")) then
-                    match FsharpJsonHelpers.readInt (&reader) with
+                    match FsharpJsonHelpers.readInt(&reader) with
                     | ValueSome v -> vVersion <- v
                     | ValueNone -> ()
-                else
-                    reader.Skip()
-
-            ValueSome
-                { Id = vId
-                  Player = vPlayer
-                  Status = vStatus
-                  Board = vBoard |> Map.ofSeq
-                  LastChange = vLastChange
-                  Version = vVersion }
-        else
-            ValueNone
-
-    static member ActionFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.Action voption =
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
+                else reader.Skip()
+            ValueSome {
+                Id = vId
+                Player = vPlayer
+                Status = vStatus
+                Board = vBoard |> Map.ofSeq
+                LastChange = vLastChange
+                Version = vVersion
+            }
+        else ValueNone
+    static member ActionFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Action voption =
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
             let mutable y = Example.GameDomain.Action.Unknown
-
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("EndOfTurn")) then
-                    if reader.Read() && reader.TokenType = JsonTokenType.True then
-                        y <- Example.GameDomain.Action.EndOfTurn
-                    else
-                        reader.Skip()
+                    if reader.Read() && reader.TokenType = JsonTokenType.True
+                    then y <- Example.GameDomain.Action.EndOfTurn
+                    else reader.Skip()
                 else if (reader.ValueTextEquals("Drop")) then
                     let mutable _dropPoint = Example.GameDomain.Location.Default.Value
-
                     match ConvertExampleGameDomain.LocationFromJson(&reader) with
                     | ValueSome v -> _dropPoint <- v
                     | ValueNone -> ()
-
                     y <- _dropPoint |> Example.GameDomain.Action.Drop
                 else if (reader.ValueTextEquals("Move")) then
                     y <- ConvertExampleGameDomain.ActionCaseMoveFromJson(&reader)
-                else
-                    reader.Skip()
-
+                else reader.Skip()
             ValueSome y
-        else
-            ValueNone
-
-    static member ActionToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Action) =
+        else ValueNone
+    static member ActionToJson (writer:inref<Utf8JsonWriter>, x: Example.GameDomain.Action) =
         writer.WriteStartObject()
-
         match x with
         | Example.GameDomain.Action.EndOfTurn ->
             writer.WritePropertyName("EndOfTurn")
             writer.WriteBooleanValue(true)
-        | Example.GameDomain.Action.Drop(dropPoint) ->
+        | Example.GameDomain.Action.Drop (dropPoint) ->
             writer.WritePropertyName("Drop")
             ConvertExampleGameDomain.LocationToJson(&writer, dropPoint)
-        | Example.GameDomain.Action.Move(fromPoint, toPoint) ->
+        | Example.GameDomain.Action.Move (fromPoint,toPoint) ->
             writer.WritePropertyName("Move")
-            ConvertExampleGameDomain.ActionCaseMoveToJson(&writer, fromPoint, toPoint)
+            ConvertExampleGameDomain.ActionCaseMoveToJson(&writer,fromPoint,toPoint)
         | _ ->
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
-
         writer.WriteEndObject()
-
     static member ActionCaseMoveFromJson(reader: byref<Utf8JsonReader>) =
         let mutable fromPoint = Example.GameDomain.Location.Default.Value
         let mutable toPoint = Example.GameDomain.Location.Default.Value
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("FromPoint")) then
                     match ConvertExampleGameDomain.LocationFromJson(&reader) with
                     | ValueSome v -> fromPoint <- v
@@ -318,12 +266,9 @@ type ConvertExampleGameDomain() =
                     match ConvertExampleGameDomain.LocationFromJson(&reader) with
                     | ValueSome v -> toPoint <- v
                     | ValueNone -> ()
-                else
-                    reader.Skip()
-
-        Example.GameDomain.Action.Move(fromPoint, toPoint)
-
-    static member ActionCaseMoveToJson(writer: inref<Utf8JsonWriter>, fromPoint, toPoint) =
+                else reader.Skip()
+        Example.GameDomain.Action.Move (fromPoint,toPoint)
+    static member ActionCaseMoveToJson (writer: inref<Utf8JsonWriter>,fromPoint,toPoint) =
         writer.WriteStartObject()
         writer.WritePropertyName("FromPoint")
         ConvertExampleGameDomain.LocationToJson(&writer, fromPoint)
@@ -331,7 +276,7 @@ type ConvertExampleGameDomain() =
         ConvertExampleGameDomain.LocationToJson(&writer, toPoint)
         writer.WriteEndObject()
 
-    static member RequestToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Request) =
+    static member RequestToJson (writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Request) =
         writer.WriteStartObject()
         writer.WritePropertyName("Game")
         ConvertExampleGameDomain.GameToJson(&writer, x.Game)
@@ -339,14 +284,12 @@ type ConvertExampleGameDomain() =
         ConvertExampleGameDomain.ActionToJson(&writer, x.Action)
         writer.WriteEndObject()
 
-    static member RequestFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.Request voption =
+    static member RequestFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Request voption =
         let mutable vGame = Example.GameDomain.Game.Default.Value
         let mutable vAction = Example.GameDomain.Action.Unknown
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Game")) then
                     match ConvertExampleGameDomain.GameFromJson(&reader) with
                     | ValueSome v -> vGame <- v
@@ -355,70 +298,53 @@ type ConvertExampleGameDomain() =
                     match ConvertExampleGameDomain.ActionFromJson(&reader) with
                     | ValueSome v -> vAction <- v
                     | ValueNone -> ()
-                else
-                    reader.Skip()
-
-            ValueSome { Game = vGame; Action = vAction }
-        else
-            ValueNone
-
-    static member ResponseFromJson(reader: byref<Utf8JsonReader>) : Example.GameDomain.Response voption =
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
+                else reader.Skip()
+            ValueSome {
+                Game = vGame
+                Action = vAction
+            }
+        else ValueNone
+    static member ResponseFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Response voption =
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
             let mutable y = Example.GameDomain.Response.Unknown
-
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Ok")) then
                     y <- ConvertExampleGameDomain.ResponseCaseOkFromJson(&reader)
                 else if (reader.ValueTextEquals("Fail")) then
                     let mutable _errors = ResizeArray()
-
                     if reader.Read() && reader.TokenType = JsonTokenType.StartArray then
                         while reader.TokenType <> JsonTokenType.EndArray do
-                            match FsharpJsonHelpers.readString (&reader) with
+                            match FsharpJsonHelpers.readString(&reader) with
                             | ValueSome v -> _errors.Add(v)
                             | ValueNone -> ()
-                    else
-                        reader.Skip()
-
+                    else reader.Skip()
                     y <- _errors |> List.ofSeq |> Example.GameDomain.Response.Fail
-                else
-                    reader.Skip()
-
+                else reader.Skip()
             ValueSome y
-        else
-            ValueNone
-
-    static member ResponseToJson(writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Response) =
+        else ValueNone
+    static member ResponseToJson (writer:inref<Utf8JsonWriter>, x: Example.GameDomain.Response) =
         writer.WriteStartObject()
-
         match x with
-        | Example.GameDomain.Response.Ok(game, possibleActions) ->
+        | Example.GameDomain.Response.Ok (game,possibleActions) ->
             writer.WritePropertyName("Ok")
-            ConvertExampleGameDomain.ResponseCaseOkToJson(&writer, game, possibleActions)
-        | Example.GameDomain.Response.Fail(errors) ->
+            ConvertExampleGameDomain.ResponseCaseOkToJson(&writer,game,possibleActions)
+        | Example.GameDomain.Response.Fail (errors) ->
             writer.WritePropertyName("Fail")
             writer.WriteStartArray()
-
             for v in errors do
                 writer.WriteStringValue(v)
-
             writer.WriteEndArray()
         | _ ->
             writer.WritePropertyName("Unknown")
             writer.WriteBooleanValue(true)
-
         writer.WriteEndObject()
-
     static member ResponseCaseOkFromJson(reader: byref<Utf8JsonReader>) =
         let mutable game = Example.GameDomain.Game.Default.Value
         let mutable possibleActions = ResizeArray()
-
-        if FsharpJsonHelpers.moveToStartObject (&reader) then
-            while FsharpJsonHelpers.moveToEndObject (&reader) = false do
-                if reader.TokenType <> JsonTokenType.PropertyName then
-                    ()
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("Game")) then
                     match ConvertExampleGameDomain.GameFromJson(&reader) with
                     | ValueSome v -> game <- v
@@ -429,22 +355,17 @@ type ConvertExampleGameDomain() =
                             match ConvertExampleGameDomain.ActionFromJson(&reader) with
                             | ValueSome v -> possibleActions.Add(v)
                             | ValueNone -> ()
-                    else
-                        reader.Skip()
-                else
-                    reader.Skip()
-
-        Example.GameDomain.Response.Ok(game, possibleActions |> List.ofSeq)
-
-    static member ResponseCaseOkToJson(writer: inref<Utf8JsonWriter>, game, possibleActions) =
+                    else reader.Skip()
+                else reader.Skip()
+        Example.GameDomain.Response.Ok (game,possibleActions |> List.ofSeq)
+    static member ResponseCaseOkToJson (writer: inref<Utf8JsonWriter>,game,possibleActions) =
         writer.WriteStartObject()
         writer.WritePropertyName("Game")
         ConvertExampleGameDomain.GameToJson(&writer, game)
         writer.WritePropertyName("PossibleActions")
         writer.WriteStartArray()
-
         for v in possibleActions do
             ConvertExampleGameDomain.ActionToJson(&writer, v)
-
         writer.WriteEndArray()
         writer.WriteEndObject()
+

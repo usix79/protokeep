@@ -31,6 +31,8 @@ let rec typeToString (type': Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
+    | Byte -> "byte"
+    | Short -> "short"
     | Int -> "int"
     | Long -> "long"
     | Single -> "single"

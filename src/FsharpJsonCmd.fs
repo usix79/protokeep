@@ -293,6 +293,8 @@ let rec readValue (typesCache: Types.TypesCache) =
     function
     | Bool -> $"{helpers}.readBoolean(&reader)"
     | String -> $"{helpers}.readString(&reader)"
+    | Byte -> $"{helpers}.readByte(&reader)"
+    | Short -> $"{helpers}.readShort(&reader)"
     | Int -> $"{helpers}.readInt(&reader)"
     | Long -> $"{helpers}.readLong(&reader)"
     | Single -> $"{helpers}.readSingle(&reader)"
@@ -320,6 +322,8 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         function
         | Bool -> $"writer.WriteBooleanValue({vName})"
         | String -> $"writer.WriteStringValue({vName})"
+        | Byte
+        | Short
         | Int
         | Long
         | Single

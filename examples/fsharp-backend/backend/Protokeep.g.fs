@@ -66,6 +66,38 @@ module FsharpJsonHelpers =
                 ValueNone
         | false -> ValueNone
 
+    let readByte (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number ->
+                try
+                    reader.GetSByte()
+                with _ ->
+                    reader.GetDecimal() |> sbyte
+                |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> sbyte |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readShort (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number ->
+                try
+                    reader.GetInt16()
+                with _ ->
+                    reader.GetDecimal() |> int16
+                |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> int16 |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
     let readInt (reader: byref<Utf8JsonReader>) =
         match reader.Read() with
         | true ->
@@ -213,6 +245,26 @@ module FsharpMongoHelpers =
 
     let fromMoney (value: int, scale: int) : decimal =
         decimal value / decimal (Math.Pow(10., float scale))
+
+    let ReadBsonType (reader: IO.IBsonReader) =
+        match reader.CurrentBsonType with
+        | BsonType.Int32 -> sbyte (reader.ReadInt32()) |> ValueSome
+        | BsonType.Int64 -> sbyte (reader.ReadInt64()) |> ValueSome
+        | BsonType.Double -> sbyte (reader.ReadDouble()) |> ValueSome
+        | BsonType.String -> sbyte (reader.ReadString()) |> ValueSome
+        | _ ->
+            reader.SkipValue()
+            ValueNone
+
+    let readShort (reader: IO.IBsonReader) =
+        match reader.CurrentBsonType with
+        | BsonType.Int32 -> int16 (reader.ReadInt32()) |> ValueSome
+        | BsonType.Int64 -> int16 (reader.ReadInt64()) |> ValueSome
+        | BsonType.Double -> int16 (reader.ReadDouble()) |> ValueSome
+        | BsonType.String -> int16 (reader.ReadString()) |> ValueSome
+        | _ ->
+            reader.SkipValue()
+            ValueNone
 
     let readInt (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with

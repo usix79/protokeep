@@ -64,6 +64,38 @@ module FsharpJsonHelpers =
                 ValueNone
         | false -> ValueNone
 
+    let readByte (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number ->
+                try
+                    reader.GetSByte()
+                with _ ->
+                    reader.GetDecimal() |> sbyte
+                |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> sbyte |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
+    let readShort (reader: byref<Utf8JsonReader>) =
+        match reader.Read() with
+        | true ->
+            match reader.TokenType with
+            | JsonTokenType.Number ->
+                try
+                    reader.GetInt16()
+                with _ ->
+                    reader.GetDecimal() |> int16
+                |> ValueSome
+            | JsonTokenType.String -> reader.GetString() |> int16 |> ValueSome
+            | _ ->
+                reader.Skip()
+                ValueNone
+        | false -> ValueNone
+
     let readInt (reader: byref<Utf8JsonReader>) =
         match reader.Read() with
         | true ->
