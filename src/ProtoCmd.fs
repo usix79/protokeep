@@ -35,7 +35,7 @@ let keyValuePairName (ns: ComplexName) (k: Type) (v: Type) =
     let solid =
         function
         | Complex name -> solidDiff ns name
-        | t -> $"t"
+        | t -> $"{t}"
 
     $"{solid k}{solid v}Pair"
 
@@ -131,11 +131,6 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: TypesCache) =
 
     txt.ToString()
 
-let pairName (t1Name: string) (t2Name: string) =
-    let t1Name = t1Name.Replace(".", "")
-    let t2Name = t2Name.Replace(".", "")
-    $"{t1Name}{t2Name}Pair"
-
 let caseNeedsRecord =
     function
     | Types.EmptyRecord -> false
@@ -160,7 +155,7 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | Single -> "float"
     | Double -> "double"
     | Money _ -> "int32"
-    | Bytes -> "bytes"
+    | Binary -> "bytes"
     | Timestamp -> "google.protobuf.Timestamp"
     | Duration -> "google.protobuf.Duration"
     | Guid -> "bytes"

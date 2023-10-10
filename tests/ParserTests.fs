@@ -75,7 +75,7 @@ record Crossroad = {
     ServiceInterval: duration
     CurrentLight: Domain.TrafficLight
     Nickname: option<string>
-    Img: bytes
+    Img: binary
     Notes: array<string>
     Siblings: list<int>
     Props: map<int, string>
@@ -157,7 +157,7 @@ record Crossroad = {
                           IsVersion = false
                           Indexes = [] }
                         { Name = "Img"
-                          Type = Bytes
+                          Type = Binary
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }

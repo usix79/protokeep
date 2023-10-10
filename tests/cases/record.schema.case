@@ -1,0 +1,24 @@
+module Test.Domain
+
+record Crossroad = {
+    Id: int key
+    AltId: guid
+    Address: string
+    Corner: option<string>
+    IsMonitored: bool
+    Patch: byte
+    Model: short
+    Serial: int
+    Mask: long
+    Cost: money(2)
+    Xpos: single
+    Ypos: double
+    LastChecked: timestamp
+    ServiceInterval: duration
+    Intervals: list<int>
+    Notes: array<string>
+    Tags: map<string, int>
+    Next: option<Crossroad>
+    Img: binary
+    Version: int
+}

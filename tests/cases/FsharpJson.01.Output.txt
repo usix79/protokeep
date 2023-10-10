@@ -1,6 +1,0 @@
-namespace Protokeep.FsharpJson
-
-open System.Text.Json
-open Protokeep
-
-type ConvertDomain () =

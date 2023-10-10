@@ -38,7 +38,7 @@ let rec typeToString (type': Type) =
     | Single -> "single"
     | Double -> "double"
     | Money scale -> $"money({scale})"
-    | Bytes -> "bytes"
+    | Binary -> "binary"
     | Timestamp -> "timestamp"
     | Duration -> "duration"
     | Guid -> "guid"

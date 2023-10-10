@@ -1,9 +1,0 @@
-module Domain
-record Score = {
-    S1 : int key
-    S2 : int key
-}
-record Incident = {
-    Score: Score key
-    Details: string
-}

@@ -1,0 +1,32 @@
+syntax = "proto3";
+package Test.Domain;
+option csharp_namespace = "ProtoClasses.Test.Domain";
+import "google/protobuf/timestamp.proto";
+message Incident {
+    oneof Union {
+        bool SwitchedOff = 1;
+        int32 MissedTurns = 2;
+        Test.Domain.Incident__Delayes Delayes = 3;
+        Test.Domain.Incident__Root Root = 4;
+        Test.Domain.Incident__Noise Noise = 5;
+    }
+}
+
+message Incident__Delayes {
+    google.protobuf.Timestamp From = 1;
+    google.protobuf.Timestamp To = 2;
+}
+
+message Incident__Root {
+    repeated Test.Domain.Incident P1 = 1;
+}
+
+message Incident__Noise {
+    repeated StringStringPair P1 = 1;
+}
+
+message StringStringPair {
+    string key = 1;
+    string value = 2;
+}
+

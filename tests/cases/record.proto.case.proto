@@ -1,0 +1,33 @@
+syntax = "proto3";
+package Test.Domain;
+option csharp_namespace = "ProtoClasses.Test.Domain";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+message Crossroad {
+    int32 Id = 1;
+    bytes AltId = 2;
+    string Address = 3;
+    oneof Corner {string CornerValue = 4;}
+    bool IsMonitored = 5;
+    int32 Patch = 6;
+    int32 Model = 7;
+    int32 Serial = 8;
+    int64 Mask = 9;
+    int32 Cost = 10;
+    float Xpos = 11;
+    double Ypos = 12;
+    google.protobuf.Timestamp LastChecked = 13;
+    google.protobuf.Duration ServiceInterval = 14;
+    repeated int32 Intervals = 15;
+    repeated string Notes = 16;
+    repeated StringIntPair Tags = 17;
+    oneof Next {Test.Domain.Crossroad NextValue = 18;}
+    bytes Img = 19;
+    int32 Version = 20;
+}
+
+message StringIntPair {
+    string key = 1;
+    int32 value = 2;
+}
+

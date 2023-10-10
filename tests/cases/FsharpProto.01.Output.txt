@@ -1,2 +1,0 @@
-namespace Protokeep.FsharpProtoConverters
-type ConvertDomain () =

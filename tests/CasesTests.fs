@@ -21,8 +21,11 @@ type TestCasesFromFilesAttribute(dir: string) =
 
         Directory.GetFiles(casesDir, $"*.case")
         |> Array.map Path.GetFileName
-        |> Array.groupBy (fun name -> name.Split('.')[0]) // group by case name
-        |> Array.map (fun (caeseName, fileNames) ->
+        |> Array.map (fun (caseFileName) ->
+            let caseName = caseFileName.Split('.')[0]
+
+            let fileNames = Directory.GetFiles(casesDir, $"{caseName}.*")
+
             let commands =
                 fileNames |> Array.map (fun (fileName: string) -> fileName.Split('.')[1])
 
@@ -31,7 +34,7 @@ type TestCasesFromFilesAttribute(dir: string) =
                 |> Array.map (fun fileName -> File.ReadAllText(Path.Combine(casesDir, fileName)))
 
             let map = Array.zip commands docs |> Map.ofArray
-            [| caeseName :> obj; map :> obj |])
+            [| caseName :> obj; map :> obj |])
         |> Seq.ofArray
 
 

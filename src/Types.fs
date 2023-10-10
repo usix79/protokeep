@@ -14,7 +14,7 @@ type Type =
     | Money of scale: int
     | Single
     | Double
-    | Bytes
+    | Binary
     | Timestamp
     | Duration
     | Guid

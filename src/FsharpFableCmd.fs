@@ -226,7 +226,7 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         | Single
         | Double -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Money scale -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
-        | Bytes -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
+        | Binary -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
         | Timestamp -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toDateTime{rightOp})"
         | Duration -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toTimeSpan{rightOp})"
         | Guid -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
@@ -263,7 +263,7 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         | Single
         | Double -> $"JNumber (unbox {vName})"
         | Money _ -> $"JNumber (unbox {vName})"
-        | Bytes -> $"JString ({vName} |> System.Convert.ToBase64String)"
+        | Binary -> $"JString ({vName} |> System.Convert.ToBase64String)"
         | Timestamp -> $"JString ({vName} |> {helpers}.fromDateTime)"
         | Duration -> $"JString ({vName} |> {helpers}.fromTimeSpan)"
         | Guid -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"

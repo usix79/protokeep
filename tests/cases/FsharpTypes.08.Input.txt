@@ -1,9 +1,0 @@
-module Domain
-record Score = {
-    S1 : int key
-    S2 : int key
-}
-union Incident =
-    | MatchStarted
-    | TeamScored of int key
-    | MatchFinished of Score key

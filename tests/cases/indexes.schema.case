@@ -1,0 +1,39 @@
+module Test.Domain
+
+record ThreeWaysMarket = {
+    Win1: money(3) idx
+    Draw: money(3) idx
+    Win2: money(3) idx
+}
+
+record TwoWaysMarket = {
+    Win1: money(3) idx
+    Win2: money(3) idx
+}
+
+record HandicapMarket = {
+    Value: money(2)
+    Win1: money(3) idx
+    Win2: money(3) idx
+}
+
+union Market =
+    | ThreeWaysMarket of ThreeWaysMarket
+    | TwoWaysMarket of TwoWaysMarket
+    | HandicapMarket of HandicapMarket
+
+
+
+record Score = {
+    S1 : int key
+    S2 : int key
+}
+
+record GoalDetails = {
+    Score: Score
+    Comment: string
+}
+
+record MatchProtocol = {
+    Details : list<GoalDetails> idx[.Score => .Comment]
+}

@@ -1,0 +1,42 @@
+syntax = "proto3";
+package Test.Domain;
+option csharp_namespace = "ProtoClasses.Test.Domain";
+message ThreeWaysMarket {
+    int32 Win1 = 1;
+    int32 Draw = 2;
+    int32 Win2 = 3;
+}
+
+message TwoWaysMarket {
+    int32 Win1 = 1;
+    int32 Win2 = 2;
+}
+
+message HandicapMarket {
+    int32 Value = 1;
+    int32 Win1 = 2;
+    int32 Win2 = 3;
+}
+
+message Market {
+    oneof Union {
+        Test.Domain.ThreeWaysMarket ThreeWaysMarket = 1;
+        Test.Domain.TwoWaysMarket TwoWaysMarket = 2;
+        Test.Domain.HandicapMarket HandicapMarket = 3;
+    }
+}
+
+message Score {
+    int32 S1 = 1;
+    int32 S2 = 2;
+}
+
+message GoalDetails {
+    Test.Domain.Score Score = 1;
+    string Comment = 2;
+}
+
+message MatchProtocol {
+    repeated Test.Domain.GoalDetails Details = 1;
+}
+

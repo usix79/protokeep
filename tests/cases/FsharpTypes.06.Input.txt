@@ -1,8 +1,0 @@
-module Domain
-enum TrafficLight = Red | Yellow | Green
-record Crossroad = {
-    Id: int key
-    Light: TrafficLight key
-    Street1: string
-    Street2: string
-}

@@ -1,0 +1,6 @@
+module Test.Domain
+
+enum TrafficLight =
+    | Red
+    | Yellow
+    | Green

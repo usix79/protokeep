@@ -44,7 +44,7 @@ module private Impl =
               skipString "long" |>> (fun () -> Long)
               skipString "single" |>> (fun () -> Single)
               skipString "double" |>> (fun () -> Double)
-              skipString "bytes" |>> (fun () -> Bytes)
+              skipString "binary" |>> (fun () -> Binary)
               skipString "timestamp" |>> (fun () -> Timestamp)
               skipString "duration" |>> (fun () -> Duration)
               skipString "guid" |>> (fun () -> Guid)

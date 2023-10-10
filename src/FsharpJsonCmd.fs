@@ -300,7 +300,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Single -> $"{helpers}.readSingle(&reader)"
     | Double -> $"{helpers}.readDouble(&reader)"
     | Money scale -> $"{helpers}.readMoney(&reader, {scale})"
-    | Bytes -> $"{helpers}.readBytes(&reader)"
+    | Binary -> $"{helpers}.readBytes(&reader)"
     | Timestamp -> $"{helpers}.readTimestamp(&reader)"
     | Duration -> $"{helpers}.readDuration(&reader)"
     | Guid -> $"{helpers}.readGuid(&reader)"
@@ -329,7 +329,7 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         | Single
         | Double
         | Money _ -> $"writer.WriteNumberValue({vName})"
-        | Bytes -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"
+        | Binary -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"
         | Timestamp -> $"{helpers}.writeTimestamp(&writer, {vName})"
         | Duration -> $"{helpers}.writeDuration(&writer, {vName})"
         | Guid -> $"{helpers}.writeGuid(&writer, {vName})"
