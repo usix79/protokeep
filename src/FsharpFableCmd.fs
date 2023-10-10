@@ -81,16 +81,26 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             line txt $"            match pair.Key with"
 
             for case in union.Cases do
-                let rightValue =
-                    match case with
-                    | Types.EmptyRecord ->
+                match case with
+                | Types.EmptyRecord ->
+                    let rightValue =
                         $"{helpers}.ifBool (fun v -> y <- {dottedName union.Name}.{firstName case.Name})"
-                    | Types.SingleFieldRecord fieldInfo ->
-                        unpackField' $" |> {dottedName case.Name}" typesCache "y" fieldInfo.Type
-                    | Types.MultiFieldsRecord ->
+
+                    line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
+                | Types.SingleFieldRecord fieldInfo ->
+                    let prefix = "_"
+                    let tmpName = $"{prefix}{fieldInfo.Name}"
+                    linei txt 3 $"| \"{firstName case.Name}\" ->"
+                    declareFieldValue 4 prefix fieldInfo
+                    linei txt 4 $"""pair.Value |> {unpackField' "" typesCache $"{tmpName}" fieldInfo.Type}"""
+                    linei txt 4 $"y <- {tmpName}{FsharpTypesCmd.fromMutable fieldInfo.Type} |> {dottedName case.Name}"
+                | Types.MultiFieldsRecord ->
+                    let rightValue =
                         $"(fun v -> y <- v |> Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson)"
 
-                line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
+                    line txt $"            | \"{firstName case.Name}\" -> pair.Value |> {rightValue}"
+
+
 
             line txt $"            | _ -> () )"
             line txt $"        y"
@@ -147,13 +157,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
     and readObject prefix recordInfo =
         for fieldInfo in recordInfo.Fields do
-            match fieldInfo.Type with
-            | Types.IsEnum typesCache enumInfo ->
-                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
-            | Types.IsUnion typesCache unionInfo ->
-                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-            | _ ->
-                line txt $"        let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue true fieldInfo.Type}"
+            declareFieldValue 2 prefix fieldInfo
 
         line txt $"        {helpers}.getProps json"
         line txt $"        |> Seq.iter(fun pair ->"
@@ -167,11 +171,19 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 | Optional _ -> "Value"
                 | _ -> ""
 
-            line
-                txt
-                $"            | \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackField typesCache vName fieldInfo.Type}"
+            let unpackLine = unpackField typesCache vName fieldInfo.Type
+            linei txt 3 $"| \"{firstCharToUpper fieldInfo.Name}{suffix}\" -> pair.Value |> {unpackLine}"
 
         line txt $"            | _ -> () )"
+
+    and declareFieldValue ident prefix fieldInfo =
+        match fieldInfo.Type with
+        | Types.IsEnum typesCache enumInfo ->
+            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
+        | Types.IsUnion typesCache unionInfo ->
+            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
+        | _ ->
+            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue ns true fieldInfo.Type}"
 
     and writeObject prefix recordInfo =
         line txt $"        ["
@@ -182,21 +194,16 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             match fieldInfo.Type with
             | Optional t ->
                 let inner = "v"
-                line txt $"           match {vName} with"
-
-                line
-                    txt
-                    $"           | ValueSome v -> \"{firstCharToUpper fieldInfo.Name}Value\", {packField typesCache inner t}"
-
-                line txt $"           | ValueNone -> ()"
-            | _ ->
-                line
-                    txt
-                    $"           \"{firstCharToUpper fieldInfo.Name}\", {packField typesCache vName fieldInfo.Type}"
+                linei txt 3 $"match {vName} with"
+                let fieldName = "{firstCharToUpper fieldInfo.Name}Value"
+                linei txt 3 $"| ValueSome v -> \"{fieldName}\", {packField typesCache inner t}"
+                linei txt 3 $"| ValueNone -> ()"
+            | _ -> linei txt 3 $"\"{firstCharToUpper fieldInfo.Name}\", {packField typesCache vName fieldInfo.Type}"
 
         line txt $"        ] |> Map.ofList |> JObject"
 
     line txt $"namespace {genNamespace}"
+    line txt $""
     line txt $"open Fable.SimpleJson"
     line txt $"open Protokeep"
     line txt $""
@@ -226,9 +233,10 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         | List t ->
             let inner = f "" $" |> {vName}.Add" t
             $"{helpers}.ifArray (Seq.iter ({inner}))"
-        | Map t ->
-            let inner = f "" $" |> fun v -> {vName}.Add(key, v)" t
-            $"{helpers}.ifObject (Map.iter (fun key -> {inner}))"
+        | Map(k, v) ->
+            let innerValue = f "" $" |> fun v -> {vName}.Add(k, v)" v
+            let innerKey = f "" $" |> fun k -> value |> {innerValue}" k
+            $"{helpers}.ifMap (fun (key, value) -> key |> {innerKey})"
         | Complex typeName ->
             match typesCache.TryFind typeName with
             | Some(Enum _) ->
@@ -260,9 +268,10 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         | List t ->
             let inner = f "v" t
             $"JArray ({vName} |> Seq.map (fun v -> {inner}) |> List.ofSeq)"
-        | Map t ->
-            let inner = f "v" t
-            $"JObject ({vName} |> Map.map (fun _ v -> {inner}))"
+        | Map(k, v) ->
+            let innerKey = f "k" k
+            let innerValue = f "v" v
+            $"{vName} |> {helpers}.mapToArray (fun k -> {innerKey}) (fun v -> {innerValue})"
         | Complex typeName ->
             match typesCache.TryFind typeName with
             | Some(Enum _) ->

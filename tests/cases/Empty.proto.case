@@ -1,0 +1,3 @@
+syntax = "proto3";
+package Test.Domain;
+option csharp_namespace = "ProtoClasses.Test.Domain";

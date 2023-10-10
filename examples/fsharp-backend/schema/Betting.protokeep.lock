@@ -1,0 +1,38 @@
+enum Example.Betting.OutcomeResult
+    value Win = 1
+    value Lose = 2
+    value Void = 3
+    value Canceled = 4
+union Example.Betting.Outcome
+    case Empty = 1
+    case Priced = 2
+    case PricedWithProb = 3
+    case Resulted = 4
+record Example.Betting.Outcome.Empty
+record Example.Betting.Outcome.Priced
+    field price money(3) = 1
+record Example.Betting.Outcome.PricedWithProb
+    field price money(3) = 1
+    field prob single = 2
+record Example.Betting.Outcome.Resulted
+    field result Example.Betting.OutcomeResult = 1
+record Example.Betting.Winner3Way
+    field Win1 Example.Betting.Outcome = 1
+    field Draw Example.Betting.Outcome = 2
+    field Win2 Example.Betting.Outcome = 3
+record Example.Betting.Handicap
+    field Value money(2) = 1
+    field Win1 Example.Betting.Outcome = 2
+    field Win2 Example.Betting.Outcome = 3
+record Example.Betting.Total
+    field Value money(2) = 1
+    field Over Example.Betting.Outcome = 2
+    field Under Example.Betting.Outcome = 3
+record Example.Betting.Score
+    field S1 int = 1
+    field S2 int = 2
+record Example.Betting.ScoreOutcome
+    field Score Example.Betting.Score = 1
+    field Outcome Example.Betting.Outcome = 2
+record Example.Betting.CorrectScore
+    field Scores list<Example.Betting.ScoreOutcome> = 1

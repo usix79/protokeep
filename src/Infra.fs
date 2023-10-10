@@ -41,10 +41,8 @@ let loadEmbeddedFile (name: string) =
 
 let updateCommons (targetFileName: string) args (fn: string -> string) =
 
-    let defaultExtention = Path.GetExtension(targetFileName)
-
     let defaultCommonsFileName =
-        Path.Combine(Path.GetDirectoryName(targetFileName), $"Protokeep{defaultExtention}")
+        Path.Combine(Path.GetDirectoryName(targetFileName), $"Protokeep.g.fs")
 
     checkArgUpdateCommons defaultCommonsFileName args
     |> Option.iter

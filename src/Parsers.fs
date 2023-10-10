@@ -48,21 +48,43 @@ module private Impl =
               skipString "guid" |>> (fun () -> Guid)
               skipString "money" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
               |>> Money
-
               complexName |>> Complex ]
 
-    let fullType' =
-        type'
-        >>= (fun t ->
-            ws
-            >>? opt (
-                choice
-                    [ skipString "option" |>> (fun () -> Optional t)
-                      skipString "array" |>> (fun () -> Array t)
-                      skipString "list" |>> (fun () -> List t)
-                      skipString "map" |>> (fun () -> Map t) ]
-            )
-            |>> (Option.defaultValue t))
+    // let fullType' =
+    //     type'
+    //     >>= (fun t ->
+    //         ws
+    //         >>? opt (
+    //             choice
+    //                 [ skipString "option" |>> (fun () -> Optional t)
+    //                   skipString "array" |>> (fun () -> Array t)
+    //                   skipString "list" |>> (fun () -> List t)
+    //                   skipString "map" |>> (fun () -> Map t) ]
+    //         )
+    //         |>> (Option.defaultValue t))
+
+    let generic1 keyword fn =
+        skipString keyword >>. ws >>. pchar '<' >>. ws >>. type' .>> ws .>> pchar '>'
+        |>> fn
+
+    let generic2 keyword fn =
+        skipString keyword
+        >>. ws
+        >>. pchar '<'
+        >>. ws
+        >>. pipe2 type' (pchar ',' >>. ws >>. type') (fun t1 t2 -> (t1, t2))
+        .>> ws
+        .>> pchar '>'
+        |>> fn
+
+    let fullType2' =
+        choice
+            [ generic1 "option" Optional
+              generic1 "array" Array
+              generic1 "list" List
+              generic2 "map" Map
+              type' ]
+
 
     let indexKey' = choice [ skipChar '.' >>. identifier |>> IndexKey.FieldKey ]
 
@@ -85,7 +107,7 @@ module private Impl =
     let field' =
         pipe4
             ((between spaces ws identifier) .>> pchar ':')
-            (between ws ws fullType')
+            (between ws ws fullType2')
             (opt (skipString "key") .>> ws)
             (many (index' .>> ws))
             (fun name type' isKey idxs ->
@@ -108,7 +130,7 @@ module private Impl =
     let unionCaseField' =
         pipe3
             (opt ((between ws ws identifier) .>>? pchar ':'))
-            (between ws ws fullType')
+            (between ws ws fullType2')
             (opt (skipString "key") .>> ws)
             (fun name type' isKey ->
                 {| Name = name
@@ -220,7 +242,7 @@ module private Impl =
         keyword "field"
         >>. pipe3
             (identifier .>> ws1)
-            (between ws ws fullType')
+            (between ws ws fullType2')
             ((between ws ws (pchar '=')) >>. pint32 .>> ts)
             (fun name type' num -> { Name = name; Type = type'; Num = num })
 

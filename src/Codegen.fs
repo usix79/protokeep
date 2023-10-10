@@ -13,18 +13,23 @@ let linei (txt: StringBuilder) (i: int) (l: string) =
 
     txt.AppendLine(l) |> ignore
 
-let solidName (ComplexName ns) = ns |> List.rev |> String.concat ""
+let complexNameToString sep (ComplexName ns) = ns |> List.rev |> String.concat sep
 
-let dottedName (ComplexName ns) = ns |> List.rev |> String.concat "."
+let solidName = complexNameToString ""
+let dottedName = complexNameToString "."
 
-let dottedDiff (ComplexName currentNamespace) (ComplexName typeName) =
+let complexNameDiffToString sep (ComplexName currentNamespace) (ComplexName typeName) =
     let rec loop =
         function
         | n1 :: ns1, n2 :: ns2 when n1 = n2 -> loop (ns1, ns2)
         | _, ns2 -> ns2
 
     loop ((currentNamespace |> List.rev), (typeName |> List.rev))
-    |> String.concat "."
+    |> String.concat sep
+
+let dottedDiff = complexNameDiffToString "."
+
+let solidDiff = complexNameDiffToString ""
 
 let firstName (ComplexName ns) = ns.Head
 

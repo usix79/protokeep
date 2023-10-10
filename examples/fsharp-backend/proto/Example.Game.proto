@@ -1,0 +1,81 @@
+syntax = "proto3";
+package Example.GameDomain;
+option csharp_namespace = "ProtoClasses.Example.GameDomain";
+import "google/protobuf/timestamp.proto";
+enum Side {
+    SideUnknown = 0;
+    SidePlayer1 = 1;
+    SidePlayer2 = 2;
+}
+
+message GameStatus {
+    oneof Union {
+        int32 InProgress = 1;
+        Example.GameDomain.GameStatus__Finnished Finnished = 2;
+        bool Terminated = 3;
+    }
+}
+
+message GameStatus__Finnished {
+    Example.GameDomain.Side Winner = 1;
+    int32 Turn = 2;
+}
+
+message Location {
+    int32 X = 1;
+    int32 Y = 2;
+}
+
+message Unit {
+    string Name = 1;
+    int32 Health = 2;
+}
+
+message Game {
+    bytes Id = 1;
+    int32 Player = 2;
+    Example.GameDomain.GameStatus Status = 3;
+    repeated LocationUnitPair Board = 4;
+    google.protobuf.Timestamp LastChange = 5;
+    int32 Version = 6;
+}
+
+message Action {
+    oneof Union {
+        bool EndOfTurn = 1;
+        Example.GameDomain.Location Drop = 2;
+        Example.GameDomain.Action__Move Move = 3;
+    }
+}
+
+message Action__Move {
+    Example.GameDomain.Location FromPoint = 1;
+    Example.GameDomain.Location ToPoint = 2;
+}
+
+message Request {
+    Example.GameDomain.Game Game = 1;
+    Example.GameDomain.Action Action = 2;
+}
+
+message Response {
+    oneof Union {
+        Example.GameDomain.Response__Ok Ok = 1;
+        Example.GameDomain.Response__Fail Fail = 2;
+    }
+}
+
+message Response__Ok {
+    Example.GameDomain.Game Game = 1;
+    repeated Example.GameDomain.Action PossibleActions = 2;
+}
+
+message Response__Fail {
+    repeated string Errors = 1;
+}
+
+message LocationUnitPair {
+    Example.GameDomain.Location key = 1;
+    Example.GameDomain.Unit value = 2;
+}
+

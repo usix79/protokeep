@@ -1,0 +1,30 @@
+union Example.Betting.Football.Market
+    case Winner3Way = 1
+    case Handicap = 2
+    case Total = 3
+    case CorrectScore = 4
+record Example.Betting.Football.Market.Winner3Way
+    field p1 Example.Betting.Winner3Way = 1
+record Example.Betting.Football.Market.Handicap
+    field p1 Example.Betting.Handicap = 1
+record Example.Betting.Football.Market.Total
+    field p1 Example.Betting.Total = 1
+record Example.Betting.Football.Market.CorrectScore
+    field p1 Example.Betting.CorrectScore = 1
+enum Example.Betting.Football.Period
+    value Half1 = 1
+    value Half2 = 2
+    value MainTime = 3
+enum Example.Betting.Football.Statistic
+    value Goals = 1
+    value YellowCards = 2
+    value Corners = 3
+enum Example.Betting.Football.Status
+    value Open = 1
+    value Closed = 2
+record Example.Betting.Football.MarketItem
+    field Statistic Example.Betting.Football.Statistic = 1
+    field Period Example.Betting.Football.Period = 2
+    field Market Example.Betting.Football.Market = 3
+    field Status Example.Betting.Football.Status = 4
+    field Version int = 5

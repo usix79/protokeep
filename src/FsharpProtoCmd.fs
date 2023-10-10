@@ -24,6 +24,8 @@ let Instance =
 
 let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache) =
 
+    let ns = module'.Name
+
     let txt = StringBuilder()
 
     let fromProtobuf fullNameTxt =
@@ -31,14 +33,6 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
     let toProtobuf fullNameTxt =
         line txt $"    static member ToProtobuf(x: {fullNameTxt}) : ProtoClasses.{fullNameTxt} ="
-
-    let convertionFrom type' =
-        fieldFromProtobuf type' |> Option.map ((+) " |> ") |> Option.defaultValue ""
-
-    let convertionTo type' =
-        fieldToProtobuf type' |> Option.map ((+) " |> ") |> Option.defaultValue ""
-
-    let ns = module'.Name
 
     let rec genItem =
         function
@@ -80,7 +74,9 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                     match case with
                     | Types.EmptyRecord -> $"{dottedName case.Name}"
                     | Types.SingleFieldRecord fieldInfo ->
-                        $"{dottedName case.Name}(x.{firstName case.Name}{convertionFrom fieldInfo.Type})"
+                        match ProtoCmd.caseNeedsRecord case with
+                        | true -> $"x.{firstName case.Name} |> Convert{solidName ns}.FromProtobuf"
+                        | false -> $"{dottedName case.Name}(x.{firstName case.Name}{convertionFrom ns fieldInfo.Type})"
                     | Types.MultiFieldsRecord -> $"x.{firstName case.Name} |> Convert{solidName ns}.FromProtobuf"
 
                 line
@@ -103,8 +99,15 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 match case with
                 | Types.EmptyRecord -> line txt $"{condition} -> y.{firstName case.Name} <- true"
                 | Types.SingleFieldRecord fieldInfo ->
-                    line txt $"{condition} ->"
-                    genFieldToProtobuf fieldInfo.Name $"    y.{firstName case.Name}" fieldInfo
+                    match ProtoCmd.caseNeedsRecord case with
+                    | true ->
+                        line
+                            txt
+                            ($"{condition} -> y.{firstName case.Name} <- "
+                             + $"Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}ToProtobuf({values})")
+                    | false ->
+                        line txt $"{condition} ->"
+                        genFieldToProtobuf fieldInfo.Name $"    y.{firstName case.Name}" fieldInfo
                 | Types.MultiFieldsRecord ->
                     line
                         txt
@@ -115,38 +118,47 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             line txt "        y"
 
             for case in union.Cases do
-                let fullCaseNameTxt = $"ProtoClasses.{dottedName union.Name}__{firstName case.Name}"
-
-                let fieldsNames =
-                    case.Fields |> List.map (fun field -> field.Name) |> String.concat ","
-
                 match case with
-                | Types.MultiFieldsRecord ->
-                    line txt $"    static member FromProtobuf (x:{fullCaseNameTxt}) ="
-
-                    let values =
-                        case.Fields
-                        |> List.map (fun fieldInfo -> $"({genFieldFromProtobuf fullCaseNameTxt fieldInfo})")
-                        |> String.concat ","
-
-                    line txt $"        {case.Name |> dottedName}"
-                    line txt $"            ({values})"
-                    line txt ""
-
-                    line
-                        txt
-                        $"    static member {firstName union.Name}Case{firstName case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
-
-                    line txt $"        let y = {fullCaseNameTxt}()"
-
-                    for fieldInfo in case.Fields do
-                        genFieldToProtobuf $"{fieldInfo.Name}" $"y.{firstCharToUpper fieldInfo.Name}" fieldInfo
-
-                    line txt $"        y"
-                    line txt ""
+                | Types.SingleFieldRecord fieldInfo ->
+                    match fieldInfo.Type with
+                    | Optional _
+                    | Array _
+                    | List _
+                    | Map _ -> genCase union case
+                    | _ -> ()
+                | Types.MultiFieldsRecord -> genCase union case
                 | _ -> ()
 
             line txt ""
+
+    and genCase (union: UnionInfo) (case: RecordInfo) =
+        let fullCaseNameTxt = $"ProtoClasses.{dottedName union.Name}__{firstName case.Name}"
+
+        let fieldsNames =
+            case.Fields |> List.map (fun field -> field.Name) |> String.concat ","
+
+        line txt $"    static member FromProtobuf (x:{fullCaseNameTxt}) ="
+
+        let values =
+            case.Fields
+            |> List.map (fun fieldInfo -> $"({genFieldFromProtobuf fullCaseNameTxt fieldInfo})")
+            |> String.concat ","
+
+        line txt $"        {case.Name |> dottedName}"
+        line txt $"            ({values})"
+        line txt ""
+
+        line
+            txt
+            $"    static member {firstName union.Name}Case{firstName case.Name}ToProtobuf ({fieldsNames}) : {fullCaseNameTxt} ="
+
+        line txt $"        let y = {fullCaseNameTxt}()"
+
+        for fieldInfo in case.Fields do
+            genFieldToProtobuf $"{fieldInfo.Name}" $"y.{firstCharToUpper fieldInfo.Name}" fieldInfo
+
+        line txt $"        y"
+        line txt ""
 
     and genFieldFromProtobuf fullNameTxt fieldInfo =
         match fieldInfo.Type with
@@ -154,8 +166,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             let caseValue =
                 $"{fullNameTxt}.{firstCharToUpper fieldInfo.Name}OneofCase.{firstCharToUpper fieldInfo.Name}Value"
 
-            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then ValueSome (x.{firstCharToUpper fieldInfo.Name}Value{convertionFrom t}) else ValueNone"
-        | t -> $"x.{firstCharToUpper fieldInfo.Name}{convertionFrom t}"
+            $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then ValueSome (x.{firstCharToUpper fieldInfo.Name}Value{convertionFrom ns t}) else ValueNone"
+        | t -> $"x.{firstCharToUpper fieldInfo.Name}{convertionFrom ns t}"
 
     and genFieldToProtobuf xName yName fieldInfo =
         match fieldInfo.Type with
@@ -168,12 +180,15 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             match fieldToProtobuf t with
             | Some cnv -> line txt $"        {yName}.AddRange({xName} |> Seq.map({cnv}))"
             | None -> line txt $"        {yName}.AddRange({xName})"
-        | Map t ->
-            match fieldToProtobuf t with
-            | Some cnv ->
-                line txt $"        for pair in {xName} do"
-                line txt $"            {yName}.[pair.Key] <- pair.Value |> {cnv}"
-            | None -> line txt $"        {yName}.Add({xName})"
+        | Map(k, v) ->
+            let protoPairTypeName =
+                $"ProtoClasses.{ns |> dottedName}.{ProtoCmd.keyValuePairName ns k v}"
+
+            line txt $"        for pair in {xName} do"
+            line txt $"            let protoPair = {protoPairTypeName} ()"
+            line txt $"            protoPair.Key <- pair.Key{convertionTo k}"
+            line txt $"            protoPair.Value <- pair.Value{convertionTo v}"
+            line txt $"            {yName}.Add(protoPair)"
         | t -> line txt $"        {yName} <- {xName}{convertionTo t}"
 
 
@@ -187,7 +202,11 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
     txt.ToString()
 
-let rec fieldFromProtobuf type' =
+
+let convertionFrom ns type' =
+    fieldFromProtobuf ns type' |> Option.map ((+) " |> ") |> Option.defaultValue ""
+
+let rec fieldFromProtobuf ns type' =
     match type' with
     | Bool
     | String
@@ -202,21 +221,22 @@ let rec fieldFromProtobuf type' =
     | Guid -> Some "fun v -> System.Guid(v.ToByteArray())"
     | Optional t -> failwith "direct convertion is not possible"
     | Array t ->
-        match fieldFromProtobuf t with
+        match fieldFromProtobuf ns t with
         | Some convertion -> $"Seq.map({convertion}) |> Array.ofSeq"
         | None -> "Array.ofSeq"
         |> Some
     | List t ->
-        match fieldFromProtobuf t with
+        match fieldFromProtobuf ns t with
         | Some convertion -> $"Seq.map({convertion}) |> List.ofSeq"
         | None -> "List.ofSeq"
         |> Some
-    | Map t ->
-        match fieldFromProtobuf t with
-        | Some convertion -> $"Seq.map(fun pair -> pair.Key,pair.Value |> {convertion}) |> Map.ofSeq"
-        | None -> "Seq.map(fun pair -> pair.Key,pair.Value) |> Map.ofSeq"
+    | Map(k, v) ->
+        $"Seq.map(fun x -> x.Key{convertionFrom ns k}, x.Value{convertionFrom ns v}) |> Map.ofSeq"
         |> Some
     | Complex typeName -> Some $"Convert{lastNames typeName |> solidName}.FromProtobuf"
+
+let convertionTo type' =
+    fieldToProtobuf type' |> Option.map ((+) " |> ") |> Option.defaultValue ""
 
 let rec fieldToProtobuf type' =
     match type' with
@@ -233,6 +253,6 @@ let rec fieldToProtobuf type' =
     | Guid -> Some "fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())"
     | Optional _ -> failwith "direct convertion is not possible"
     | Array _
-    | List _ -> failwith "direct convertion is supported, use AddRange"
-    | Map _ -> failwith "direct convertion is supported, use Add"
+    | List _ -> failwith "direct convertion is not supported, use AddRange"
+    | Map _ -> failwith "direct convertion is not supported, use AddRanre"
     | Complex typeName -> Some $"Convert{lastNames typeName |> solidName}.ToProtobuf"

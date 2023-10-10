@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>fsharp_console</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Protokeep.g.fs" />
+    <Compile Include="GameProtoConverters.g.fs" />
+    <Compile Include="GameJsonConverters.g.fs" />
+    <Compile Include="GameMongoConverters.g.fs" />
+    <Compile Include="BettingProtoConverters.g.fs" />
+    <Compile Include="BettingJsonConverters.g.fs" />
+    <Compile Include="BettingMongoConverters.g.fs" />
+    <Compile Include="BettingFootballProtoConverters.g.fs" />
+    <Compile Include="BettingFootballJsonConverters.g.fs" />
+    <Compile Include="BettingFootballMongoConverters.g.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\domain\domain.fsproj" />
+    <ProjectReference Include="..\proto\proto.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.24.4" />
+  </ItemGroup>
+
+</Project>

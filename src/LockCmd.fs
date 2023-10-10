@@ -33,17 +33,17 @@ let rec typeToString (type': Type) =
     | String -> "string"
     | Int -> "int"
     | Long -> "long"
-    | Single -> "float"
+    | Single -> "single"
     | Double -> "double"
     | Money scale -> $"money({scale})"
     | Bytes -> "bytes"
     | Timestamp -> "timestamp"
     | Duration -> "duration"
     | Guid -> "guid"
-    | Optional v -> typeToString v + " option"
-    | Array v -> typeToString v + " array"
-    | List v -> typeToString v + " list"
-    | Map v -> typeToString v + " map"
+    | Optional v -> $"option<{typeToString v}>"
+    | Array v -> $"array<{typeToString v}>"
+    | List v -> $"list<{typeToString v}>"
+    | Map(k, v) -> $"map<{typeToString k}, {typeToString v}>"
     | Complex ns -> dottedName ns
 
 let gen (locks: LockItem list) =

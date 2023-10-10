@@ -31,10 +31,36 @@ let Instance =
       Description = "generate protobuf description: proto [-o|--output] outputFile"
       Run = Handler }
 
+let keyValuePairName (ns: ComplexName) (k: Type) (v: Type) =
+    let solid =
+        function
+        | Complex name -> solidDiff ns name
+        | t -> $"t"
+
+    $"{solid k}{solid v}Pair"
+
+let resolveKeyValuePairs (module': Module) =
+    let resolveRecord (info: RecordInfo) =
+        info.Fields
+        |> List.choose
+           ^ fun fieldInfo ->
+               match fieldInfo.Type with
+               | Map(k, v) -> (k, v) |> Some
+               | _ -> None
+
+    let rec resolve =
+        function
+        | Record info -> resolveRecord info
+        | Union info -> info.Cases |> List.collect resolveRecord
+        | _ -> []
+
+    module'.Items |> List.collect resolve |> List.distinct
+
 let gen (module': Module) (locks: LocksCollection) (typesCache: TypesCache) =
     let txt = StringBuilder()
+    let ns = module'.Name
 
-    let rec genItem ns =
+    let rec genItem =
         function
         | Enum info ->
             let name = firstName info.Name
@@ -45,6 +71,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: TypesCache) =
                 line txt $"    {name}{symbol.Name} = {symbol.Num};"
 
             line txt $"}}"
+            line txt $""
         | Record info -> genRecord (firstName info.Name) info
         | Union info ->
             line txt $"message {firstName info.Name} {{"
@@ -54,24 +81,21 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: TypesCache) =
                 let fieldTypeName =
                     match caseInfo with
                     | Types.EmptyRecord -> "bool" // empty case would be bool
-                    | Types.SingleFieldRecord fieldInfo -> $"{typeToString fieldInfo.Type}"
+                    | Types.SingleFieldRecord fieldInfo ->
+                        match caseNeedsRecord caseInfo with
+                        | true -> $"{dottedName info.Name}__{firstName caseInfo.Name}"
+                        | false -> $"{typeToString ns fieldInfo.Type}"
                     | Types.MultiFieldsRecord -> $"{dottedName info.Name}__{firstName caseInfo.Name}"
 
                 line txt $"        {fieldTypeName} {caseLock.Name} = {caseLock.Num};"
 
             line txt $"    }}"
             line txt $"}}"
+            line txt $""
 
-            for case in info.Cases do
-                let needRecord =
-                    match case with
-                    | Types.EmptyRecord -> false
-                    | Types.SingleFieldRecord _ -> false
-                    | Types.MultiFieldsRecord -> true
-
-                if needRecord then
-                    let recordName = (firstName info.Name) + "__" + (firstName case.Name)
-                    genRecord recordName case
+            for case in info.Cases |> List.filter caseNeedsRecord do
+                let recordName = (firstName info.Name) + "__" + (firstName case.Name)
+                genRecord recordName case
 
     and genRecord recordName info =
         line txt $"message {recordName} {{"
@@ -81,10 +105,11 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: TypesCache) =
             | Optional v ->
                 line
                     txt
-                    $"    oneof {firstCharToUpper item.Name} {{{typeToString v} {firstCharToUpper item.Name}Value = {item.Num};}}"
-            | _ -> line txt $"    {typeToString item.Type} {firstCharToUpper item.Name} = {item.Num};"
+                    $"    oneof {firstCharToUpper item.Name} {{{typeToString ns v} {firstCharToUpper item.Name}Value = {item.Num};}}"
+            | _ -> line txt $"    {typeToString ns item.Type} {firstCharToUpper item.Name} = {item.Num};"
 
         line txt $"}}"
+        line txt $""
 
     line txt """syntax = "proto3";"""
     line txt $"package {dottedName module'.Name};"
@@ -94,10 +119,37 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: TypesCache) =
         if reference <> module'.Name then
             line txt $"import \"{dottedName reference}.proto\";"
 
-    module'.Items |> List.iter (genItem module'.Name)
+    module'.Items |> List.iter genItem
+
+    for k, v in resolveKeyValuePairs module' do
+        let name = keyValuePairName ns k v
+        line txt $"message {name} {{"
+        line txt $"    {typeToString ns k} key = 1;"
+        line txt $"    {typeToString ns v} value = 2;"
+        line txt $"}}"
+        line txt $""
+
     txt.ToString()
 
-let rec typeToString (type': Type) =
+let pairName (t1Name: string) (t2Name: string) =
+    let t1Name = t1Name.Replace(".", "")
+    let t2Name = t2Name.Replace(".", "")
+    $"{t1Name}{t2Name}Pair"
+
+let caseNeedsRecord =
+    function
+    | Types.EmptyRecord -> false
+    | Types.SingleFieldRecord fi ->
+        match fi.Type with
+        | Optional _
+        | Array _
+        | List _
+        | Map _ -> true
+        | _ -> false
+    | Types.MultiFieldsRecord -> true
+
+
+let rec typeToString (ns: ComplexName) (type': Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
@@ -110,10 +162,10 @@ let rec typeToString (type': Type) =
     | Timestamp -> "google.protobuf.Timestamp"
     | Duration -> "google.protobuf.Duration"
     | Guid -> "bytes"
-    | Optional v -> typeToString v
+    | Optional v -> typeToString ns v
     | Array v
-    | List v -> "repeated " + (typeToString v)
-    | Map v -> $"map<string,{typeToString v}>"
+    | List v -> "repeated " + (typeToString ns v)
+    | Map(k, v) -> $"repeated {keyValuePairName ns k v}"
     | Complex ns -> dottedName ns
 
 let references (locks: LocksCollection) (module': Module) =
@@ -121,13 +173,13 @@ let references (locks: LocksCollection) (module': Module) =
 
     let rec typeReference =
         function
-        | Timestamp -> Some <| ComplexName [ "google/protobuf/timestamp" ]
-        | Duration -> Some <| ComplexName [ "google/protobuf/duration" ]
-        | Complex ns -> Some <| Types.extractNamespace ns
+        | Timestamp -> [ ComplexName [ "google/protobuf/timestamp" ] ]
+        | Duration -> [ ComplexName [ "google/protobuf/duration" ] ]
+        | Complex ns -> [ Types.extractNamespace ns ]
         | Optional v
-        | Map v
         | Array v -> typeReference v
-        | _ -> None
+        | Map(k, v) -> typeReference k @ typeReference v
+        | _ -> []
 
     let rec f =
         function
@@ -137,7 +189,8 @@ let references (locks: LocksCollection) (module': Module) =
 
     and fRecord info =
         info.Fields
-        |> List.choose (fun fieldInfo -> typeReference fieldInfo.Type)
+        |> List.map (fun fieldInfo -> typeReference fieldInfo.Type)
+        |> List.concat
         |> List.iter (fun r -> set.Add(r) |> ignore)
 
     module'.Items |> List.iter f

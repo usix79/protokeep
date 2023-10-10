@@ -1,0 +1,47 @@
+enum Example.GameDomain.Side
+    value Player1 = 1
+    value Player2 = 2
+union Example.GameDomain.GameStatus
+    case InProgress = 1
+    case Finnished = 2
+    case Terminated = 3
+record Example.GameDomain.GameStatus.InProgress
+    field turn int = 1
+record Example.GameDomain.GameStatus.Finnished
+    field winner Example.GameDomain.Side = 1
+    field turn int = 2
+record Example.GameDomain.GameStatus.Terminated
+record Example.GameDomain.Location
+    field X int = 1
+    field Y int = 2
+record Example.GameDomain.Unit
+    field Name string = 1
+    field Health int = 2
+record Example.GameDomain.Game
+    field Id guid = 1
+    field Player int = 2
+    field Status Example.GameDomain.GameStatus = 3
+    field Board map<Example.GameDomain.Location, Example.GameDomain.Unit> = 4
+    field LastChange timestamp = 5
+    field Version int = 6
+union Example.GameDomain.Action
+    case EndOfTurn = 1
+    case Drop = 2
+    case Move = 3
+record Example.GameDomain.Action.EndOfTurn
+record Example.GameDomain.Action.Drop
+    field dropPoint Example.GameDomain.Location = 1
+record Example.GameDomain.Action.Move
+    field fromPoint Example.GameDomain.Location = 1
+    field toPoint Example.GameDomain.Location = 2
+record Example.GameDomain.Request
+    field Game Example.GameDomain.Game = 1
+    field Action Example.GameDomain.Action = 2
+union Example.GameDomain.Response
+    case Ok = 1
+    case Fail = 2
+record Example.GameDomain.Response.Ok
+    field game Example.GameDomain.Game = 1
+    field possibleActions list<Example.GameDomain.Action> = 2
+record Example.GameDomain.Response.Fail
+    field errors list<string> = 1

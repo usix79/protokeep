@@ -60,7 +60,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                     line txt $"            {fieldInfo.Name} = {dottedDiff ns enumInfo.Name}.Unknown"
                 | Types.IsUnion typesCache unionInfo ->
                     line txt $"            {fieldInfo.Name} = {dottedDiff ns unionInfo.Name}.Unknown"
-                | _ -> line txt $"            {fieldInfo.Name} = {defValue false fieldInfo.Type}"
+                | _ -> line txt $"            {fieldInfo.Name} = {defValue ns false fieldInfo.Type}"
 
             line txt $"        }}"
             line txt $""
@@ -131,7 +131,7 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | Optional v -> typeToString ns v + " voption"
     | Array v -> typeToString ns v + " array"
     | List v -> typeToString ns v + " list"
-    | Map v -> $"Map<string,{typeToString ns v}>"
+    | Map(k, v) -> $"Map<{typeToString ns k},{typeToString ns v}>"
     | Complex typeName ->
         match lastNames typeName with
         | name when name = ns -> firstName typeName
@@ -182,7 +182,7 @@ let makeKeyArgs (typesCache: TypesCache) (keyFields: FieldInfo list) prefix suff
        ^ fun info ->
            match info.Type with
            | Types.IsRecord typesCache _
-           | Types.IsUnion typesCache _ -> $"{prefix}{info.Name}{suffix}.Key"
+           | Types.IsUnion typesCache _ -> $"({prefix}{info.Name}{suffix} :> IEntity).Key"
            | _ -> $"{prefix}{info.Name}{suffix}"
     |> String.concat ", "
 
@@ -269,7 +269,7 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
                | IndexKey.FieldKey name ->
                    match field.Type with
                    | Array _
-                   | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name}.Key)"
+                   | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> (v.{name} :> IEntity).Key)"
                    | _ -> $"x.{field.Name}.{name}"
         |> String.concat "; "
 
@@ -283,7 +283,7 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
             | Array _
             | List _ ->
                 line txt $"    member x.TryFind{firstCharToUpper indexName}In{fieldInfo.Name} (key:Key) ="
-                line txt $"        x.{fieldInfo.Name} |> Seq.tryFind (fun i -> i.{name}.Key = key)"
+                line txt $"        x.{fieldInfo.Name} |> Seq.tryFind (fun i -> (i.{name} :> IEntity).Key = key)"
             | _ -> ()
         | _ -> ()
 
@@ -314,12 +314,12 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
             match fieldInfo.Type with
             | Array _ ->
                 let mapTxt =
-                    $"fun v -> items.TryFind v.{keyName}.Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
+                    $"fun v -> items.TryFind (v.{keyName} :> IEntity).Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
 
                 line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> Array.map ({mapTxt})"
             | List _ ->
                 let mapTxt =
-                    $"fun v -> items.TryFind v.{keyName}.Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
+                    $"fun v -> items.TryFind (v.{keyName} :> IEntity).Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
 
                 line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> List.map ({mapTxt})"
             | wrong -> failwithf "Not supportes type for indexier %A" wrong
@@ -404,7 +404,7 @@ let unionIndexMembers (typesCache: TypesCache) txt indexName unionInfo =
 
         line txt $"        | {left} -> {right}"
 
-let defValue isMutable =
+let defValue (ns: ComplexName) isMutable =
     function
     | Bool -> "false"
     | String -> "\"\""
@@ -421,4 +421,11 @@ let defValue isMutable =
     | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
-    | Complex typeName -> $"Convert{lastNames typeName |> solidName}.Default{firstName typeName}.Value"
+    | Complex typeName -> $"{typeName |> dottedDiff ns}.Default.Value"
+
+let fromMutable =
+    function
+    | Array _ -> " |> Array.ofSeq"
+    | List _ -> " |> List.ofSeq"
+    | Map _ -> " |> Map.ofSeq"
+    | _ -> ""

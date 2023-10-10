@@ -1,0 +1,43 @@
+module Example.GameDomain
+
+enum Side =
+    | Player1
+    | Player2
+
+union GameStatus =
+    | InProgress of turn:int
+    | Finnished of winner:Side * turn:int
+    | Terminated
+
+record struct Location = {
+    X: int
+    Y: int
+}
+
+record Unit = {
+    Name: string
+    Health: int
+}
+
+record Game = {
+    Id: guid key
+    Player: int
+    Status: GameStatus
+    Board: map<Location, Unit>
+    LastChange: timestamp
+    Version: int
+}
+
+union struct Action =
+    | EndOfTurn
+    | Drop of dropPoint:Location
+    | Move of fromPoint:Location * toPoint:Location
+
+record Request = {
+    Game: Game
+    Action: Action
+}
+
+union Response =
+    | Ok of game: Game * possibleActions: list<Action>
+    | Fail of errors: list<string>

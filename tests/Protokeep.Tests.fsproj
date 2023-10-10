@@ -8,15 +8,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Utils.fs" />
-    <Compile Include="FsharpFableTests.fs" />
-    <Compile Include="FsharpJsonTests.fs" />
-    <Compile Include="FsharpProtoTests.fs" />
-    <Compile Include="FsharpTypesTests.fs" />
-    <Compile Include="ProtoTests.fs" />
+    <Compile Include="ParserTests.fs" />
     <Compile Include="EvolutionTests.fs" />
     <Compile Include="LockDocTests.fs" />
-    <Compile Include="ProtokeepDocTests.fs" />
+    <Compile Include="CasesTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />

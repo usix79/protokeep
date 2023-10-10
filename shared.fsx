@@ -70,10 +70,10 @@ let rm fileName dirName =
 
     Ok()
 
-let rmAll dirName =
+let rmAll dirName mask =
     result {
         if Directory.Exists dirName then
-            for fileName in Directory.GetFiles(dirName) do
+            for fileName in Directory.GetFiles(dirName, mask) do
                 do! rm fileName dirName
         else
             return! Error ^ $"Directory {dirName} not found"

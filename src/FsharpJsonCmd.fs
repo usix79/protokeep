@@ -31,6 +31,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
     let txt = StringBuilder()
     let ns = module'.Name
+    let genNs = genNamespace.Split('.') |> Seq.rev |> List.ofSeq |> ComplexName
 
     let rec genItem =
         function
@@ -57,21 +58,6 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         | Record info ->
             let fullNameTxt = info.Name |> dottedName
 
-            line txt $"    static member {firstName info.Name}FromJson(reader: byref<Utf8JsonReader>): {fullNameTxt} ="
-            readObject "v" info
-
-            line txt $"        {{"
-
-            for fieldInfo in info.Fields do
-                match fieldInfo.Type with
-                | Types.IsUnion typesCache _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
-                | Array _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Array.ofSeq"
-                | List _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> List.ofSeq"
-                | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
-                | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
-
-            line txt $"        }}"
-
             line
                 txt
                 $"    static member {firstName info.Name}ToJson (writer: inref<Utf8JsonWriter>, x: {fullNameTxt}) ="
@@ -79,14 +65,29 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             writeObject "x." info
             line txt $""
 
+            line
+                txt
+                $"    static member {firstName info.Name}FromJson(reader: byref<Utf8JsonReader>): {fullNameTxt} voption ="
+
+            readObject "v" info
+
+            line txt $"            ValueSome {{"
+
+            for fieldInfo in info.Fields do
+                let valueName = $"v{fieldInfo.Name}{FsharpTypesCmd.fromMutable fieldInfo.Type}"
+                linei txt 4 $"{fieldInfo.Name} = {valueName}"
+
+            line txt $"            }}"
+            line txt $"        else ValueNone"
+
+
         | Union union ->
             line
                 txt
-                $"    static member {firstName union.Name}FromJson(reader: byref<Utf8JsonReader>): {dottedName union.Name} ="
-
-            line txt $"        let mutable y = {dottedName union.Name}.Unknown"
+                $"    static member {firstName union.Name}FromJson(reader: byref<Utf8JsonReader>): {dottedName union.Name} voption ="
 
             line txt $"        if {helpers}.moveToStartObject(&reader)then"
+            line txt $"            let mutable y = {dottedName union.Name}.Unknown"
 
             line txt $"            while {helpers}.moveToEndObject(&reader) = false do"
             line txt $"                if reader.TokenType <> JsonTokenType.PropertyName then ()"
@@ -100,24 +101,18 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                     linei txt 5 $"then y <- {dottedName union.Name}.{firstName case.Name}"
                     linei txt 5 $"else reader.Skip()"
                 | Types.SingleFieldRecord fieldInfo ->
-                    match fieldInfo.Type with
-                    | Array _
-                    | List _
-                    | Map _ -> linei txt 5 $"()"
-                    | Complex t ->
-                        linei
-                            txt
-                            5
-                            $"y <- Convert{solidName ns}.{firstName t}FromJson(&reader) |> {dottedName union.Name}.{firstName case.Name}"
-                    | t -> readValueBlock txt 5 typesCache t $"y <- v |> {dottedName union.Name}.{firstName case.Name}"
+                    let prefix = "_"
+                    declareFieldValue 5 prefix fieldInfo
+                    readFieldValue 5 prefix fieldInfo
+                    let ctr = $"|> {dottedName union.Name}.{firstName case.Name}"
+                    linei txt 5 $"y <- {prefix}{fieldInfo.Name}{FsharpTypesCmd.fromMutable fieldInfo.Type} {ctr}"
                 | Types.MultiFieldsRecord ->
-                    linei
-                        txt
-                        5
-                        $"y <- Convert{solidName ns}.{firstName union.Name}Case{firstName case.Name}FromJson(&reader)"
+                    let methodName = $"{firstName union.Name}Case{firstName case.Name}FromJson"
+                    linei txt 5 $"y <- Convert{solidName ns}.{methodName}(&reader)"
 
             linei txt 4 $"else reader.Skip()"
-            line txt $"        y"
+            line txt $"            ValueSome y"
+            line txt $"        else ValueNone"
 
             line
                 txt
@@ -127,7 +122,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             line txt $"        match x with"
 
             for case in union.Cases do
-                let values = case.Fields |> List.map Common.getName |> String.concat ","
+                let values = case.Fields |> List.map getName |> String.concat ","
 
                 linei
                     txt
@@ -140,12 +135,10 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
                 match case with
                 | Types.EmptyRecord -> linei txt 3 $"writer.WriteBooleanValue(true)"
-                | Types.SingleFieldRecord fieldInfo -> linei txt 3 (writeValue typesCache values fieldInfo.Type)
+                | Types.SingleFieldRecord fieldInfo -> writeFieldValue 3 (getName fieldInfo) fieldInfo.Type
                 | Types.MultiFieldsRecord ->
-                    linei
-                        txt
-                        3
-                        $"Convert{lastNames union.Name |> solidName}.{firstName union.Name}Case{firstName case.Name}ToJson(&writer,{values})"
+                    let methodName = $"{firstName union.Name}Case{firstName case.Name}ToJson"
+                    linei txt 3 $"Convert{solidName ns}.{methodName}(&writer,{values})"
 
             line txt $"        | _ ->"
             line txt $"            writer.WritePropertyName(\"Unknown\")"
@@ -187,13 +180,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
     and readObject prefix recordInfo =
         for fieldInfo in recordInfo.Fields do
-            match fieldInfo.Type with
-            | Types.IsEnum typesCache enumInfo ->
-                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
-            | Types.IsUnion typesCache unionInfo ->
-                line txt $"        let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-            | _ ->
-                line txt $"        let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue true fieldInfo.Type}"
+            declareFieldValue 2 prefix fieldInfo
 
         line txt $"        if {helpers}.moveToStartObject(&reader) then"
 
@@ -201,31 +188,52 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"                if reader.TokenType <> JsonTokenType.PropertyName then ()"
 
         for fieldInfo in recordInfo.Fields do
-            let vName = prefix + fieldInfo.Name
-
             let suffix =
                 match fieldInfo.Type with
                 | Optional _ -> "Value"
                 | _ -> ""
 
             linei txt 4 $"else if (reader.ValueTextEquals(\"{firstCharToUpper fieldInfo.Name}{suffix}\")) then"
-
-            match fieldInfo.Type with
-            | Array t
-            | List t ->
-                linei txt 5 $"if reader.Read() && reader.TokenType = JsonTokenType.StartArray then"
-                linei txt 6 $"while reader.Read() && reader.TokenType <> JsonTokenType.EndArray do"
-                readValueBlock txt 7 typesCache t $"{vName}.Add(v)"
-                linei txt 5 $"else reader.Skip()"
-            | Map t ->
-                linei txt 5 $"if reader.Read() && reader.TokenType = JsonTokenType.StartObject then"
-                linei txt 6 $"while {helpers}.moveToEndObject(&reader) = false do"
-                linei txt 7 $"let propName = reader.GetString()"
-                readValueBlock txt 7 typesCache t $"{vName}.Add(propName, v)"
-                linei txt 5 $"else reader.Skip()"
-            | t -> readValueBlock txt 5 typesCache t $"{vName} <- v"
+            readFieldValue 5 prefix fieldInfo
 
         line txt $"                else reader.Skip()"
+
+    and declareFieldValue ident prefix fieldInfo =
+        match fieldInfo.Type with
+        | Types.IsEnum typesCache enumInfo ->
+            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
+        | Types.IsUnion typesCache unionInfo ->
+            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
+        | _ ->
+            let value = FsharpTypesCmd.defValue genNs true fieldInfo.Type
+            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {value}"
+
+    and readFieldValue ident prefix fieldInfo =
+        let vName = $"{prefix}{fieldInfo.Name}"
+
+        match fieldInfo.Type with
+        | Array t
+        | List t ->
+            linei txt ident $"if reader.Read() && reader.TokenType = JsonTokenType.StartArray then"
+            linei txt (ident + 1) $"while reader.TokenType <> JsonTokenType.EndArray do"
+            readValueBlock txt (ident + 2) typesCache t $"{vName}.Add(v)"
+            linei txt ident $"else reader.Skip()"
+        | Map(k, v) ->
+            linei txt ident $"if reader.Read() && reader.TokenType = JsonTokenType.StartArray then"
+            linei txt (ident + 1) $"while reader.Read() && reader.TokenType <> JsonTokenType.EndArray do"
+            linei txt (ident + 2) $"if reader.TokenType = JsonTokenType.StartObject then"
+            linei txt (ident + 3) $"let mutable key = {FsharpTypesCmd.defValue genNs true k}"
+            linei txt (ident + 3) $"let mutable value = {FsharpTypesCmd.defValue genNs true v}"
+            linei txt (ident + 3) $"while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do"
+            linei txt (ident + 4) $"""if (reader.ValueTextEquals("Key")) then"""
+            readValueBlock txt (ident + 5) typesCache k $"key <- v"
+            linei txt (ident + 4) $"""else if (reader.ValueTextEquals("Value")) then"""
+            readValueBlock txt (ident + 5) typesCache v $"value <- v"
+            linei txt (ident + 4) $"else reader.Skip()"
+            linei txt (ident + 3) $"{vName}.Add(key, value)"
+            linei txt (ident + 2) $"else reader.Skip()"
+            linei txt ident $"else reader.Skip()"
+        | t -> readValueBlock txt 5 typesCache t $"{vName} <- v"
 
     and writeObject prefix recordInfo =
         line txt $"        writer.WriteStartObject()"
@@ -235,18 +243,37 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
             match fieldInfo.Type with
             | Optional t ->
-                let inner = "v"
                 linei txt 2 $"match {vName} with"
                 linei txt 2 $"| ValueSome v ->"
                 linei txt 3 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}Value\")"
-                linei txt 3 $"{writeValue typesCache inner t}"
+                writeFieldValue 3 "v" t
                 linei txt 2 $"| ValueNone -> ()"
-            | _ ->
-                let inner = $"{vName}"
+            | t ->
                 linei txt 2 $"writer.WritePropertyName(\"{firstCharToUpper fieldInfo.Name}\")"
-                linei txt 2 $"{writeValue typesCache inner fieldInfo.Type}"
+                writeFieldValue 2 vName t
 
         line txt $"        writer.WriteEndObject()"
+
+    and writeFieldValue ident vName =
+        function
+        | Optional _ -> failwith "cannot unpack optional field"
+        | Array t
+        | List t ->
+            linei txt ident $"writer.WriteStartArray()"
+            linei txt ident $"for v in {vName} do"
+            linei txt (ident + 1) $"""{writeValue typesCache "v" t}"""
+            linei txt ident $"writer.WriteEndArray()"
+        | Map(k, v) ->
+            linei txt ident $"writer.WriteStartArray()"
+            linei txt ident $"for pair in {vName} do"
+            linei txt (ident + 1) $"writer.WriteStartObject()"
+            linei txt (ident + 1) $"writer.WritePropertyName(\"Key\")"
+            linei txt (ident + 1) $"""{writeValue typesCache "pair.Key" k}"""
+            linei txt (ident + 1) $"writer.WritePropertyName(\"Value\")"
+            linei txt (ident + 1) $"""{writeValue typesCache "pair.Value" v}"""
+            linei txt (ident + 1) $"writer.WriteEndObject()"
+            linei txt ident $"writer.WriteEndArray()"
+        | t -> linei txt ident $"{writeValue typesCache vName t}"
 
     line txt $"namespace {genNamespace}"
     line txt $""
@@ -278,7 +305,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Optional t -> $"{readValue typesCache t} |> ValueOption.map ValueSome"
     | Types.IsEnum typesCache ei ->
         $"{helpers}.readString(&reader) |> ValueOption.map Convert{lastNames ei.Name |> solidName}.{firstName ei.Name}FromString"
-    | Complex t -> $"Convert{lastNames t |> solidName}.{firstName t}FromJson(&reader) |> ValueSome"
+    | Complex t -> $"Convert{lastNames t |> solidName}.{firstName t}FromJson(&reader)"
     | Array _
     | List _
     | Map _ -> failwith $"Collection in {nameof (readValue)}"
@@ -303,13 +330,9 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         | Duration -> $"{helpers}.writeDuration(&writer, {vName})"
         | Guid -> $"{helpers}.writeGuid(&writer, {vName})"
         | Optional _ -> failwith "cannot unpack optional field"
-        | Array t
-        | List t ->
-            let inner = "v"
-            $"writer.WriteStartArray(); (for v in {vName} do {writeValue typesCache inner t}); writer.WriteEndArray()"
-        | Map t ->
-            let inner = "pair.Value"
-            $"writer.WriteStartObject(); (for pair in {vName} do writer.WritePropertyName(pair.Key); {writeValue typesCache inner t}); writer.WriteEndObject()"
+        | Array _
+        | List _
+        | Map _ -> failwith "cannot unpack collection field"
         | Complex typeName ->
             match typesCache.TryFind typeName with
             | Some(Enum _) ->

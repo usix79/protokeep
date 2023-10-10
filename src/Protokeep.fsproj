@@ -23,14 +23,14 @@
     <Compile Include="Infra.fs" />
     <Compile Include="Parsers.fs" />
     <Compile Include="Codegen.fs" />
+    <Compile Include="CheckCmd.fs" />
+    <Compile Include="LockCmd.fs" />
+    <Compile Include="ProtoCmd.fs" />
     <Compile Include="FsharpTypesCmd.fs" />
     <Compile Include="FsharpFableCmd.fs" />
     <Compile Include="FsharpProtoCmd.fs" />
     <Compile Include="FsharpJsonCmd.fs" />
     <Compile Include="FsharpMongoCmd.fs" />
-    <Compile Include="ProtoCmd.fs" />
-    <Compile Include="LockCmd.fs" />
-    <Compile Include="CheckCmd.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,38 @@
+module Domain
+import "Subdomain.protokeep"
+
+union Op =
+    | Val of int
+    | Sum of Op*Op
+    | Mul of Op*Op
+    | Div of Op*Op
+    | Ln of Op
+    | Quantum of Op*Op*string
+    | Imagine of option<int>
+    | SumAll of list<Op>
+    | Zero
+
+union OpError =
+    | General of list<string>
+    | DivisionByZero
+    | NotSupported
+
+union OpResult =
+    | Success of int
+    | Fail of OpError
+
+record Request = {
+    Token: string
+    Operation: Op
+    Tags: map<string,string>
+}
+
+record Response = {
+    Token: string
+    Result: OpResult
+    ExecutionTime: duration
+    Extra: option<string>
+    Since: timestamp
+    Tags: map<string,string>
+    Status: Subdomain.Status
+}

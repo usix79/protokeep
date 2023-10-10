@@ -31,6 +31,24 @@ module FsharpFableHelpers =
         | (JArray v) -> action v
         | _ -> ()
 
+    let ifMap action =
+        function
+        | (JArray arr) ->
+            arr
+            |> Seq.iter (fun v ->
+                match v with
+                | JObject v ->
+                    v.TryFind "Key"
+                    |> Option.iter (fun key -> v.TryFind "Value" |> Option.iter (fun value -> action (key, value)))
+                | _ -> ())
+        | _ -> ()
+
+    let mapToArray keyCast valueCast map =
+        map
+        |> Map.toList
+        |> List.map (fun (k, v) -> [ "Key", (keyCast k); "Value", (valueCast v) ] |> Map.ofList |> JObject)
+        |> JArray
+
     let toDateTime (v: string) = System.DateTime.Parse v
     let fromDateTime (v: System.DateTime) = v.ToString("O")
 

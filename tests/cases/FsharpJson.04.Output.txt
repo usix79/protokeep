@@ -1,6 +1,8 @@
-namespace Protokeep.FsharpJsonConverters
+namespace Protokeep.FsharpJson
+
 open System.Text.Json
-open Protokeep.FsharpJsonConvertersHelpers
+open Protokeep
+
 type ConvertDomain () =
     static member DefaultTrafficLight =
         lazy Domain.TrafficLight.Unknown

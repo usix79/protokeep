@@ -19,7 +19,7 @@ type Type =
     | Optional of value: Type
     | Array of value: Type
     | List of value: Type
-    | Map of value: Type
+    | Map of key: Type * value: Type
     | Complex of name: ComplexName
 
 
@@ -283,7 +283,20 @@ module Types =
                    | Optional(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Optional)
                    | Array(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Array)
                    | List(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> List)
-                   | Map(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Map)
+                   | Map(tkey, tvalue) ->
+                       let tkey =
+                           match tkey with
+                           | Complex typeName -> getFullName ns typeName |> Option.map Complex
+                           | t -> Some t
+
+                       let tvalue =
+                           match tvalue with
+                           | Complex typeName -> getFullName ns typeName |> Option.map Complex
+                           | t -> Some t
+
+                       match tkey, tvalue with
+                       | Some tkey, Some tvalue -> Some(Map(tkey, tvalue))
+                       | _ -> None
                    | Complex typeName -> getFullName ns typeName |> Option.map Complex
                    | t -> Some t
                    |> Option.map (fun type' -> Ok { fieldInfo with Type = type' })
