@@ -9,8 +9,8 @@ type ConvertTestDomain() =
             Address = x.Address
             Corner = if x.CornerCase = ProtoClasses.Test.Domain.Crossroad.CornerOneofCase.CornerValue then ValueSome (x.CornerValue) else ValueNone
             IsMonitored = x.IsMonitored
-            Patch = x.Patch
-            Model = x.Model
+            Patch = x.Patch |> sbyte
+            Model = x.Model |> int16
             Serial = x.Serial
             Mask = x.Mask
             Cost = x.Cost |> fun v -> (decimal v) / 100m
@@ -35,8 +35,8 @@ type ConvertTestDomain() =
         | ValueSome v -> y.CornerValue <- v
         | ValueNone -> ()
         y.IsMonitored <- x.IsMonitored
-        y.Patch <- x.Patch
-        y.Model <- x.Model
+        y.Patch <- x.Patch |> int
+        y.Model <- x.Model |> int
         y.Serial <- x.Serial
         y.Mask <- x.Mask
         y.Cost <- x.Cost |> fun v -> int (v * 100m)
@@ -47,7 +47,7 @@ type ConvertTestDomain() =
         y.Intervals.AddRange(x.Intervals)
         y.Notes.AddRange(x.Notes)
         for pair in x.Tags do
-            let protoPair = ProtoClasses.Test.Domain.StringIntPair ()
+            let protoPair = ProtoClasses.Test.Domain.StringInt32Pair ()
             protoPair.Key <- pair.Key
             protoPair.Value <- pair.Value
             y.Tags.Add(protoPair)

@@ -32,7 +32,7 @@ with
             Address = ""
             Corner = ValueNone
             IsMonitored = false
-            Patch = 0uy
+            Patch = 0y
             Model = 0s
             Serial = 0
             Mask = 0L

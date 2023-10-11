@@ -183,11 +183,11 @@ type ConvertTestDomain() =
             | BsonReaderState.Name ->
                 match reader.ReadName() with
                 | "S1" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vS1 <- v
                     | ValueNone -> ()
                 | "S2" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vS2 <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()

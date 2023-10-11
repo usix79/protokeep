@@ -108,7 +108,7 @@ let ``Simple Record`` () =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsVersion = false
                           IsKey = false
                           Indexes = [] }
@@ -130,7 +130,7 @@ let ``Simple Record`` () =
             [ RecordLock
                   { Name = ComplexName [ "Crossroad"; "Domain" ]
                     Fields =
-                      [ { Name = "Id"; Type = Int; Num = 1 }
+                      [ { Name = "Id"; Type = Int32; Num = 1 }
                         { Name = "Street1"
                           Type = String
                           Num = 2 }
@@ -152,7 +152,7 @@ let ``Union`` () =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -194,7 +194,7 @@ let ``Union`` () =
             [ RecordLock
                   { Name = ComplexName [ "Log"; "Domain" ]
                     Fields =
-                      [ { Name = "Id"; Type = Int; Num = 1 }
+                      [ { Name = "Id"; Type = Int32; Num = 1 }
                         { Name = "Check"
                           Type = Complex <| ComplexName [ "ServiceCheck"; "Domain" ]
                           Num = 2 } ] }
@@ -230,7 +230,7 @@ let ``Missed Field Record`` () =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -244,7 +244,7 @@ let ``Missed Field Record`` () =
         [ RecordLock
               { Name = ComplexName [ "Crossroad"; "Domain" ]
                 Fields =
-                  [ { Name = "Id"; Type = Int; Num = 1 }
+                  [ { Name = "Id"; Type = Int32; Num = 1 }
                     { Name = "Street1"
                       Type = String
                       Num = 2 }
@@ -269,7 +269,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Long
+                          Type = Int64
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -291,7 +291,7 @@ let ``Acceptable Evolutionof a Field's Type`` () =
             [ RecordLock
                   { Name = ComplexName [ "Crossroad"; "Domain" ]
                     Fields =
-                      [ { Name = "Id"; Type = Long; Num = 1 }
+                      [ { Name = "Id"; Type = Int64; Num = 1 }
                         { Name = "Street1"
                           Type = String
                           Num = 2 }
@@ -331,7 +331,7 @@ let UnacceptableEvolutionOfAFieldType () =
         [ RecordLock
               { Name = ComplexName [ "Crossroad"; "Domain" ]
                 Fields =
-                  [ { Name = "Id"; Type = Int; Num = 1 }
+                  [ { Name = "Id"; Type = Int32; Num = 1 }
                     { Name = "Street1"
                       Type = String
                       Num = 2 }
@@ -340,7 +340,7 @@ let UnacceptableEvolutionOfAFieldType () =
                       Num = 3 } ] } ]
 
     let expected =
-        Error [ Types.UnacceptableEvolution(ComplexName [ "Crossroad"; "Domain" ], "Id", Int, Guid) ]
+        Error [ Types.UnacceptableEvolution(ComplexName [ "Crossroad"; "Domain" ], "Id", Int32, Guid) ]
 
     assertEqual expected (Types.lock input (LocksCollection lock) (input |> Types.toTypesCacheItems |> Map.ofList))
 
@@ -356,7 +356,7 @@ let MissedFieldInUnion () =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -377,7 +377,7 @@ let MissedFieldInUnion () =
         [ RecordLock
               { Name = ComplexName [ "Log"; "Domain" ]
                 Fields =
-                  [ { Name = "Id"; Type = Int; Num = 1 }
+                  [ { Name = "Id"; Type = Int32; Num = 1 }
                     { Name = "Check"
                       Type = Complex(ComplexName [ "ServiceCheck"; "Domain" ])
                       Num = 2 } ] }
@@ -401,7 +401,7 @@ let AddFieldInUnion () =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -446,7 +446,7 @@ let AddFieldInUnion () =
             [ RecordLock
                   { Name = ComplexName [ "Log"; "Domain" ]
                     Fields =
-                      [ { Name = "Id"; Type = Int; Num = 1 }
+                      [ { Name = "Id"; Type = Int32; Num = 1 }
                         { Name = "Check"
                           Type = Complex(ComplexName [ "ServiceCheck"; "Domain" ])
                           Num = 2 } ] }

@@ -27,4 +27,4 @@ record Example.Betting.Football.MarketItem
     field Period Example.Betting.Football.Period = 2
     field Market Example.Betting.Football.Market = 3
     field Status Example.Betting.Football.Status = 4
-    field Version int = 5
+    field Version int32 = 5

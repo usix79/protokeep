@@ -5,27 +5,27 @@ enum Side =
     | Player2
 
 union GameStatus =
-    | InProgress of turn:int
-    | Finnished of winner:Side * turn:int
+    | InProgress of turn:int16
+    | Finnished of winner:Side * turn:int16
     | Terminated
 
 record struct Location = {
-    X: int
-    Y: int
+    X: int8
+    Y: int8
 }
 
 record Unit = {
     Name: string
-    Health: int
+    Health: int8
 }
 
 record Game = {
     Id: guid key
-    Player: int
+    Player: int8
     Status: GameStatus
     Board: map<Location, Unit>
     LastChange: timestamp
-    Version: int
+    Version: int32
 }
 
 union struct Action =

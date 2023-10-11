@@ -26,5 +26,5 @@ record MarketItem = {
     Period : Period key
     Market : Market key
     Status : Status
-    Version: int
+    Version: int32
 }

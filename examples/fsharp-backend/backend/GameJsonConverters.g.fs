@@ -23,8 +23,8 @@ type ConvertExampleGameDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("InProgress")) then
-                    let mutable _turn = 0
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    let mutable _turn = 0s
+                    match FsharpJsonHelpers.readShort(&reader) with
                     | ValueSome v -> _turn <- v
                     | ValueNone -> ()
                     y <- _turn |> Example.GameDomain.GameStatus.InProgress
@@ -55,7 +55,7 @@ type ConvertExampleGameDomain() =
         writer.WriteEndObject()
     static member GameStatusCaseFinnishedFromJson(reader: byref<Utf8JsonReader>) =
         let mutable winner = Example.GameDomain.Side.Unknown
-        let mutable turn = 0
+        let mutable turn = 0s
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
@@ -64,7 +64,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> winner <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Turn")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readShort(&reader) with
                     | ValueSome v -> turn <- v
                     | ValueNone -> ()
                 else reader.Skip()
@@ -86,17 +86,17 @@ type ConvertExampleGameDomain() =
         writer.WriteEndObject()
 
     static member LocationFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Location voption =
-        let mutable vX = 0
-        let mutable vY = 0
+        let mutable vX = 0y
+        let mutable vY = 0y
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("X")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readByte(&reader) with
                     | ValueSome v -> vX <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Y")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readByte(&reader) with
                     | ValueSome v -> vY <- v
                     | ValueNone -> ()
                 else reader.Skip()
@@ -115,7 +115,7 @@ type ConvertExampleGameDomain() =
 
     static member UnitFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Unit voption =
         let mutable vName = ""
-        let mutable vHealth = 0
+        let mutable vHealth = 0y
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
@@ -124,7 +124,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> vName <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Health")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readByte(&reader) with
                     | ValueSome v -> vHealth <- v
                     | ValueNone -> ()
                 else reader.Skip()
@@ -159,7 +159,7 @@ type ConvertExampleGameDomain() =
 
     static member GameFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Game voption =
         let mutable vId = System.Guid.Empty
-        let mutable vPlayer = 0
+        let mutable vPlayer = 0y
         let mutable vStatus = Example.GameDomain.GameStatus.Unknown
         let mutable vBoard = ResizeArray()
         let mutable vLastChange = System.DateTime.MinValue
@@ -172,7 +172,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> vId <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Player")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readByte(&reader) with
                     | ValueSome v -> vPlayer <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("Status")) then

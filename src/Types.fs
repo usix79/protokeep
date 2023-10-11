@@ -7,13 +7,13 @@ type ComplexName = ComplexName of string list
 type Type =
     | Bool
     | String
-    | Byte
-    | Short
-    | Int
-    | Long
+    | Int8
+    | Int16
+    | Int32
+    | Int64
     | Money of scale: int
-    | Single
-    | Double
+    | Float32
+    | Float64
     | Binary
     | Timestamp
     | Duration
@@ -382,21 +382,21 @@ module Types =
     let allowedEvolution from to' =
         // TODO: allow more evolutions
         match from, to' with
-        | Bool, Int -> true
-        | Bool, Long -> true
-        | Byte, Bool -> true
-        | Byte, Short -> true
-        | Byte, Int -> true
-        | Byte, Long -> true
-        | Short, Bool -> true
-        | Short, Int -> true
-        | Short, Long -> true
-        | Int, Long -> true
-        | Int, Bool -> true
-        | Long, Int -> true
-        | Long, Bool -> true
-        | Double, Single -> true
-        | Single, Double -> true
+        | Bool, Int32 -> true
+        | Bool, Int64 -> true
+        | Int8, Bool -> true
+        | Int8, Int16 -> true
+        | Int8, Int32 -> true
+        | Int8, Int64 -> true
+        | Int16, Bool -> true
+        | Int16, Int32 -> true
+        | Int16, Int64 -> true
+        | Int32, Int64 -> true
+        | Int32, Bool -> true
+        | Int64, Int32 -> true
+        | Int64, Bool -> true
+        | Float64, Float32 -> true
+        | Float32, Float64 -> true
         | _ -> from = to'
 
     let lockRecord

@@ -20,13 +20,13 @@ message Crossroad {
     google.protobuf.Duration ServiceInterval = 14;
     repeated int32 Intervals = 15;
     repeated string Notes = 16;
-    repeated StringIntPair Tags = 17;
+    repeated StringInt32Pair Tags = 17;
     oneof Next {Test.Domain.Crossroad NextValue = 18;}
     bytes Img = 19;
     int32 Version = 20;
 }
 
-message StringIntPair {
+message StringInt32Pair {
     string key = 1;
     int32 value = 2;
 }

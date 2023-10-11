@@ -62,14 +62,14 @@ let ``Test record`` () =
         """
 module Domain
 record Crossroad = {
-    Id: int
-    LongId: long
+    Id: int32
+    LongId: int64
     AltId: guid
     Street1: string
     Street2: string
     IsMonitored: bool
-    Xpos: single
-    Ypos: double
+    Xpos: float32
+    Ypos: float64
     Ratio: money(2)
     LastChecked: timestamp
     ServiceInterval: duration
@@ -77,8 +77,8 @@ record Crossroad = {
     Nickname: option<string>
     Img: binary
     Notes: array<string>
-    Siblings: list<int>
-    Props: map<int, string>
+    Siblings: list<int32>
+    Props: map<int32, string>
 }
 """
 
@@ -92,12 +92,12 @@ record Crossroad = {
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
                         { Name = "LongId"
-                          Type = Long
+                          Type = Int64
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -122,12 +122,12 @@ record Crossroad = {
                           IsVersion = false
                           Indexes = [] }
                         { Name = "Xpos"
-                          Type = Single
+                          Type = Float32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
                         { Name = "Ypos"
-                          Type = Double
+                          Type = Float64
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -167,12 +167,12 @@ record Crossroad = {
                           IsVersion = false
                           Indexes = [] }
                         { Name = "Siblings"
-                          Type = List Int
+                          Type = List Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
                         { Name = "Props"
-                          Type = Map(Int, String)
+                          Type = Map(Int32, String)
                           IsKey = false
                           IsVersion = false
                           Indexes = [] } ] } ] }
@@ -182,7 +182,7 @@ let ``Test single line record`` () =
     let input =
         """
 module Domain
-record Crossroad = { Id: int; Street1: string; Street2: string }
+record Crossroad = { Id: int32; Street1: string; Street2: string }
 """
 
     assertOfString
@@ -195,7 +195,7 @@ record Crossroad = { Id: int; Street1: string; Street2: string }
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -218,7 +218,7 @@ module Domain
 union ServiceCheck =
     | Random
     | Planned of timestamp
-    | Campaign of name:string*step:int
+    | Campaign of name:string*step:int32
     | RCA of Incident
 """
 
@@ -251,7 +251,7 @@ union ServiceCheck =
                                 IsVersion = false
                                 Indexes = [] }
                               { Name = "step"
-                                Type = Int
+                                Type = Int32
                                 IsKey = false
                                 IsVersion = false
                                 Indexes = [] } ] }
@@ -269,7 +269,7 @@ let ``Test single line union`` () =
     let input =
         """
 module Domain
-union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
+union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int32 | RCA of Incident
 """
 
     assertOfString
@@ -301,7 +301,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                                 IsVersion = false
                                 Indexes = [] }
                               { Name = "step"
-                                Type = Int
+                                Type = Int32
                                 IsKey = false
                                 IsVersion = false
                                 Indexes = [] } ] }
@@ -325,12 +325,12 @@ enum TrafficLight = Red | Yellow | Green
 enum AltTrafficLight = Red | Yellow | Blue
 
 record Crossroad = {
-    Id: int
+    Id: int32
     Street1: string
     Street2: string
 }
 
-union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int | RCA of Incident
+union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*step:int32 | RCA of Incident
 
 """
 
@@ -350,7 +350,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = false
                           IsVersion = false
                           Indexes = [] }
@@ -388,7 +388,7 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
                                 IsVersion = false
                                 Indexes = [] }
                               { Name = "step"
-                                Type = Int
+                                Type = Int32
                                 IsKey = false
                                 IsVersion = false
                                 Indexes = [] } ] }
@@ -407,7 +407,7 @@ let KeyInRecordTest () =
         """
 module Domain.Foundation
 record Crossroad = {
-    Id: int key
+    Id: int32 key
     Street1: string
     Street2: string key
 }
@@ -423,7 +423,7 @@ record Crossroad = {
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = true
                           IsVersion = false
                           Indexes = [] }
@@ -444,7 +444,7 @@ let KeyInUnionTest () =
         """
 module Domain.Foundation
 record Crossroad = {
-    Id: int key
+    Id: int32 key
     Street1: string
     Street2: string key
 }
@@ -452,7 +452,7 @@ union U1 =
     | Case1
     | Case2 of Crossroad
     | Case3 of Crossroad key
-    | Case4 of int key * s1:string * s2:string key
+    | Case4 of int32 key * s1:string * s2:string key
 """
 
     assertOfString
@@ -465,7 +465,7 @@ union U1 =
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = true
                           IsVersion = false
                           Indexes = [] }
@@ -506,7 +506,7 @@ union U1 =
                           IsStruct = false
                           Fields =
                             [ { Name = "p1"
-                                Type = Int
+                                Type = Int32
                                 IsKey = true
                                 IsVersion = false
                                 Indexes = [] }
@@ -529,7 +529,7 @@ let IndexInRecordTest () =
         """
 module Domain.Foundation
 record Crossroad = {
-    Id: int key
+    Id: int32 key
     Street1: string idx
     Street2: string key idx
     Street3: string idx idx:street
@@ -548,7 +548,7 @@ record Crossroad = {
                     IsStruct = false
                     Fields =
                       [ { Name = "Id"
-                          Type = Int
+                          Type = Int32
                           IsKey = true
                           IsVersion = false
                           Indexes = [] }

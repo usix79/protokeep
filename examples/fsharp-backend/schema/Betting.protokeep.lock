@@ -13,7 +13,7 @@ record Example.Betting.Outcome.Priced
     field price money(3) = 1
 record Example.Betting.Outcome.PricedWithProb
     field price money(3) = 1
-    field prob single = 2
+    field prob float32 = 2
 record Example.Betting.Outcome.Resulted
     field result Example.Betting.OutcomeResult = 1
 record Example.Betting.Winner3Way
@@ -29,8 +29,8 @@ record Example.Betting.Total
     field Over Example.Betting.Outcome = 2
     field Under Example.Betting.Outcome = 3
 record Example.Betting.Score
-    field S1 int = 1
-    field S2 int = 2
+    field S1 int16 = 1
+    field S2 int16 = 2
 record Example.Betting.ScoreOutcome
     field Score Example.Betting.Score = 1
     field Outcome Example.Betting.Outcome = 2

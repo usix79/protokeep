@@ -219,12 +219,12 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         function
         | Bool -> $"{helpers}.ifBool (fun v -> {leftOp}v{rightOp})"
         | String -> $"{helpers}.ifString (fun v -> {leftOp}v{rightOp})"
-        | Byte
-        | Short
-        | Int
-        | Long
-        | Single
-        | Double -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
+        | Int8
+        | Int16
+        | Int32
+        | Int64
+        | Float32
+        | Float64 -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Money scale -> $"{helpers}.ifNumber (fun v -> {leftOp}v |> unbox{rightOp})"
         | Binary -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String{rightOp})"
         | Timestamp -> $"{helpers}.ifString (fun v -> {leftOp}v |> {helpers}.toDateTime{rightOp})"
@@ -256,12 +256,12 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         function
         | Bool -> $"JBool ({vName})"
         | String -> $"JString ({vName})"
-        | Byte
-        | Short
-        | Int
-        | Long
-        | Single
-        | Double -> $"JNumber (unbox {vName})"
+        | Int8
+        | Int16
+        | Int32
+        | Int64
+        | Float32
+        | Float64 -> $"JNumber (unbox {vName})"
         | Money _ -> $"JNumber (unbox {vName})"
         | Binary -> $"JString ({vName} |> System.Convert.ToBase64String)"
         | Timestamp -> $"JString ({vName} |> {helpers}.fromDateTime)"

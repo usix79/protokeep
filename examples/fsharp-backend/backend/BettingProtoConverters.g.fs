@@ -81,14 +81,14 @@ type ConvertExampleBetting() =
 
     static member FromProtobuf(x: ProtoClasses.Example.Betting.Score) : Example.Betting.Score =
         {
-            S1 = x.S1
-            S2 = x.S2
+            S1 = x.S1 |> int16
+            S2 = x.S2 |> int16
         }
 
     static member ToProtobuf(x: Example.Betting.Score) : ProtoClasses.Example.Betting.Score =
         let y = ProtoClasses.Example.Betting.Score()
-        y.S1 <- x.S1
-        y.S2 <- x.S2
+        y.S1 <- x.S1 |> int
+        y.S2 <- x.S2 |> int
         y
 
     static member FromProtobuf(x: ProtoClasses.Example.Betting.ScoreOutcome) : Example.Betting.ScoreOutcome =

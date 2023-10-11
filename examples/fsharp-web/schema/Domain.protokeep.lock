@@ -9,7 +9,7 @@ union Domain.Op
     case SumAll = 8
     case Zero = 9
 record Domain.Op.Val
-    field p1 int = 1
+    field p1 int32 = 1
 record Domain.Op.Sum
     field p1 Domain.Op = 1
     field p2 Domain.Op = 2
@@ -26,7 +26,7 @@ record Domain.Op.Quantum
     field p2 Domain.Op = 2
     field p3 string = 3
 record Domain.Op.Imagine
-    field p1 option<int> = 1
+    field p1 option<int32> = 1
 record Domain.Op.SumAll
     field p1 list<Domain.Op> = 1
 record Domain.Op.Zero
@@ -42,7 +42,7 @@ union Domain.OpResult
     case Success = 1
     case Fail = 2
 record Domain.OpResult.Success
-    field p1 int = 1
+    field p1 int32 = 1
 record Domain.OpResult.Fail
     field p1 Domain.OpError = 1
 record Domain.Request

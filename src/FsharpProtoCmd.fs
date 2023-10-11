@@ -209,13 +209,13 @@ let convertionFrom ns type' =
 let rec fieldFromProtobuf ns type' =
     match type' with
     | Bool
-    | String
-    | Byte
-    | Short
-    | Int
-    | Long
-    | Single
-    | Double -> None
+    | String -> None
+    | Int8 -> Some "sbyte"
+    | Int16 -> Some "int16"
+    | Int32
+    | Int64
+    | Float32
+    | Float64 -> None
     | Money scale -> Some $"fun v -> (decimal v) / {10. ** float (scale)}m"
     | Binary -> Some "fun v -> v.ToByteArray()"
     | Timestamp -> Some "fun v -> v.ToDateTime()"
@@ -243,13 +243,13 @@ let convertionTo type' =
 let rec fieldToProtobuf type' =
     match type' with
     | Bool
-    | String
-    | Byte
-    | Short
-    | Int
-    | Long
-    | Single
-    | Double -> None
+    | String -> None
+    | Int8 -> Some "int"
+    | Int16 -> Some "int"
+    | Int32
+    | Int64
+    | Float32
+    | Float64 -> None
     | Money scale -> Some $"fun v -> int (v * {10. ** float (scale)}m)"
     | Binary -> Some "Google.Protobuf.ByteString.CopyFrom"
     | Timestamp -> Some "Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime"

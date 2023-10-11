@@ -57,7 +57,7 @@ type ConvertTestDomain() =
                     | _ -> ()
                 | "MissedTurns" ->
                     let mutable _count = 0
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> _count <- v
                     | ValueNone -> ()
                     y <- _count |> Test.Domain.Incident.MissedTurns

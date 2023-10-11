@@ -25,8 +25,8 @@ union Market =
 
 
 record Score = {
-    S1 : int key
-    S2 : int key
+    S1 : int32 key
+    S2 : int32 key
 }
 
 record GoalDetails = {

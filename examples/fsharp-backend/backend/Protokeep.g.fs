@@ -256,7 +256,17 @@ module FsharpMongoHelpers =
             reader.SkipValue()
             ValueNone
 
-    let readShort (reader: IO.IBsonReader) =
+    let readInt8 (reader: IO.IBsonReader) =
+        match reader.CurrentBsonType with
+        | BsonType.Int32 -> sbyte (reader.ReadInt32()) |> ValueSome
+        | BsonType.Int64 -> sbyte (reader.ReadInt64()) |> ValueSome
+        | BsonType.Double -> sbyte (reader.ReadDouble()) |> ValueSome
+        | BsonType.String -> sbyte (reader.ReadString()) |> ValueSome
+        | _ ->
+            reader.SkipValue()
+            ValueNone
+
+    let readInt16 (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with
         | BsonType.Int32 -> int16 (reader.ReadInt32()) |> ValueSome
         | BsonType.Int64 -> int16 (reader.ReadInt64()) |> ValueSome
@@ -266,7 +276,7 @@ module FsharpMongoHelpers =
             reader.SkipValue()
             ValueNone
 
-    let readInt (reader: IO.IBsonReader) =
+    let readInt32 (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with
         | BsonType.Int32 -> reader.ReadInt32() |> ValueSome
         | BsonType.Int64 -> int (reader.ReadInt64()) |> ValueSome
@@ -276,7 +286,7 @@ module FsharpMongoHelpers =
             reader.SkipValue()
             ValueNone
 
-    let readLong (reader: IO.IBsonReader) =
+    let readInt64 (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with
         | BsonType.Int32 -> int64 (reader.ReadInt32()) |> ValueSome
         | BsonType.Int64 -> reader.ReadInt64() |> ValueSome
@@ -286,7 +296,7 @@ module FsharpMongoHelpers =
             reader.SkipValue()
             ValueNone
 
-    let readFloat (reader: IO.IBsonReader) =
+    let readFloat32 (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with
         | BsonType.Int32 -> float32 (reader.ReadInt32()) |> ValueSome
         | BsonType.Int64 -> float32 (reader.ReadInt64()) |> ValueSome
@@ -296,7 +306,7 @@ module FsharpMongoHelpers =
             reader.SkipValue()
             ValueNone
 
-    let readDouble (reader: IO.IBsonReader) =
+    let readFloat64 (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with
         | BsonType.Int32 -> float (reader.ReadInt32()) |> ValueSome
         | BsonType.Int64 -> float (reader.ReadInt64()) |> ValueSome
@@ -324,7 +334,7 @@ module FsharpMongoHelpers =
             reader.SkipValue()
             ValueNone
 
-    let readBytes (reader: IO.IBsonReader) =
+    let readBinary (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with
         | BsonType.Binary -> reader.ReadBinaryData().Bytes |> ValueSome
         | _ ->
@@ -332,10 +342,10 @@ module FsharpMongoHelpers =
             ValueNone
 
     let readMoney (reader: IO.IBsonReader, scale: int) =
-        readInt reader |> ValueOption.map (fun v -> fromMoney (v, scale))
+        readInt32 reader |> ValueOption.map (fun v -> fromMoney (v, scale))
 
     let readDuration (reader: IO.IBsonReader) =
-        readInt reader |> ValueOption.map TimeSpan.FromMilliseconds
+        readInt32 reader |> ValueOption.map TimeSpan.FromMilliseconds
 
     let readGuid (reader: IO.IBsonReader) =
         match reader.CurrentBsonType with

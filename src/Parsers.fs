@@ -38,12 +38,12 @@ module private Impl =
         choice
             [ skipString "bool" |>> (fun () -> Bool)
               skipString "string" |>> (fun () -> String)
-              skipString "byte" |>> (fun () -> Byte)
-              skipString "short" |>> (fun () -> Short)
-              skipString "int" |>> (fun () -> Int)
-              skipString "long" |>> (fun () -> Long)
-              skipString "single" |>> (fun () -> Single)
-              skipString "double" |>> (fun () -> Double)
+              skipString "int8" |>> (fun () -> Int8)
+              skipString "int16" |>> (fun () -> Int16)
+              skipString "int32" |>> (fun () -> Int32)
+              skipString "int64" |>> (fun () -> Int64)
+              skipString "float32" |>> (fun () -> Float32)
+              skipString "float64" |>> (fun () -> Float64)
               skipString "binary" |>> (fun () -> Binary)
               skipString "timestamp" |>> (fun () -> Timestamp)
               skipString "duration" |>> (fun () -> Duration)
@@ -173,7 +173,7 @@ module private Impl =
                                               { Name = fr.Name
                                                 Type = fr.Type
                                                 IsKey = boolOfOpt fr.IsKey
-                                                IsVersion = fr.Name = "Version" && fr.Type = Int
+                                                IsVersion = fr.Name = "Version" && fr.Type = Int32
                                                 Indexes =
                                                   fr.Indexes
                                                   |> List.map (fun ir ->

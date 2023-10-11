@@ -17,7 +17,7 @@ type ConvertExampleGameDomain() =
         match x with
         | Example.GameDomain.GameStatus.InProgress (turn) ->
             writer.WriteName("InProgress")
-            writer.WriteInt32(turn)
+            writer.WriteInt32(int turn)
         | Example.GameDomain.GameStatus.Finnished (winner,turn) ->
             writer.WriteName("Finnished")
             ConvertExampleGameDomain.GameStatusCaseFinnishedToBson(writer,winner,turn)
@@ -33,15 +33,15 @@ type ConvertExampleGameDomain() =
         writer.WriteName("Winner")
         writer.WriteInt32(winner |> int)
         writer.WriteName("Turn")
-        writer.WriteInt32(turn)
+        writer.WriteInt32(int turn)
         writer.WriteEndDocument()
     static member GameStatusFromBson (reader: IBsonReader): Example.GameDomain.GameStatus =
         let mutable y = Example.GameDomain.GameStatus.Unknown
         reader.ReadStartDocument()
         match reader.ReadName() with
                 | "InProgress" ->
-                    let mutable _turn = 0
-                    match FsharpMongoHelpers.readInt reader with
+                    let mutable _turn = 0s
+                    match FsharpMongoHelpers.readInt16 reader with
                     | ValueSome v -> _turn <- v
                     | ValueNone -> ()
                     y <- _turn |> Example.GameDomain.GameStatus.InProgress
@@ -56,7 +56,7 @@ type ConvertExampleGameDomain() =
         y
     static member GameStatusCaseFinnishedFromBson (reader: IBsonReader) =
         let mutable winner = Example.GameDomain.Side.Unknown
-        let mutable turn = 0
+        let mutable turn = 0s
         reader.ReadStartDocument()
         while reader.State <> BsonReaderState.EndOfDocument do
             match reader.State with
@@ -68,7 +68,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> winner <- v
                     | ValueNone -> ()
                 | "Turn" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt16 reader with
                     | ValueSome v -> turn <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()
@@ -78,14 +78,14 @@ type ConvertExampleGameDomain() =
     static member LocationToBson(writer: IBsonWriter, x: Example.GameDomain.Location) =
         writer.WriteStartDocument()
         writer.WriteName("X")
-        writer.WriteInt32(x.X)
+        writer.WriteInt32(int x.X)
         writer.WriteName("Y")
-        writer.WriteInt32(x.Y)
+        writer.WriteInt32(int x.Y)
         writer.WriteEndDocument()
 
     static member LocationFromBson(reader: IBsonReader): Example.GameDomain.Location =
-        let mutable vX = 0
-        let mutable vY = 0
+        let mutable vX = 0y
+        let mutable vY = 0y
         reader.ReadStartDocument()
         while reader.State <> BsonReaderState.EndOfDocument do
             match reader.State with
@@ -93,11 +93,11 @@ type ConvertExampleGameDomain() =
             | BsonReaderState.Name ->
                 match reader.ReadName() with
                 | "X" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt8 reader with
                     | ValueSome v -> vX <- v
                     | ValueNone -> ()
                 | "Y" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt8 reader with
                     | ValueSome v -> vY <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()
@@ -113,12 +113,12 @@ type ConvertExampleGameDomain() =
         writer.WriteName("Name")
         writer.WriteString(x.Name)
         writer.WriteName("Health")
-        writer.WriteInt32(x.Health)
+        writer.WriteInt32(int x.Health)
         writer.WriteEndDocument()
 
     static member UnitFromBson(reader: IBsonReader): Example.GameDomain.Unit =
         let mutable vName = ""
-        let mutable vHealth = 0
+        let mutable vHealth = 0y
         reader.ReadStartDocument()
         while reader.State <> BsonReaderState.EndOfDocument do
             match reader.State with
@@ -130,7 +130,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> vName <- v
                     | ValueNone -> ()
                 | "Health" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt8 reader with
                     | ValueSome v -> vHealth <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()
@@ -148,7 +148,7 @@ type ConvertExampleGameDomain() =
         writer.WriteName("Id")
         FsharpMongoHelpers.writeGuid(writer, x.Id)
         writer.WriteName("Player")
-        writer.WriteInt32(x.Player)
+        writer.WriteInt32(int x.Player)
         writer.WriteName("Status")
         ConvertExampleGameDomain.GameStatusToBson(writer, x.Status)
         writer.WriteName("Board")
@@ -169,7 +169,7 @@ type ConvertExampleGameDomain() =
 
     static member GameFromBson(reader: IBsonReader): Example.GameDomain.Game =
         let mutable vId = System.Guid.Empty
-        let mutable vPlayer = 0
+        let mutable vPlayer = 0y
         let mutable vStatus = Example.GameDomain.GameStatus.Unknown
         let mutable vBoard = ResizeArray()
         let mutable vLastChange = System.DateTime.MinValue
@@ -185,7 +185,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> vId <- v
                     | ValueNone -> ()
                 | "Player" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt8 reader with
                     | ValueSome v -> vPlayer <- v
                     | ValueNone -> ()
                 | "Status" ->
@@ -217,7 +217,7 @@ type ConvertExampleGameDomain() =
                     | ValueSome v -> vLastChange <- v
                     | ValueNone -> ()
                 | "Version" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vVersion <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()

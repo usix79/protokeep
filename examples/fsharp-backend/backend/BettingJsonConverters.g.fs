@@ -207,17 +207,17 @@ type ConvertExampleBetting() =
         writer.WriteEndObject()
 
     static member ScoreFromJson(reader: byref<Utf8JsonReader>): Example.Betting.Score voption =
-        let mutable vS1 = 0
-        let mutable vS2 = 0
+        let mutable vS1 = 0s
+        let mutable vS2 = 0s
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("S1")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readShort(&reader) with
                     | ValueSome v -> vS1 <- v
                     | ValueNone -> ()
                 else if (reader.ValueTextEquals("S2")) then
-                    match FsharpJsonHelpers.readInt(&reader) with
+                    match FsharpJsonHelpers.readShort(&reader) with
                     | ValueSome v -> vS2 <- v
                     | ValueNone -> ()
                 else reader.Skip()

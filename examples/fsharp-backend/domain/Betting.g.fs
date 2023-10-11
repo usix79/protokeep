@@ -141,17 +141,17 @@ with
 
 [<Struct>]
 type Score = {
-    S1 : int
-    S2 : int
+    S1 : int16
+    S2 : int16
 }
 with
     static member Default: Lazy<Score> =
         lazy {
-            S1 = 0
-            S2 = 0
+            S1 = 0s
+            S2 = 0s
         }
 
-    static member MakeKey (s1': int, s2': int) =
+    static member MakeKey (s1': int16, s2': int16) =
         Key.Items [Key.Value (s1'.ToString()); Key.Value (s2'.ToString())]
 
     interface IEntity with

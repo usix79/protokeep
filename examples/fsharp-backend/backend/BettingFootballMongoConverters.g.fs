@@ -119,7 +119,7 @@ type ConvertExampleBettingFootball() =
                     | ValueSome v -> vStatus <- v
                     | ValueNone -> ()
                 | "Version" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vVersion <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()

@@ -2,13 +2,13 @@ module Domain
 import "Subdomain.protokeep"
 
 union Op =
-    | Val of int
+    | Val of int32
     | Sum of Op*Op
     | Mul of Op*Op
     | Div of Op*Op
     | Ln of Op
     | Quantum of Op*Op*string
-    | Imagine of option<int>
+    | Imagine of option<int32>
     | SumAll of list<Op>
     | Zero
 
@@ -18,7 +18,7 @@ union OpError =
     | NotSupported
 
 union OpResult =
-    | Success of int
+    | Success of int32
     | Fail of OpError
 
 record Request = {

@@ -119,12 +119,12 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
-    | Byte -> "sbyte"
-    | Short -> "int16"
-    | Int -> "int"
-    | Long -> "int64"
-    | Single -> "float32"
-    | Double -> "float"
+    | Int8 -> "sbyte"
+    | Int16 -> "int16"
+    | Int32 -> "int"
+    | Int64 -> "int64"
+    | Float32 -> "float32"
+    | Float64 -> "float"
     | Money _ -> "decimal"
     | Binary -> "byte array"
     | Timestamp -> "System.DateTime"
@@ -168,8 +168,10 @@ let keyExpression (typesCache: TypesCache) (keyFields: FieldInfo list) =
 
            match info.Type with
            | String -> $"Key.Value ({vName})"
-           | Int
-           | Long
+           | Int8
+           | Int16
+           | Int32
+           | Int64
            | Money _ -> $"Key.Value ({vName}.ToString())"
            | Guid -> $"Key.Value ({vName}.ToString())"
            | Types.IsRecord typesCache _
@@ -410,12 +412,12 @@ let defValue (ns: ComplexName) isMutable =
     function
     | Bool -> "false"
     | String -> "\"\""
-    | Byte -> "0uy"
-    | Short -> "0s"
-    | Int -> "0"
-    | Long -> "0L"
-    | Single -> "0.f"
-    | Double -> "0."
+    | Int8 -> "0y"
+    | Int16 -> "0s"
+    | Int32 -> "0"
+    | Int64 -> "0L"
+    | Float32 -> "0.f"
+    | Float64 -> "0."
     | Money _ -> "0m"
     | Binary -> "Array.empty"
     | Timestamp -> "System.DateTime.MinValue"

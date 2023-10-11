@@ -14,24 +14,24 @@ open Example.GameDomain
 let req =
     { Game =
         { Id = Guid.NewGuid()
-          Player = 7
-          Status = InProgress 1
+          Player = 7y
+          Status = InProgress 1s
           Board =
-            [ { X = 0; Y = 0 }, { Unit.Name = "Knight"; Health = 100 }
-              { X = 0; Y = 2 }, { Unit.Name = "Archer"; Health = 70 }
-              { X = 4; Y = 2 }, { Unit.Name = "Wizard"; Health = 12 } ]
+            [ { X = 0y; Y = 0y }, { Unit.Name = "Knight"; Health = 100y }
+              { X = 0y; Y = 2y }, { Unit.Name = "Archer"; Health = 70y }
+              { X = 4y; Y = 2y }, { Unit.Name = "Wizard"; Health = 12y } ]
             |> Map.ofList
           LastChange = DateTime.Today.ToUniversalTime()
           Version = 1 }
-      Action = Drop { X = 1; Y = 2 } }
+      Action = Drop { X = 1y; Y = 2y } }
 
 let respOk =
     Ok(
         { req.Game with
-            Status = InProgress 2
-            Board = req.Game.Board.Add({ X = 1; Y = 2 }, { Unit.Name = "Cleric"; Health = 100 })
+            Status = InProgress 2s
+            Board = req.Game.Board.Add({ X = 1y; Y = 2y }, { Unit.Name = "Cleric"; Health = 100y })
             Version = 2 },
-        [ Drop { X = 1; Y = 1 }; Move({ X = 1; Y = 2 }, { X = 1; Y = 3 }) ]
+        [ Drop { X = 1y; Y = 1y }; Move({ X = 1y; Y = 2y }, { X = 1y; Y = 3y }) ]
     )
 
 let respFail = Fail [ "Invalid action"; "Server error" ]

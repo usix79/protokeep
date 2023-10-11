@@ -25,9 +25,9 @@ type ConvertTestDomain() =
         writer.WriteName("IsMonitored")
         writer.WriteBoolean(x.IsMonitored)
         writer.WriteName("Patch")
-        writer.WriteInt32(x.Patch)
+        writer.WriteInt32(int x.Patch)
         writer.WriteName("Model")
-        writer.WriteInt32(x.Model)
+        writer.WriteInt32(int x.Model)
         writer.WriteName("Serial")
         writer.WriteInt32(x.Serial)
         writer.WriteName("Mask")
@@ -35,7 +35,7 @@ type ConvertTestDomain() =
         writer.WriteName("Cost")
         writer.WriteInt32(FsharpMongoHelpers.toMoney (x.Cost, 2))
         writer.WriteName("Xpos")
-        writer.WriteDouble(x.Xpos |> double)
+        writer.WriteDouble(double x.Xpos)
         writer.WriteName("Ypos")
         writer.WriteDouble(x.Ypos)
         writer.WriteName("LastChecked")
@@ -79,7 +79,7 @@ type ConvertTestDomain() =
         let mutable vAddress = ""
         let mutable vCorner = ValueNone
         let mutable vIsMonitored = false
-        let mutable vPatch = 0uy
+        let mutable vPatch = 0y
         let mutable vModel = 0s
         let mutable vSerial = 0
         let mutable vMask = 0L
@@ -101,7 +101,7 @@ type ConvertTestDomain() =
             | BsonReaderState.Name ->
                 match reader.ReadName() with
                 | "Id" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vId <- v
                     | ValueNone -> ()
                 | "AltId" ->
@@ -121,19 +121,19 @@ type ConvertTestDomain() =
                     | ValueSome v -> vIsMonitored <- v
                     | ValueNone -> ()
                 | "Patch" ->
-                    match FsharpMongoHelpers.readByte reader with
+                    match FsharpMongoHelpers.readInt8 reader with
                     | ValueSome v -> vPatch <- v
                     | ValueNone -> ()
                 | "Model" ->
-                    match FsharpMongoHelpers.readShort reader with
+                    match FsharpMongoHelpers.readInt16 reader with
                     | ValueSome v -> vModel <- v
                     | ValueNone -> ()
                 | "Serial" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vSerial <- v
                     | ValueNone -> ()
                 | "Mask" ->
-                    match FsharpMongoHelpers.readLong reader with
+                    match FsharpMongoHelpers.readInt64 reader with
                     | ValueSome v -> vMask <- v
                     | ValueNone -> ()
                 | "Cost" ->
@@ -141,11 +141,11 @@ type ConvertTestDomain() =
                     | ValueSome v -> vCost <- v
                     | ValueNone -> ()
                 | "Xpos" ->
-                    match FsharpMongoHelpers.readFloat reader with
+                    match FsharpMongoHelpers.readFloat32 reader with
                     | ValueSome v -> vXpos <- v
                     | ValueNone -> ()
                 | "Ypos" ->
-                    match FsharpMongoHelpers.readDouble reader with
+                    match FsharpMongoHelpers.readFloat64 reader with
                     | ValueSome v -> vYpos <- v
                     | ValueNone -> ()
                 | "LastChecked" ->
@@ -159,7 +159,7 @@ type ConvertTestDomain() =
                 | "Intervals" ->
                     reader.ReadStartArray()
                     while reader.ReadBsonType() <> BsonType.EndOfDocument do
-                        match FsharpMongoHelpers.readInt reader with
+                        match FsharpMongoHelpers.readInt32 reader with
                         | ValueSome v -> vIntervals.Add(v)
                         | ValueNone -> ()
                     reader.ReadEndArray()
@@ -183,7 +183,7 @@ type ConvertTestDomain() =
                                 | ValueSome v -> key <- v
                                 | ValueNone -> ()
                             | "Value" ->
-                                match FsharpMongoHelpers.readInt reader with
+                                match FsharpMongoHelpers.readInt32 reader with
                                 | ValueSome v -> value <- v
                                 | ValueNone -> ()
                             | _ -> reader.SkipValue()
@@ -195,11 +195,11 @@ type ConvertTestDomain() =
                     | ValueSome v -> vNext <- v
                     | ValueNone -> ()
                 | "Img" ->
-                    match FsharpMongoHelpers.readBytes reader with
+                    match FsharpMongoHelpers.readBinary reader with
                     | ValueSome v -> vImg <- v
                     | ValueNone -> ()
                 | "Version" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt32 reader with
                     | ValueSome v -> vVersion <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()

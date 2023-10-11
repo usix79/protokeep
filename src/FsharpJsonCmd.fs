@@ -293,12 +293,12 @@ let rec readValue (typesCache: Types.TypesCache) =
     function
     | Bool -> $"{helpers}.readBoolean(&reader)"
     | String -> $"{helpers}.readString(&reader)"
-    | Byte -> $"{helpers}.readByte(&reader)"
-    | Short -> $"{helpers}.readShort(&reader)"
-    | Int -> $"{helpers}.readInt(&reader)"
-    | Long -> $"{helpers}.readLong(&reader)"
-    | Single -> $"{helpers}.readSingle(&reader)"
-    | Double -> $"{helpers}.readDouble(&reader)"
+    | Int8 -> $"{helpers}.readByte(&reader)"
+    | Int16 -> $"{helpers}.readShort(&reader)"
+    | Int32 -> $"{helpers}.readInt(&reader)"
+    | Int64 -> $"{helpers}.readLong(&reader)"
+    | Float32 -> $"{helpers}.readSingle(&reader)"
+    | Float64 -> $"{helpers}.readDouble(&reader)"
     | Money scale -> $"{helpers}.readMoney(&reader, {scale})"
     | Binary -> $"{helpers}.readBytes(&reader)"
     | Timestamp -> $"{helpers}.readTimestamp(&reader)"
@@ -322,12 +322,12 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         function
         | Bool -> $"writer.WriteBooleanValue({vName})"
         | String -> $"writer.WriteStringValue({vName})"
-        | Byte
-        | Short
-        | Int
-        | Long
-        | Single
-        | Double
+        | Int8
+        | Int16
+        | Int32
+        | Int64
+        | Float32
+        | Float64
         | Money _ -> $"writer.WriteNumberValue({vName})"
         | Binary -> $"writer.WriteBase64StringValue(System.ReadOnlySpan({vName}))"
         | Timestamp -> $"{helpers}.writeTimestamp(&writer, {vName})"

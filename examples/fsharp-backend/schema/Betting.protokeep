@@ -9,7 +9,7 @@ enum OutcomeResult =
 union Outcome =
     | Empty
     | Priced of price: money(3)
-    | PricedWithProb of price: money(3) * prob: single
+    | PricedWithProb of price: money(3) * prob: float32
     | Resulted of result: OutcomeResult
 
 record Winner3Way = {
@@ -31,8 +31,8 @@ record Total = {
 }
 
 record struct Score = {
-    S1 : int key
-    S2 : int key
+    S1 : int16 key
+    S2 : int16 key
 }
 
 record ScoreOutcome = {

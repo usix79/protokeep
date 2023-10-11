@@ -9,8 +9,8 @@ type Side =
 
 type GameStatus =
     | Unknown
-    | InProgress of turn: int
-    | Finnished of winner: Side * turn: int
+    | InProgress of turn: int16
+    | Finnished of winner: Side * turn: int16
     | Terminated
 
     static member MakeUnknownKey() = Key.Value "0"
@@ -29,30 +29,30 @@ type GameStatus =
 
 [<Struct>]
 type Location = {
-    X : int
-    Y : int
+    X : sbyte
+    Y : sbyte
 }
 with
     static member Default: Lazy<Location> =
         lazy {
-            X = 0
-            Y = 0
+            X = 0y
+            Y = 0y
         }
 
 type Unit = {
     Name : string
-    Health : int
+    Health : sbyte
 }
 with
     static member Default: Lazy<Unit> =
         lazy {
             Name = ""
-            Health = 0
+            Health = 0y
         }
 
 type Game = {
     Id : System.Guid
-    Player : int
+    Player : sbyte
     Status : GameStatus
     Board : Map<Location,Unit>
     LastChange : System.DateTime
@@ -62,7 +62,7 @@ with
     static member Default: Lazy<Game> =
         lazy {
             Id = System.Guid.Empty
-            Player = 0
+            Player = 0y
             Status = GameStatus.Unknown
             Board = Map.empty
             LastChange = System.DateTime.MinValue

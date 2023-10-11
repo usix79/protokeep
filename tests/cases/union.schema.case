@@ -2,7 +2,7 @@ module Test.Domain
 
 union Incident =
     | SwitchedOff
-    | MissedTurns of count:int
+    | MissedTurns of count:int32
     | Delayes of from:timestamp * to:timestamp
     | Root of list<Incident>
     | Noise of map<string, string>

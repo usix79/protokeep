@@ -38,7 +38,7 @@ type ConvertExampleBetting() =
         writer.WriteName("Price")
         writer.WriteInt32(FsharpMongoHelpers.toMoney (price, 3))
         writer.WriteName("Prob")
-        writer.WriteDouble(prob |> double)
+        writer.WriteDouble(double prob)
         writer.WriteEndDocument()
     static member OutcomeFromBson (reader: IBsonReader): Example.Betting.Outcome =
         let mutable y = Example.Betting.Outcome.Unknown
@@ -79,7 +79,7 @@ type ConvertExampleBetting() =
                     | ValueSome v -> price <- v
                     | ValueNone -> ()
                 | "Prob" ->
-                    match FsharpMongoHelpers.readFloat reader with
+                    match FsharpMongoHelpers.readFloat32 reader with
                     | ValueSome v -> prob <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()
@@ -218,14 +218,14 @@ type ConvertExampleBetting() =
         if asEntity.IsSome then
             FsharpMongoHelpers.writeId (writer, x)
         writer.WriteName("S1")
-        writer.WriteInt32(x.S1)
+        writer.WriteInt32(int x.S1)
         writer.WriteName("S2")
-        writer.WriteInt32(x.S2)
+        writer.WriteInt32(int x.S2)
         writer.WriteEndDocument()
 
     static member ScoreFromBson(reader: IBsonReader): Example.Betting.Score =
-        let mutable vS1 = 0
-        let mutable vS2 = 0
+        let mutable vS1 = 0s
+        let mutable vS2 = 0s
         reader.ReadStartDocument()
         while reader.State <> BsonReaderState.EndOfDocument do
             match reader.State with
@@ -233,11 +233,11 @@ type ConvertExampleBetting() =
             | BsonReaderState.Name ->
                 match reader.ReadName() with
                 | "S1" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt16 reader with
                     | ValueSome v -> vS1 <- v
                     | ValueNone -> ()
                 | "S2" ->
-                    match FsharpMongoHelpers.readInt reader with
+                    match FsharpMongoHelpers.readInt16 reader with
                     | ValueSome v -> vS2 <- v
                     | ValueNone -> ()
                 | _ -> reader.SkipValue()

@@ -32,7 +32,7 @@ let testCases =
           [ RecordLock
                 { Name = ComplexName [ "Crossroad"; "Domain" ]
                   Fields =
-                    [ { Name = "Id"; Type = Int; Num = 1 }
+                    [ { Name = "Id"; Type = Int32; Num = 1 }
                       { Name = "Street1"
                         Type = String
                         Num = 2 }
@@ -41,7 +41,7 @@ let testCases =
                         Num = 3 } ] } ]
         ExpectedOutput =
           "record Domain.Crossroad
-    field Id int = 1
+    field Id int32 = 1
     field Street1 string = 2
     field Street2 string = 3
 "     } ]
