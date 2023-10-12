@@ -7,6 +7,134 @@ open MongoDB.Bson.Serialization.Serializers
 open Protokeep
 
 type ConvertExampleGameDomain() =
+    static member SessionOwnerToBson(writer: IBsonWriter, x: Example.GameDomain.SessionOwner) =
+        writer.WriteStartDocument()
+        match x with
+        | Example.GameDomain.SessionOwner.Guest ->
+            writer.WriteName("Guest")
+            writer.WriteBoolean(true)
+        | Example.GameDomain.SessionOwner.Registered (playerId) ->
+            writer.WriteName("Registered")
+            FsharpMongoHelpers.writeGuid(writer, playerId)
+        | _ ->
+            writer.WriteName("Unknown")
+            writer.WriteBoolean(true)
+        writer.WriteEndDocument()
+    static member SessionOwnerFromBson (reader: IBsonReader): Example.GameDomain.SessionOwner =
+        let mutable y = Example.GameDomain.SessionOwner.Unknown
+        reader.ReadStartDocument()
+        match reader.ReadName() with
+                | "Guest" ->
+                    match FsharpMongoHelpers.readBoolean reader with
+                    | ValueSome true -> y <- Example.GameDomain.SessionOwner.Guest
+                    | _ -> ()
+                | "Registered" ->
+                    let mutable _playerId = System.Guid.Empty
+                    match FsharpMongoHelpers.readGuid reader with
+                    | ValueSome v -> _playerId <- v
+                    | ValueNone -> ()
+                    y <- _playerId |> Example.GameDomain.SessionOwner.Registered
+                | _ -> ()
+        reader.ReadEndDocument()
+        y
+    static member ConnectionToBson(writer: IBsonWriter, x: Example.GameDomain.Connection) =
+        writer.WriteStartDocument()
+        writer.WriteName("Id")
+        writer.WriteString(x.Id)
+        writer.WriteEndDocument()
+
+    static member ConnectionFromBson(reader: IBsonReader): Example.GameDomain.Connection =
+        let mutable vId = ""
+        reader.ReadStartDocument()
+        while reader.State <> BsonReaderState.EndOfDocument do
+            match reader.State with
+            | BsonReaderState.Type -> reader.ReadBsonType() |> ignore
+            | BsonReaderState.Name ->
+                match reader.ReadName() with
+                | "Id" ->
+                    match FsharpMongoHelpers.readString reader with
+                    | ValueSome v -> vId <- v
+                    | ValueNone -> ()
+                | _ -> reader.SkipValue()
+            | _ -> printfn "Unexpected state: %A" reader.State
+        reader.ReadEndDocument()
+        {
+            Id = vId
+        }
+
+    static member SessionToBson(writer: IBsonWriter, x: Example.GameDomain.Session, ?asEntity: bool) =
+        writer.WriteStartDocument()
+        if asEntity.IsSome then
+            FsharpMongoHelpers.writeId (writer, x)
+        writer.WriteName("Id")
+        FsharpMongoHelpers.writeGuid(writer, x.Id)
+        writer.WriteName("Owner")
+        ConvertExampleGameDomain.SessionOwnerToBson(writer, x.Owner)
+        match x.CurrentConnection with
+        | ValueSome v ->
+            writer.WriteName("CurrentConnectionValue")
+            ConvertExampleGameDomain.ConnectionToBson(writer, v)
+        | ValueNone -> ()
+        match x.CurrentMatch with
+        | ValueSome v ->
+            writer.WriteName("CurrentMatchValue")
+            FsharpMongoHelpers.writeGuid(writer, v)
+        | ValueNone -> ()
+        writer.WriteName("ExpiredAt")
+        writer.WriteDateTime(FsharpMongoHelpers.fromDateTime x.ExpiredAt)
+        writer.WriteName("Version")
+        writer.WriteInt32(x.Version)
+        writer.WriteEndDocument()
+
+    static member SessionFromBson(reader: IBsonReader): Example.GameDomain.Session =
+        let mutable vId = System.Guid.Empty
+        let mutable vOwner = Example.GameDomain.SessionOwner.Unknown
+        let mutable vCurrentConnection = ValueNone
+        let mutable vCurrentMatch = ValueNone
+        let mutable vExpiredAt = System.DateTime.MinValue
+        let mutable vVersion = 0
+        reader.ReadStartDocument()
+        while reader.State <> BsonReaderState.EndOfDocument do
+            match reader.State with
+            | BsonReaderState.Type -> reader.ReadBsonType() |> ignore
+            | BsonReaderState.Name ->
+                match reader.ReadName() with
+                | "Id" ->
+                    match FsharpMongoHelpers.readGuid reader with
+                    | ValueSome v -> vId <- v
+                    | ValueNone -> ()
+                | "Owner" ->
+                    match ConvertExampleGameDomain.SessionOwnerFromBson(reader) |> ValueSome with
+                    | ValueSome v -> vOwner <- v
+                    | ValueNone -> ()
+                | "CurrentConnectionValue" ->
+                    match ConvertExampleGameDomain.ConnectionFromBson(reader) |> ValueSome |> ValueOption.map ValueSome with
+                    | ValueSome v -> vCurrentConnection <- v
+                    | ValueNone -> ()
+                | "CurrentMatchValue" ->
+                    match FsharpMongoHelpers.readGuid reader |> ValueOption.map ValueSome with
+                    | ValueSome v -> vCurrentMatch <- v
+                    | ValueNone -> ()
+                | "ExpiredAt" ->
+                    match FsharpMongoHelpers.readTimestamp reader with
+                    | ValueSome v -> vExpiredAt <- v
+                    | ValueNone -> ()
+                | "Version" ->
+                    match FsharpMongoHelpers.readInt32 reader with
+                    | ValueSome v -> vVersion <- v
+                    | ValueNone -> ()
+                | _ -> reader.SkipValue()
+            | _ -> printfn "Unexpected state: %A" reader.State
+        reader.ReadEndDocument()
+        {
+            Id = vId
+            Owner = vOwner
+            CurrentConnection = vCurrentConnection
+            CurrentMatch = vCurrentMatch
+            ExpiredAt = vExpiredAt
+            Version = vVersion
+        }
+
     static memberSideFromInt = function
         | Example.GameDomain.Side.Player1 -> Example.GameDomain.Side.Player1
         | Example.GameDomain.Side.Player2 -> Example.GameDomain.Side.Player2
@@ -397,6 +525,14 @@ type ConvertExampleGameDomain() =
         reader.ReadEndDocument()
         Example.GameDomain.Response.Ok (game,possibleActions |> List.ofSeq)
 
+type SessionSerializer() =
+    inherit SerializerBase<Example.GameDomain.Session>()
+    override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) =
+        ConvertExampleGameDomain.SessionFromBson(ctx.Reader)
+
+    override x.Serialize(ctx: BsonSerializationContext, args: BsonSerializationArgs, value: Example.GameDomain.Session) =
+        ConvertExampleGameDomain.SessionToBson(ctx.Writer, value, true)
+
 type GameSerializer() =
     inherit SerializerBase<Example.GameDomain.Game>()
     override x.Deserialize(ctx: BsonDeserializationContext, args: BsonDeserializationArgs) =
@@ -408,4 +544,5 @@ type GameSerializer() =
 type ConvertExampleGameDomain with
     static member RegisterSerializers() =
         BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3
+        BsonSerializer.RegisterSerializer(SessionSerializer())
         BsonSerializer.RegisterSerializer(GameSerializer())

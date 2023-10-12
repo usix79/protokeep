@@ -2,6 +2,26 @@ syntax = "proto3";
 package Example.GameDomain;
 option csharp_namespace = "ProtoClasses.Example.GameDomain";
 import "google/protobuf/timestamp.proto";
+message SessionOwner {
+    oneof Union {
+        bool Guest = 1;
+        bytes Registered = 2;
+    }
+}
+
+message Connection {
+    string Id = 1;
+}
+
+message Session {
+    bytes Id = 1;
+    Example.GameDomain.SessionOwner Owner = 2;
+    oneof CurrentConnection {Example.GameDomain.Connection CurrentConnectionValue = 3;}
+    oneof CurrentMatch {bytes CurrentMatchValue = 4;}
+    google.protobuf.Timestamp ExpiredAt = 5;
+    int32 Version = 6;
+}
+
 enum Side {
     SideUnknown = 0;
     SidePlayer1 = 1;

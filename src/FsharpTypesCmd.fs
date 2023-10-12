@@ -427,7 +427,8 @@ let defValue (ns: ComplexName) isMutable =
     | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
-    | Complex typeName -> $"{typeName |> dottedDiff ns}.Default.Value"
+    | Complex typeName when ns = (lastNames typeName) -> $"{typeName |> firstName}.Default.Value"
+    | Complex typeName -> $"{typeName |> dottedName}.Default.Value"
 
 let fromMutable =
     function

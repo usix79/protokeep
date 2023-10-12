@@ -111,19 +111,19 @@ type ConvertTestDomain() =
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do
                 if reader.TokenType <> JsonTokenType.PropertyName then ()
                 else if (reader.ValueTextEquals("ThreeWaysMarket")) then
-                    let mutable _p1 = Domain.ThreeWaysMarket.Default.Value
+                    let mutable _p1 = Test.Domain.ThreeWaysMarket.Default.Value
                     match ConvertTestDomain.ThreeWaysMarketFromJson(&reader) with
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
                     y <- _p1 |> Test.Domain.Market.ThreeWaysMarket
                 else if (reader.ValueTextEquals("TwoWaysMarket")) then
-                    let mutable _p1 = Domain.TwoWaysMarket.Default.Value
+                    let mutable _p1 = Test.Domain.TwoWaysMarket.Default.Value
                     match ConvertTestDomain.TwoWaysMarketFromJson(&reader) with
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
                     y <- _p1 |> Test.Domain.Market.TwoWaysMarket
                 else if (reader.ValueTextEquals("HandicapMarket")) then
-                    let mutable _p1 = Domain.HandicapMarket.Default.Value
+                    let mutable _p1 = Test.Domain.HandicapMarket.Default.Value
                     match ConvertTestDomain.HandicapMarketFromJson(&reader) with
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
@@ -185,7 +185,7 @@ type ConvertTestDomain() =
         writer.WriteEndObject()
 
     static member GoalDetailsFromJson(reader: byref<Utf8JsonReader>): Test.Domain.GoalDetails voption =
-        let mutable vScore = Domain.Score.Default.Value
+        let mutable vScore = Test.Domain.Score.Default.Value
         let mutable vComment = ""
         if FsharpJsonHelpers.moveToStartObject(&reader) then
             while FsharpJsonHelpers.moveToEndObject(&reader) = false do

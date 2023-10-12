@@ -5,6 +5,124 @@ open Protokeep
 
 type ConvertExampleGameDomain() =
 
+    static member SessionOwnerFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.SessionOwner voption =
+        if FsharpJsonHelpers.moveToStartObject(&reader)then
+            let mutable y = Example.GameDomain.SessionOwner.Unknown
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
+                else if (reader.ValueTextEquals("Guest")) then
+                    if reader.Read() && reader.TokenType = JsonTokenType.True
+                    then y <- Example.GameDomain.SessionOwner.Guest
+                    else reader.Skip()
+                else if (reader.ValueTextEquals("Registered")) then
+                    let mutable _playerId = System.Guid.Empty
+                    match FsharpJsonHelpers.readGuid(&reader) with
+                    | ValueSome v -> _playerId <- v
+                    | ValueNone -> ()
+                    y <- _playerId |> Example.GameDomain.SessionOwner.Registered
+                else reader.Skip()
+            ValueSome y
+        else ValueNone
+    static member SessionOwnerToJson (writer:inref<Utf8JsonWriter>, x: Example.GameDomain.SessionOwner) =
+        writer.WriteStartObject()
+        match x with
+        | Example.GameDomain.SessionOwner.Guest ->
+            writer.WritePropertyName("Guest")
+            writer.WriteBooleanValue(true)
+        | Example.GameDomain.SessionOwner.Registered (playerId) ->
+            writer.WritePropertyName("Registered")
+            FsharpJsonHelpers.writeGuid(&writer, playerId)
+        | _ ->
+            writer.WritePropertyName("Unknown")
+            writer.WriteBooleanValue(true)
+        writer.WriteEndObject()
+
+    static member ConnectionToJson (writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Connection) =
+        writer.WriteStartObject()
+        writer.WritePropertyName("Id")
+        writer.WriteStringValue(x.Id)
+        writer.WriteEndObject()
+
+    static member ConnectionFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Connection voption =
+        let mutable vId = ""
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
+                else if (reader.ValueTextEquals("Id")) then
+                    match FsharpJsonHelpers.readString(&reader) with
+                    | ValueSome v -> vId <- v
+                    | ValueNone -> ()
+                else reader.Skip()
+            ValueSome {
+                Id = vId
+            }
+        else ValueNone
+    static member SessionToJson (writer: inref<Utf8JsonWriter>, x: Example.GameDomain.Session) =
+        writer.WriteStartObject()
+        writer.WritePropertyName("Id")
+        FsharpJsonHelpers.writeGuid(&writer, x.Id)
+        writer.WritePropertyName("Owner")
+        ConvertExampleGameDomain.SessionOwnerToJson(&writer, x.Owner)
+        match x.CurrentConnection with
+        | ValueSome v ->
+            writer.WritePropertyName("CurrentConnectionValue")
+            ConvertExampleGameDomain.ConnectionToJson(&writer, v)
+        | ValueNone -> ()
+        match x.CurrentMatch with
+        | ValueSome v ->
+            writer.WritePropertyName("CurrentMatchValue")
+            FsharpJsonHelpers.writeGuid(&writer, v)
+        | ValueNone -> ()
+        writer.WritePropertyName("ExpiredAt")
+        FsharpJsonHelpers.writeTimestamp(&writer, x.ExpiredAt)
+        writer.WritePropertyName("Version")
+        writer.WriteNumberValue(x.Version)
+        writer.WriteEndObject()
+
+    static member SessionFromJson(reader: byref<Utf8JsonReader>): Example.GameDomain.Session voption =
+        let mutable vId = System.Guid.Empty
+        let mutable vOwner = Example.GameDomain.SessionOwner.Unknown
+        let mutable vCurrentConnection = ValueNone
+        let mutable vCurrentMatch = ValueNone
+        let mutable vExpiredAt = System.DateTime.MinValue
+        let mutable vVersion = 0
+        if FsharpJsonHelpers.moveToStartObject(&reader) then
+            while FsharpJsonHelpers.moveToEndObject(&reader) = false do
+                if reader.TokenType <> JsonTokenType.PropertyName then ()
+                else if (reader.ValueTextEquals("Id")) then
+                    match FsharpJsonHelpers.readGuid(&reader) with
+                    | ValueSome v -> vId <- v
+                    | ValueNone -> ()
+                else if (reader.ValueTextEquals("Owner")) then
+                    match ConvertExampleGameDomain.SessionOwnerFromJson(&reader) with
+                    | ValueSome v -> vOwner <- v
+                    | ValueNone -> ()
+                else if (reader.ValueTextEquals("CurrentConnectionValue")) then
+                    match ConvertExampleGameDomain.ConnectionFromJson(&reader) |> ValueOption.map ValueSome with
+                    | ValueSome v -> vCurrentConnection <- v
+                    | ValueNone -> ()
+                else if (reader.ValueTextEquals("CurrentMatchValue")) then
+                    match FsharpJsonHelpers.readGuid(&reader) |> ValueOption.map ValueSome with
+                    | ValueSome v -> vCurrentMatch <- v
+                    | ValueNone -> ()
+                else if (reader.ValueTextEquals("ExpiredAt")) then
+                    match FsharpJsonHelpers.readTimestamp(&reader) with
+                    | ValueSome v -> vExpiredAt <- v
+                    | ValueNone -> ()
+                else if (reader.ValueTextEquals("Version")) then
+                    match FsharpJsonHelpers.readInt(&reader) with
+                    | ValueSome v -> vVersion <- v
+                    | ValueNone -> ()
+                else reader.Skip()
+            ValueSome {
+                Id = vId
+                Owner = vOwner
+                CurrentConnection = vCurrentConnection
+                CurrentMatch = vCurrentMatch
+                ExpiredAt = vExpiredAt
+                Version = vVersion
+            }
+        else ValueNone
     static member SideFromString =
         function
         | "SidePlayer1" -> Example.GameDomain.Side.Player1

@@ -2,6 +2,54 @@ namespace Protokeep.FsharpProto
 
 type ConvertExampleGameDomain() =
 
+    static member FromProtobuf(x: ProtoClasses.Example.GameDomain.SessionOwner) : Example.GameDomain.SessionOwner =
+        match x.UnionCase with
+        | ProtoClasses.Example.GameDomain.SessionOwner.UnionOneofCase.Guest -> Example.GameDomain.SessionOwner.Guest
+        | ProtoClasses.Example.GameDomain.SessionOwner.UnionOneofCase.Registered -> Example.GameDomain.SessionOwner.Registered(x.Registered |> fun v -> System.Guid(v.ToByteArray()))
+        | _ -> Example.GameDomain.SessionOwner.Unknown
+    static member ToProtobuf(x: Example.GameDomain.SessionOwner) : ProtoClasses.Example.GameDomain.SessionOwner =
+        let y = ProtoClasses.Example.GameDomain.SessionOwner()
+        match x with
+        | Example.GameDomain.SessionOwner.Guest -> y.Guest <- true
+        | Example.GameDomain.SessionOwner.Registered (playerId) ->
+            y.Registered <- playerId |> fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())
+        | Example.GameDomain.SessionOwner.Unknown -> ()
+        y
+
+    static member FromProtobuf(x: ProtoClasses.Example.GameDomain.Connection) : Example.GameDomain.Connection =
+        {
+            Id = x.Id
+        }
+
+    static member ToProtobuf(x: Example.GameDomain.Connection) : ProtoClasses.Example.GameDomain.Connection =
+        let y = ProtoClasses.Example.GameDomain.Connection()
+        y.Id <- x.Id
+        y
+
+    static member FromProtobuf(x: ProtoClasses.Example.GameDomain.Session) : Example.GameDomain.Session =
+        {
+            Id = x.Id |> fun v -> System.Guid(v.ToByteArray())
+            Owner = x.Owner |> ConvertExampleGameDomain.FromProtobuf
+            CurrentConnection = if x.CurrentConnectionCase = ProtoClasses.Example.GameDomain.Session.CurrentConnectionOneofCase.CurrentConnectionValue then ValueSome (x.CurrentConnectionValue |> ConvertExampleGameDomain.FromProtobuf) else ValueNone
+            CurrentMatch = if x.CurrentMatchCase = ProtoClasses.Example.GameDomain.Session.CurrentMatchOneofCase.CurrentMatchValue then ValueSome (x.CurrentMatchValue |> fun v -> System.Guid(v.ToByteArray())) else ValueNone
+            ExpiredAt = x.ExpiredAt |> fun v -> v.ToDateTime()
+            Version = x.Version
+        }
+
+    static member ToProtobuf(x: Example.GameDomain.Session) : ProtoClasses.Example.GameDomain.Session =
+        let y = ProtoClasses.Example.GameDomain.Session()
+        y.Id <- x.Id |> fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())
+        y.Owner <- x.Owner |> ConvertExampleGameDomain.ToProtobuf
+        match x.CurrentConnection with
+        | ValueSome v -> y.CurrentConnectionValue <- v |> ConvertExampleGameDomain.ToProtobuf
+        | ValueNone -> ()
+        match x.CurrentMatch with
+        | ValueSome v -> y.CurrentMatchValue <- v |> fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())
+        | ValueNone -> ()
+        y.ExpiredAt <- x.ExpiredAt |> Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime
+        y.Version <- x.Version
+        y
+
     static member FromProtobuf(x: ProtoClasses.Example.GameDomain.Side) : Example.GameDomain.Side =
         enum<Example.GameDomain.Side> (int x)
 

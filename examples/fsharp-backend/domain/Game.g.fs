@@ -2,6 +2,62 @@ namespace Example.GameDomain
 
 open Protokeep.FsharpTypes
 
+type SessionOwner =
+    | Unknown
+    | Guest
+    | Registered of playerId: System.Guid
+
+    static member MakeUnknownKey() = Key.Value "0"
+    static member MakeGuestKey() = Key.Value "1"
+    static member MakeRegisteredKey() = Key.Value "2"
+
+    interface IEntity with
+        member x.Key =
+            match x with
+            | SessionOwner.Unknown -> SessionOwner.MakeUnknownKey()
+            | SessionOwner.Guest -> SessionOwner.MakeGuestKey()
+            | SessionOwner.Registered(playerId') -> SessionOwner.MakeRegisteredKey()
+
+
+type Connection = {
+    Id : string
+}
+with
+    static member Default: Lazy<Connection> =
+        lazy {
+            Id = ""
+        }
+
+type Session = {
+    Id : System.Guid
+    Owner : SessionOwner
+    CurrentConnection : Connection voption
+    CurrentMatch : System.Guid voption
+    ExpiredAt : System.DateTime
+    mutable Version : int
+}
+with
+    static member Default: Lazy<Session> =
+        lazy {
+            Id = System.Guid.Empty
+            Owner = SessionOwner.Unknown
+            CurrentConnection = ValueNone
+            CurrentMatch = ValueNone
+            ExpiredAt = System.DateTime.MinValue
+            Version = 0
+        }
+
+    static member MakeKey (id': System.Guid) =
+        Key.Value (id'.ToString())
+
+    interface IEntity with
+        member x.Key = Session.MakeKey (x.Id)
+
+    interface IVersioned with
+        member x.Version
+            with get () = x.Version
+            and set v = x.Version <- v
+
 type Side =
     | Unknown = 0
     | Player1 = 1

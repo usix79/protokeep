@@ -143,19 +143,19 @@ type ConvertTestDomain() =
         reader.ReadStartDocument()
         match reader.ReadName() with
                 | "ThreeWaysMarket" ->
-                    let mutable _p1 = Domain.ThreeWaysMarket.Default.Value
+                    let mutable _p1 = Test.Domain.ThreeWaysMarket.Default.Value
                     match ConvertTestDomain.ThreeWaysMarketFromBson(reader) |> ValueSome with
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
                     y <- _p1 |> Test.Domain.Market.ThreeWaysMarket
                 | "TwoWaysMarket" ->
-                    let mutable _p1 = Domain.TwoWaysMarket.Default.Value
+                    let mutable _p1 = Test.Domain.TwoWaysMarket.Default.Value
                     match ConvertTestDomain.TwoWaysMarketFromBson(reader) |> ValueSome with
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
                     y <- _p1 |> Test.Domain.Market.TwoWaysMarket
                 | "HandicapMarket" ->
-                    let mutable _p1 = Domain.HandicapMarket.Default.Value
+                    let mutable _p1 = Test.Domain.HandicapMarket.Default.Value
                     match ConvertTestDomain.HandicapMarketFromBson(reader) |> ValueSome with
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
@@ -207,7 +207,7 @@ type ConvertTestDomain() =
         writer.WriteEndDocument()
 
     static member GoalDetailsFromBson(reader: IBsonReader): Test.Domain.GoalDetails =
-        let mutable vScore = Domain.Score.Default.Value
+        let mutable vScore = Test.Domain.Score.Default.Value
         let mutable vComment = ""
         reader.ReadStartDocument()
         while reader.State <> BsonReaderState.EndOfDocument do

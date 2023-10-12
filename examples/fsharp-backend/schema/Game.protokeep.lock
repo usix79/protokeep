@@ -1,3 +1,18 @@
+union Example.GameDomain.SessionOwner
+    case Guest = 1
+    case Registered = 2
+record Example.GameDomain.SessionOwner.Guest
+record Example.GameDomain.SessionOwner.Registered
+    field playerId guid = 1
+record Example.GameDomain.Connection
+    field Id string = 1
+record Example.GameDomain.Session
+    field Id guid = 1
+    field Owner Example.GameDomain.SessionOwner = 2
+    field CurrentConnection option<Example.GameDomain.Connection> = 3
+    field CurrentMatch option<guid> = 4
+    field ExpiredAt timestamp = 5
+    field Version int32 = 6
 enum Example.GameDomain.Side
     value Player1 = 1
     value Player2 = 2

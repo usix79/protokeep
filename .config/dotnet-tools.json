@@ -15,7 +15,7 @@
       ]
     },
     "protokeep": {
-      "version": "0.3.14",
+      "version": "0.3.14.2",
       "commands": [
         "protokeep"
       ]

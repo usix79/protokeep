@@ -1,5 +1,22 @@
 module Example.GameDomain
 
+union SessionOwner =
+    | Guest
+    | Registered of playerId: guid
+
+record Connection = {
+    Id: string
+}
+
+record Session = {
+    Id: guid key
+    Owner: SessionOwner
+    CurrentConnection: option<Connection>
+    CurrentMatch: option<guid>
+    ExpiredAt: timestamp
+    Version: int32
+}
+
 enum Side =
     | Player1
     | Player2
