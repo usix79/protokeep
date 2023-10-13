@@ -1,4 +1,4 @@
-enum Example.Betting.OutcomeResult
+enum int8 Example.Betting.OutcomeResult
     value Win = 1
     value Lose = 2
     value Void = 3

@@ -3,11 +3,11 @@ namespace Example.Betting
 open Protokeep.FsharpTypes
 
 type OutcomeResult =
-    | Unknown = 0
-    | Win = 1
-    | Lose = 2
-    | Void = 3
-    | Canceled = 4
+    | Unknown = 0y
+    | Win = 1y
+    | Lose = 2y
+    | Void = 3y
+    | Canceled = 4y
 
 type Outcome =
     | Unknown

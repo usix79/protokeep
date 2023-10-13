@@ -1,6 +1,6 @@
 module Test.Domain
 
-enum TrafficLight =
+enum TrafficLight: int8 =
     | Red
     | Yellow
     | Green

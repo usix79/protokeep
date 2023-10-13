@@ -3,7 +3,7 @@ namespace Protokeep.FsharpProto
 type ConvertExampleBetting() =
 
     static member FromProtobuf(x: ProtoClasses.Example.Betting.OutcomeResult) : Example.Betting.OutcomeResult =
-        enum<Example.Betting.OutcomeResult> (int x)
+        LanguagePrimitives.EnumOfValue (sbyte x)
 
     static member ToProtobuf(x: Example.Betting.OutcomeResult) : ProtoClasses.Example.Betting.OutcomeResult =
         enum<ProtoClasses.Example.Betting.OutcomeResult> (int x)

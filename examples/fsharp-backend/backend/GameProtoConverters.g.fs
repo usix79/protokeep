@@ -51,7 +51,7 @@ type ConvertExampleGameDomain() =
         y
 
     static member FromProtobuf(x: ProtoClasses.Example.GameDomain.Side) : Example.GameDomain.Side =
-        enum<Example.GameDomain.Side> (int x)
+        LanguagePrimitives.EnumOfValue (sbyte x)
 
     static member ToProtobuf(x: Example.GameDomain.Side) : ProtoClasses.Example.GameDomain.Side =
         enum<ProtoClasses.Example.GameDomain.Side> (int x)

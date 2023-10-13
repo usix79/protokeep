@@ -27,12 +27,13 @@ module private Impl =
     let complexName: Parser<ComplexName, _> =
         sepBy1 identifier (pchar '.') |>> (List.rev >> ComplexName)
 
-    let enum' =
-        keyword "enum"
-        >>. pipe2
-            (identifier .>> ws .>> skipChar '=' .>> spaces .>> opt (pchar '|'))
-            (sepBy1 (between spaces spaces identifier) (pchar '|'))
-            (fun name symbols -> {| Name = name; Symbols = symbols |})
+
+    let enumType' =
+        choice
+            [ skipString "int8" |>> (fun () -> Int8)
+              skipString "int16" |>> (fun () -> Int16)
+              skipString "int32" |>> (fun () -> Int32)
+              skipString "int64" |>> (fun () -> Int64) ]
 
     let type' =
         choice
@@ -51,6 +52,21 @@ module private Impl =
               skipString "money" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
               |>> Money
               complexName |>> Complex ]
+
+    let enum' =
+        keyword "enum"
+        >>. pipe3
+            (identifier)
+            (ws >>. opt (pchar ':' >>. ws >>. enumType' .>> ws)
+             .>> ws
+             .>> skipChar '='
+             .>> spaces
+             .>> opt (pchar '|'))
+            (sepBy1 (between spaces spaces identifier) (pchar '|'))
+            (fun name typ symbols ->
+                {| Name = name
+                   Type = typ |> Option.defaultValue Int32
+                   Symbols = symbols |})
 
     let generic1 keyword fn =
         skipString keyword >>. ws >>. pchar '<' >>. ws >>. type' .>> ws .>> pchar '>'
@@ -161,6 +177,7 @@ module private Impl =
                               |>> (fun r ->
                                   Enum
                                       { Name = Types.mergeName moduleName r.Name
+                                        Type = r.Type
                                         Symbols = r.Symbols })
                               record'
                               |>> (fun r ->
@@ -215,7 +232,8 @@ module private Impl =
 
     let enumLock =
         keyword "enum"
-        >>. pipe2
+        >>. pipe3
+            (enumType' .>> ws1)
             (complexName .>> ts)
             (many1 (
                 (ws
@@ -224,7 +242,11 @@ module private Impl =
                  >>. pipe2 identifier ((between ws ws (pchar '=')) >>. pint32 .>> ts) (fun value' num ->
                      { Name = value'; Num = num }: EnumValueLock))
             ))
-            (fun name values -> EnumLock { Name = name; Values = values })
+            (fun typ name values ->
+                EnumLock
+                    { Name = name
+                      Type = typ
+                      Values = values })
 
 
     let recordFieldLock =

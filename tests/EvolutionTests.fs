@@ -17,6 +17,7 @@ let ``Duplicate Symbols in Enum`` () =
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green"; "Yellow" ] } ] }
 
     let lock = []
@@ -34,11 +35,13 @@ let ``Duplicate Symbols in Locked Enum`` () =
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green" ] } ] }
 
     let lock =
         [ EnumLock
               { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                Type = Int32
                 Values =
                   [ { Name = "Red"; Num = 1 }
                     { Name = "Yellow"; Num = 2 }
@@ -58,11 +61,13 @@ let ``Missed Symbol in Enum`` () =
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green" ] } ] }
 
     let lock =
         [ EnumLock
               { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                Type = Int32
                 Values =
                   [ { Name = "Red"; Num = 1 }
                     { Name = "Yellow"; Num = 2 }
@@ -82,6 +87,7 @@ let ``Single Enum`` () =
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green" ] } ] }
 
     let lock = []
@@ -90,6 +96,7 @@ let ``Single Enum`` () =
         Ok
             [ EnumLock
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Values =
                       [ { Name = "Red"; Num = 1 }
                         { Name = "Yellow"; Num = 2 }

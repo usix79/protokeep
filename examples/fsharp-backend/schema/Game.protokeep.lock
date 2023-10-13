@@ -13,7 +13,7 @@ record Example.GameDomain.Session
     field CurrentMatch option<guid> = 4
     field ExpiredAt timestamp = 5
     field Version int32 = 6
-enum Example.GameDomain.Side
+enum int8 Example.GameDomain.Side
     value Player1 = 1
     value Player2 = 2
 union Example.GameDomain.GameStatus

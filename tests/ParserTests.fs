@@ -37,6 +37,7 @@ enum TrafficLight =
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green" ] } ] }
 
 [<Fact>]
@@ -44,7 +45,7 @@ let ``Test single line enum`` () =
     let input =
         """
 module Domain
-enum TrafficLight = Red | Yellow | Green
+enum TrafficLight: int8 = Red | Yellow | Green
 """
 
     assertOfString
@@ -54,6 +55,7 @@ enum TrafficLight = Red | Yellow | Green
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int8
                     Symbols = [ "Red"; "Yellow"; "Green" ] } ] }
 
 [<Fact>]
@@ -341,9 +343,11 @@ union ServiceCheck = Random | Planned of timestamp | Campaign of name:string*ste
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Foundation"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green" ] }
               Enum
                   { Name = ComplexName [ "AltTrafficLight"; "Foundation"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Blue" ] }
               Record
                   { Name = ComplexName [ "Crossroad"; "Foundation"; "Domain" ]
@@ -614,4 +618,5 @@ enum TrafficLight =
           Items =
             [ Enum
                   { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                    Type = Int32
                     Symbols = [ "Red"; "Yellow"; "Green" ] } ] }

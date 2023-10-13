@@ -18,6 +18,7 @@ let testCases =
       { Locks =
           [ EnumLock
                 { Name = ComplexName [ "TrafficLight"; "Domain" ]
+                  Type = Int32
                   Values =
                     [ { Name = "Red"; Num = 1 }
                       { Name = "Yellow"; Num = 2 }

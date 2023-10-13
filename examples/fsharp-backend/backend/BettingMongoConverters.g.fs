@@ -58,7 +58,7 @@ type ConvertExampleBetting() =
                     y <- ConvertExampleBetting.OutcomeCasePricedWithProbFromBson(reader)
                 | "Resulted" ->
                     let mutable _result = Example.Betting.OutcomeResult.Unknown
-                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v) with
+                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue (sbyte v)) with
                     | ValueSome v -> _result <- v
                     | ValueNone -> ()
                     y <- _result |> Example.Betting.Outcome.Resulted

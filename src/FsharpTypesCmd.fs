@@ -30,10 +30,10 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
         function
         | Enum info ->
             line txt $"type {firstName info.Name} ="
-            line txt "    | Unknown = 0"
+            line txt $"    | Unknown = 0{literalSuffix info.Type}"
 
             for symbol in locks.Enum(info.Name).Values do
-                line txt $"    | {symbol.Name} = {symbol.Num}"
+                line txt $"    | {symbol.Name} = {symbol.Num}{literalSuffix info.Type}"
 
             line txt $""
         | Record info ->
@@ -115,7 +115,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
 
     txt.ToString()
 
-let rec typeToString (ns: ComplexName) (type': Type) =
+let primitiveTypeToString (type': Type) =
     match type' with
     | Bool -> "bool"
     | String -> "string"
@@ -130,6 +130,23 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | Timestamp -> "System.DateTime"
     | Duration -> "System.TimeSpan"
     | Guid -> "System.Guid"
+    | _ -> failwithf "type not supported as key %A" type'
+
+let rec typeToString (ns: ComplexName) (type': Type) =
+    match type' with
+    | Bool -> primitiveTypeToString type'
+    | String -> primitiveTypeToString type'
+    | Int8 -> primitiveTypeToString type'
+    | Int16 -> primitiveTypeToString type'
+    | Int32 -> primitiveTypeToString type'
+    | Int64 -> primitiveTypeToString type'
+    | Float32 -> primitiveTypeToString type'
+    | Float64 -> primitiveTypeToString type'
+    | Money _ -> primitiveTypeToString type'
+    | Binary -> primitiveTypeToString type'
+    | Timestamp -> primitiveTypeToString type'
+    | Duration -> primitiveTypeToString type'
+    | Guid -> primitiveTypeToString type'
     | Optional v -> typeToString ns v + " voption"
     | Array v -> typeToString ns v + " array"
     | List v -> typeToString ns v + " list"
@@ -408,17 +425,28 @@ let unionIndexMembers (typesCache: TypesCache) txt indexName unionInfo =
 
         line txt $"        | {left} -> {right}"
 
-let defValue (ns: ComplexName) isMutable =
+let literalSuffix =
     function
+    | Int8 -> "y"
+    | Int16 -> "s"
+    | Int32 -> ""
+    | Int64 -> "L"
+    | Float32 -> "f"
+    | Float64 -> ""
+    | Money _ -> "m"
+    | _ -> ""
+
+let defValue (ns: ComplexName) isMutable t =
+    match t with
     | Bool -> "false"
     | String -> "\"\""
-    | Int8 -> "0y"
-    | Int16 -> "0s"
-    | Int32 -> "0"
-    | Int64 -> "0L"
-    | Float32 -> "0.f"
-    | Float64 -> "0."
-    | Money _ -> "0m"
+    | Int8 -> $"0{literalSuffix t}"
+    | Int16 -> $"0{literalSuffix t}"
+    | Int32 -> $"0{literalSuffix t}"
+    | Int64 -> $"0{literalSuffix t}"
+    | Float32 -> $"0.{literalSuffix t}"
+    | Float64 -> $"0.{literalSuffix t}"
+    | Money _ -> $"0{literalSuffix t}"
     | Binary -> "Array.empty"
     | Timestamp -> "System.DateTime.MinValue"
     | Duration -> "System.TimeSpan.Zero"

@@ -11,15 +11,15 @@ record Example.Betting.Football.Market.Total
     field p1 Example.Betting.Total = 1
 record Example.Betting.Football.Market.CorrectScore
     field p1 Example.Betting.CorrectScore = 1
-enum Example.Betting.Football.Period
+enum int32 Example.Betting.Football.Period
     value Half1 = 1
     value Half2 = 2
     value MainTime = 3
-enum Example.Betting.Football.Statistic
+enum int32 Example.Betting.Football.Statistic
     value Goals = 1
     value YellowCards = 2
     value Corners = 3
-enum Example.Betting.Football.Status
+enum int32 Example.Betting.Football.Status
     value Open = 1
     value Closed = 2
 record Example.Betting.Football.MarketItem

@@ -1,4 +1,4 @@
-enum Domain.Subdomain.Status
+enum int32 Domain.Subdomain.Status
     value Green = 1
     value Yellow = 2
     value Red = 3

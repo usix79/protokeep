@@ -39,7 +39,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         | Enum info ->
             let fullNameTxt = info.Name |> dottedName
             fromProtobuf fullNameTxt
-            line txt $"        enum<{fullNameTxt}> (int x)"
+            line txt $"        LanguagePrimitives.EnumOfValue ({FsharpTypesCmd.primitiveTypeToString info.Type} x)"
             line txt ""
             toProtobuf fullNameTxt
             line txt $"        enum<ProtoClasses.{fullNameTxt}> (int x)"

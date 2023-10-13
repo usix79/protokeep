@@ -350,7 +350,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Guid -> $"{helpers}.readGuid reader"
     | Optional t -> $"{readValue typesCache t} |> ValueOption.map ValueSome"
     | Types.IsEnum typesCache ei ->
-        $"{helpers}.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v)"
+        $"{helpers}.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue ({FsharpTypesCmd.primitiveTypeToString ei.Type} v))"
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}FromBson(reader) |> ValueSome"
     | Array _
     | List _

@@ -17,7 +17,7 @@ record Session = {
     Version: int32
 }
 
-enum Side =
+enum Side: int8 =
     | Player1
     | Player2
 

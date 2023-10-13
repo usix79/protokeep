@@ -54,7 +54,7 @@ let gen (locks: LockItem list) =
     let rec f =
         function
         | EnumLock lock ->
-            line txt $"enum {dottedName lock.Name}"
+            line txt $"enum {typeToString lock.Type} {dottedName lock.Name}"
 
             for value' in lock.Values do
                 line txt $"    value {value'.Name} = {value'.Num}"

@@ -192,7 +192,7 @@ type ConvertExampleGameDomain() =
             | BsonReaderState.Name ->
                 match reader.ReadName() with
                 | "Winner" ->
-                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v) with
+                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue (sbyte v)) with
                     | ValueSome v -> winner <- v
                     | ValueNone -> ()
                 | "Turn" ->

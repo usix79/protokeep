@@ -103,11 +103,11 @@ type ConvertExampleBettingFootball() =
             | BsonReaderState.Name ->
                 match reader.ReadName() with
                 | "Statistic" ->
-                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v) with
+                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue (int v)) with
                     | ValueSome v -> vStatistic <- v
                     | ValueNone -> ()
                 | "Period" ->
-                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v) with
+                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue (int v)) with
                     | ValueSome v -> vPeriod <- v
                     | ValueNone -> ()
                 | "Market" ->
@@ -115,7 +115,7 @@ type ConvertExampleBettingFootball() =
                     | ValueSome v -> vMarket <- v
                     | ValueNone -> ()
                 | "Status" ->
-                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue v) with
+                    match FsharpMongoHelpers.readInt reader |> ValueOption.map (fun v -> LanguagePrimitives.EnumOfValue (int v)) with
                     | ValueSome v -> vStatus <- v
                     | ValueNone -> ()
                 | "Version" ->

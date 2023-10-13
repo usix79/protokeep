@@ -24,19 +24,19 @@ type ConvertExampleBettingFootball() =
         y
 
     static member FromProtobuf(x: ProtoClasses.Example.Betting.Football.Period) : Example.Betting.Football.Period =
-        enum<Example.Betting.Football.Period> (int x)
+        LanguagePrimitives.EnumOfValue (int x)
 
     static member ToProtobuf(x: Example.Betting.Football.Period) : ProtoClasses.Example.Betting.Football.Period =
         enum<ProtoClasses.Example.Betting.Football.Period> (int x)
 
     static member FromProtobuf(x: ProtoClasses.Example.Betting.Football.Statistic) : Example.Betting.Football.Statistic =
-        enum<Example.Betting.Football.Statistic> (int x)
+        LanguagePrimitives.EnumOfValue (int x)
 
     static member ToProtobuf(x: Example.Betting.Football.Statistic) : ProtoClasses.Example.Betting.Football.Statistic =
         enum<ProtoClasses.Example.Betting.Football.Statistic> (int x)
 
     static member FromProtobuf(x: ProtoClasses.Example.Betting.Football.Status) : Example.Betting.Football.Status =
-        enum<Example.Betting.Football.Status> (int x)
+        LanguagePrimitives.EnumOfValue (int x)
 
     static member ToProtobuf(x: Example.Betting.Football.Status) : ProtoClasses.Example.Betting.Football.Status =
         enum<ProtoClasses.Example.Betting.Football.Status> (int x)

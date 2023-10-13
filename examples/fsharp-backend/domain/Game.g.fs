@@ -59,9 +59,9 @@ with
             and set v = x.Version <- v
 
 type Side =
-    | Unknown = 0
-    | Player1 = 1
-    | Player2 = 2
+    | Unknown = 0y
+    | Player1 = 1y
+    | Player2 = 2y
 
 type GameStatus =
     | Unknown

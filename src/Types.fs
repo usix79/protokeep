@@ -40,6 +40,7 @@ type Index =
 
 type EnumInfo =
     { Name: ComplexName
+      Type: Type
       Symbols: string list }
 
 type FieldInfo =
@@ -92,6 +93,7 @@ type EnumValueLock = { Name: string; Num: int }
 
 type EnumLock =
     { Name: ComplexName
+      Type: Type
       Values: EnumValueLock list }
 
 type MessageFieldLock = { Name: string; Type: Type; Num: int }
@@ -347,7 +349,34 @@ module Types =
                           |> Result.map ^ fun recordItems -> [ unionItem; yield! recordItems ]
         |> Result.map List.concat
 
+    let allowedEvolution from to' =
+        // TODO: allow more evolutions
+        match from, to' with
+        | Bool, Int8 -> true
+        | Bool, Int16 -> true
+        | Bool, Int32 -> true
+        | Bool, Int64 -> true
+        | Bool, String -> true
+        | Int8, Bool -> true
+        | Int8, Int16 -> true
+        | Int8, Int32 -> true
+        | Int8, Int64 -> true
+        | Int8, String -> true
+        | Int16, Bool -> true
+        | Int16, Int32 -> true
+        | Int16, Int64 -> true
+        | Int16, String -> true
+        | Int32, Bool -> true
+        | Int32, Int64 -> true
+        | Int32, String -> true
+        | Int64, Bool -> true
+        | Int64, String -> true
+        | Float64, Float32 -> true
+        | Float32, Float64 -> true
+        | _ -> from = to'
+
     let lockEnum (lockCache: LocksCollection) info =
+        // TODO: validate that enum type is capable of storing all values
         let valuesLock =
             if lockCache.IsEnum info.Name then
                 lockCache.Enum(info.Name).Values
@@ -377,27 +406,12 @@ module Types =
                    (fun symbol -> DuplicateSymbolsInEnum(info.Name, symbol))
                    (fun symbol -> MissedSymbolInEnum(info.Name, symbol))
                    valuesLock
-               |> Result.map ^ fun values -> EnumLock { Name = info.Name; Values = values }
-
-    let allowedEvolution from to' =
-        // TODO: allow more evolutions
-        match from, to' with
-        | Bool, Int32 -> true
-        | Bool, Int64 -> true
-        | Int8, Bool -> true
-        | Int8, Int16 -> true
-        | Int8, Int32 -> true
-        | Int8, Int64 -> true
-        | Int16, Bool -> true
-        | Int16, Int32 -> true
-        | Int16, Int64 -> true
-        | Int32, Int64 -> true
-        | Int32, Bool -> true
-        | Int64, Int32 -> true
-        | Int64, Bool -> true
-        | Float64, Float32 -> true
-        | Float32, Float64 -> true
-        | _ -> from = to'
+               |> Result.map
+                  ^ fun values ->
+                      EnumLock
+                          { Name = info.Name
+                            Type = info.Type
+                            Values = values }
 
     let lockRecord
         (lockCache: LocksCollection)
