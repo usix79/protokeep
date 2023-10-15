@@ -1,9 +1,16 @@
 # Release Notes
 
-## 0.3.14 - 2023-10-02
+## 0.3.14 - 2023-10-15
+
+Warining: **breaking changes**
 
 * Restructuring of the project along with new package id
-* Added IEntity interface
+* Massive renaming of the types
+* Added `IEntity` interface
+* Added `IVersioned` interface
+* Added support of `struct` modifier
+* Added support of `enums` sizes
+* Added support of `MondoDb.Bson` converters
 
 ## 0.3.6 - 2023-09-28
 

@@ -16,7 +16,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/usix79/protokeep</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotesFile>./RELESE_NOTES.md</PackageReleaseNotesFile>
+    <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/../RELEASE_NOTES.md"))</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common.fs" />
@@ -39,6 +39,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
+    <ItemGroup>
+        <None Include="../README.md" Pack="true" PackagePath="\"/>
+        <None Include="../RELEASE_NOTES.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>  
   <ItemGroup>
     <PackageReference Include="FParsec" Version="2.0.0-beta2" />
   </ItemGroup>
