@@ -15,6 +15,7 @@
     <PackageTags>Schema;Codegen;Fsharp;Fable;Protobuf;MongoDb;Binary;Json;Bson</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/usix79/protokeep</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotesFile>./RELESE_NOTES.md</PackageReleaseNotesFile>
   </PropertyGroup>
   <ItemGroup>
