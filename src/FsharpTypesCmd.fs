@@ -98,6 +98,12 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
                 line txt $"    | {firstName case.Name}{fieldsStr}"
 
             line txt $""
+
+            line
+                txt
+                $"    static member Default: Lazy<{dottedDiff ns info.Name}> = lazy {dottedDiff ns info.Name}.Unknown"
+
+            line txt $""
             unionKeyMembers ns locks typesCache txt info
 
             for indexName in info.Indexes typesCache do
