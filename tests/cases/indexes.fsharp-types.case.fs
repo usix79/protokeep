@@ -101,6 +101,8 @@ type Market =
     | TwoWaysMarket of p1: TwoWaysMarket
     | HandicapMarket of p1: HandicapMarket
 
+    static member Default: Lazy<Market> = lazy Market.Unknown
+
     static member MakeUnknownKey() = Key.Value "0"
     static member MakeThreeWaysMarketKey() = Key.Value "1"
     static member MakeTwoWaysMarketKey() = Key.Value "2"

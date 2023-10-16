@@ -10,6 +10,8 @@ type Incident =
     | Root of p1: Incident list
     | Noise of p1: Map<string,string>
 
+    static member Default: Lazy<Incident> = lazy Incident.Unknown
+
     static member MakeUnknownKey() = Key.Value "0"
     static member MakeSwitchedOffKey() = Key.Value "1"
     static member MakeMissedTurnsKey() = Key.Value "2"
