@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.3.15 - 2023-10-27
+
+* Fix bug when read enum from Mongo.Bson
+
 ## 0.3.14 - 2023-10-15
 
 Warining: **breaking changes**
