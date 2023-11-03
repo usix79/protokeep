@@ -35,7 +35,17 @@ module private Impl =
               skipString "int32" |>> (fun () -> Int32)
               skipString "int64" |>> (fun () -> Int64) ]
 
-    let type' =
+    let fullTypeParser, fullTypeParserRef = createParserForwardedToRef<Type, unit> ()
+
+    let genericType = ws >>. pchar '<' >>. ws >>. fullTypeParser .>> ws .>> pchar '>'
+
+    let generic2Type =
+        pipe2
+            (pchar '<' >>. ws >>. fullTypeParser .>> ws .>> pchar ',' .>> ws)
+            (fullTypeParser .>> ws .>> pchar '>')
+            (fun key value -> key, value)
+
+    fullTypeParserRef.Value <-
         choice
             [ skipString "bool" |>> (fun () -> Bool)
               skipString "string" |>> (fun () -> String)
@@ -51,6 +61,11 @@ module private Impl =
               skipString "guid" |>> (fun () -> Guid)
               skipString "money" >>. ws >>. pchar '(' >>. ws >>. pint32 .>> ws .>> pchar ')'
               |>> Money
+              skipString "option" >>. genericType |>> Optional
+              skipString "array" >>. genericType |>> Array
+              skipString "list" >>. genericType |>> List
+              skipString "set" >>. genericType |>> Set
+              skipString "map" >>. generic2Type |>> Map
               complexName |>> Complex ]
 
     let enum' =
@@ -67,30 +82,6 @@ module private Impl =
                 {| Name = name
                    Type = typ |> Option.defaultValue Int32
                    Symbols = symbols |})
-
-    let generic1 keyword fn =
-        skipString keyword >>. ws >>. pchar '<' >>. ws >>. type' .>> ws .>> pchar '>'
-        |>> fn
-
-    let generic2 keyword fn =
-        skipString keyword
-        >>. ws
-        >>. pchar '<'
-        >>. ws
-        >>. pipe2 type' (pchar ',' >>. ws >>. type') (fun t1 t2 -> (t1, t2))
-        .>> ws
-        .>> pchar '>'
-        |>> fn
-
-    let fullType2' =
-        choice
-            [ generic1 "option" Optional
-              generic1 "array" Array
-              generic1 "list" List
-              generic1 "set" Set
-              generic2 "map" Map
-              type' ]
-
 
     let indexKey' = choice [ skipChar '.' >>. identifier |>> IndexKey.FieldKey ]
 
@@ -113,7 +104,7 @@ module private Impl =
     let field' =
         pipe4
             ((between spaces ws identifier) .>> pchar ':')
-            (between ws ws fullType2')
+            (between ws ws fullTypeParser)
             (opt (skipString "key") .>> ws)
             (many (index' .>> ws))
             (fun name type' isKey idxs ->
@@ -136,7 +127,7 @@ module private Impl =
     let unionCaseField' =
         pipe3
             (opt ((between ws ws identifier) .>>? pchar ':'))
-            (between ws ws fullType2')
+            (between ws ws fullTypeParser)
             (opt (skipString "key") .>> ws)
             (fun name type' isKey ->
                 {| Name = name
@@ -249,12 +240,11 @@ module private Impl =
                       Type = typ
                       Values = values })
 
-
     let recordFieldLock =
         keyword "field"
         >>. pipe3
             (identifier .>> ws1)
-            (between ws ws fullType2')
+            (between ws ws fullTypeParser)
             ((between ws ws (pchar '=')) >>. pint32 .>> ts)
             (fun name type' num -> { Name = name; Type = type'; Num = num })
 

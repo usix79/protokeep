@@ -265,6 +265,6 @@ let rec fieldToProtobuf type' =
     | Optional _ -> failwith "direct convertion is not possible"
     | Array _
     | List _
-    | Set _ -> failwith "direct convertion is not supported, use AddRange"
-    | Map _ -> failwith "direct convertion is not supported, use AddRanre"
+    | Set _
+    | Map _ -> failwith "direct convertion is not supported, use AddRange"
     | Complex typeName -> Some $"Convert{lastNames typeName |> solidName}.ToProtobuf"

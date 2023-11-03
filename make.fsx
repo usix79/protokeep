@@ -43,6 +43,7 @@ let case (caseName: string) =
 
 [ ("CLEAN", (fun _ -> dotnet "clean" "."))
   ("BUILD", (fun _ -> dotnet "build" "."))
+  ("TEST", (fun _ -> dotnet "test" "."))
   ("PACK", (fun _ -> pack ()))
   ("GEN", (fun _ -> gen ()))
   ("CASE", case) ]

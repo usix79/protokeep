@@ -32,9 +32,12 @@ let Instance =
       Run = Handler }
 
 let keyValuePairName (ns: ComplexName) (k: Type) (v: Type) =
-    let solid =
+    let rec solid =
         function
         | Complex name -> solidDiff ns name
+        | Array v
+        | List v
+        | Set v -> $"Repeated{solid v}"
         | t -> $"{t}"
 
     $"{solid k}{solid v}Pair"

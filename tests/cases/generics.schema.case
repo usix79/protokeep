@@ -1,0 +1,5 @@
+module Test.Domain
+
+record Game = {
+    Units: map<int32, set<string>>
+}

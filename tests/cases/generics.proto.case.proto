@@ -1,0 +1,12 @@
+syntax = "proto3";
+package Test.Domain;
+option csharp_namespace = "ProtoClasses.Test.Domain";
+message Game {
+    repeated Int32RepeatedStringPair Units = 1;
+}
+
+message Int32RepeatedStringPair {
+    int32 key = 1;
+    repeated string value = 2;
+}
+
