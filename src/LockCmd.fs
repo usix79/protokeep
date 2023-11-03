@@ -45,6 +45,7 @@ let rec typeToString (type': Type) =
     | Optional v -> $"option<{typeToString v}>"
     | Array v -> $"array<{typeToString v}>"
     | List v -> $"list<{typeToString v}>"
+    | Set v -> $"set<{typeToString v}>"
     | Map(k, v) -> $"map<{typeToString k}, {typeToString v}>"
     | Complex ns -> dottedName ns
 

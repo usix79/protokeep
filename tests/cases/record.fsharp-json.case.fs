@@ -50,7 +50,12 @@ type ConvertTestDomain() =
         writer.WriteEndArray()
         writer.WritePropertyName("Tags")
         writer.WriteStartArray()
-        for pair in x.Tags do
+        for v in x.Tags do
+            writer.WriteStringValue(v)
+        writer.WriteEndArray()
+        writer.WritePropertyName("Metrics")
+        writer.WriteStartArray()
+        for pair in x.Metrics do
             writer.WriteStartObject()
             writer.WritePropertyName("Key")
             writer.WriteStringValue(pair.Key)
@@ -87,6 +92,7 @@ type ConvertTestDomain() =
         let mutable vIntervals = ResizeArray()
         let mutable vNotes = ResizeArray()
         let mutable vTags = ResizeArray()
+        let mutable vMetrics = ResizeArray()
         let mutable vNext = ValueNone
         let mutable vImg = Array.empty
         let mutable vVersion = 0
@@ -165,6 +171,13 @@ type ConvertTestDomain() =
                     else reader.Skip()
                 else if (reader.ValueTextEquals("Tags")) then
                     if reader.Read() && reader.TokenType = JsonTokenType.StartArray then
+                        while reader.TokenType <> JsonTokenType.EndArray do
+                            match FsharpJsonHelpers.readString(&reader) with
+                            | ValueSome v -> vTags.Add(v)
+                            | ValueNone -> ()
+                    else reader.Skip()
+                else if (reader.ValueTextEquals("Metrics")) then
+                    if reader.Read() && reader.TokenType = JsonTokenType.StartArray then
                         while reader.Read() && reader.TokenType <> JsonTokenType.EndArray do
                             if reader.TokenType = JsonTokenType.StartObject then
                                 let mutable key = ""
@@ -179,7 +192,7 @@ type ConvertTestDomain() =
                                         | ValueSome v -> value <- v
                                         | ValueNone -> ()
                                     else reader.Skip()
-                                vTags.Add(key, value)
+                                vMetrics.Add(key, value)
                             else reader.Skip()
                     else reader.Skip()
                 else if (reader.ValueTextEquals("NextValue")) then
@@ -212,7 +225,8 @@ type ConvertTestDomain() =
                 ServiceInterval = vServiceInterval
                 Intervals = vIntervals |> List.ofSeq
                 Notes = vNotes |> Array.ofSeq
-                Tags = vTags |> Map.ofSeq
+                Tags = vTags |> Set.ofSeq
+                Metrics = vMetrics |> Map.ofSeq
                 Next = vNext
                 Img = vImg
                 Version = vVersion

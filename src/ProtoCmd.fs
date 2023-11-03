@@ -139,6 +139,7 @@ let caseNeedsRecord =
         | Optional _
         | Array _
         | List _
+        | Set _
         | Map _ -> true
         | _ -> false
     | Types.MultiFieldsRecord -> true
@@ -161,7 +162,8 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | Guid -> "bytes"
     | Optional v -> typeToString ns v
     | Array v
-    | List v -> "repeated " + (typeToString ns v)
+    | List v
+    | Set v -> "repeated " + (typeToString ns v)
     | Map(k, v) -> $"repeated {keyValuePairName ns k v}"
     | Complex ns -> dottedName ns
 
@@ -174,7 +176,9 @@ let references (locks: LocksCollection) (module': Module) =
         | Duration -> [ ComplexName [ "google/protobuf/duration" ] ]
         | Complex ns -> [ Types.extractNamespace ns ]
         | Optional v
-        | Array v -> typeReference v
+        | Array v
+        | List v
+        | Set v -> typeReference v
         | Map(k, v) -> typeReference k @ typeReference v
         | _ -> []
 

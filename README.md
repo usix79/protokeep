@@ -20,7 +20,7 @@ Problems addressed:
 
 - **Simple Types**: Basic data types like `int`, `string`, `bool`, etc. for common use cases.
   
-- **Generic Types**: Types like `optional`, `array`, `list` and `map` which can hold other types.
+- **Generic Types**: Types like `optional`, `array`, `list`, `set` and `map` which can hold other types.
 
 - **Enums**: A set of named values.
 

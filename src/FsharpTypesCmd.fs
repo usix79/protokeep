@@ -156,6 +156,7 @@ let rec typeToString (ns: ComplexName) (type': Type) =
     | Optional v -> typeToString ns v + " voption"
     | Array v -> typeToString ns v + " array"
     | List v -> typeToString ns v + " list"
+    | Set v -> $"Set<{typeToString ns v}>"
     | Map(k, v) -> $"Map<{typeToString ns k},{typeToString ns v}>"
     | Complex typeName ->
         match lastNames typeName with
@@ -278,7 +279,8 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
                | IndexValue.Field name ->
                    match field.Type with
                    | Array _
-                   | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name})"
+                   | List _
+                   | Set _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> v.{name})"
                    | _ -> $"x.{field.Name}.{name}"
         |> String.concat "; "
 
@@ -296,7 +298,8 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
                | IndexKey.FieldKey name ->
                    match field.Type with
                    | Array _
-                   | List _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> (v.{name} :> IEntity).Key)"
+                   | List _
+                   | Set _ -> $"yield! x.{field.Name} |> Seq.map (fun v -> (v.{name} :> IEntity).Key)"
                    | _ -> $"x.{field.Name}.{name}"
         |> String.concat "; "
 
@@ -308,7 +311,8 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
         | IndexKey.FieldKey name ->
             match fieldInfo.Type with
             | Array _
-            | List _ ->
+            | List _
+            | Set _ ->
                 line txt $"    member x.TryFind{firstCharToUpper indexName}In{fieldInfo.Name} (key:Key) ="
                 line txt $"        x.{fieldInfo.Name} |> Seq.tryFind (fun i -> (i.{name} :> IEntity).Key = key)"
             | _ -> ()
@@ -338,18 +342,17 @@ let recordIndexMembers (locks: LocksCollection) txt indexName recordInfo =
                 txt
                 $"            {fieldInfo.Name} = items.TryFind(Key.Value \"{fieldLock.Num}\") |> Option.defaultValue x.{fieldInfo.Name}"
         | (IndexKey.FieldKey keyName), (IndexValue.Field valueName) ->
-            match fieldInfo.Type with
-            | Array _ ->
-                let mapTxt =
-                    $"fun v -> items.TryFind (v.{keyName} :> IEntity).Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
+            let mapFnTxt =
+                $"fun v -> items.TryFind (v.{keyName} :> IEntity).Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
 
-                line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> Array.map ({mapTxt})"
-            | List _ ->
-                let mapTxt =
-                    $"fun v -> items.TryFind (v.{keyName} :> IEntity).Key |> Option.map (fun i -> {{v with {valueName} = i}}) |> Option.defaultValue v"
+            let mapTypeTxt =
+                match fieldInfo.Type with
+                | Array _ -> "Array.map"
+                | List _ -> "List.map"
+                | Set _ -> "Set.map"
+                | wrong -> failwithf "Not supportes type for indexier %A" wrong
 
-                line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> List.map ({mapTxt})"
-            | wrong -> failwithf "Not supportes type for indexier %A" wrong
+            line txt $"            {fieldInfo.Name} = x.{fieldInfo.Name} |> {mapTypeTxt} ({mapFnTxt})"
         | wrong -> failwithf "Not supported indexer %A" wrong
 
     line txt $"        }}"
@@ -460,6 +463,7 @@ let defValue (ns: ComplexName) isMutable t =
     | Optional _ -> "ValueNone"
     | Array _ -> if isMutable then "ResizeArray()" else "Array.empty"
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
+    | Set _ -> if isMutable then "ResizeArray()" else "Set.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
     | Complex typeName when ns = (lastNames typeName) -> $"{typeName |> firstName}.Default.Value"
     | Complex typeName -> $"{typeName |> dottedName}.Default.Value"
@@ -468,5 +472,6 @@ let fromMutable =
     function
     | Array _ -> " |> Array.ofSeq"
     | List _ -> " |> List.ofSeq"
+    | Set _ -> " |> Set.ofSeq"
     | Map _ -> " |> Map.ofSeq"
     | _ -> ""

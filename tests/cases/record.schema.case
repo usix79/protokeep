@@ -17,7 +17,8 @@ record Crossroad = {
     ServiceInterval: duration
     Intervals: list<int32>
     Notes: array<string>
-    Tags: map<string, int32>
+    Tags: set<string>
+    Metrics: map<string, int32>
     Next: option<Crossroad>
     Img: binary
     Version: int32

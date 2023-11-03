@@ -20,7 +20,8 @@ type ConvertTestDomain() =
             ServiceInterval = x.ServiceInterval |> fun v -> v.ToTimeSpan()
             Intervals = x.Intervals |> List.ofSeq
             Notes = x.Notes |> Array.ofSeq
-            Tags = x.Tags |> Seq.map(fun x -> x.Key, x.Value) |> Map.ofSeq
+            Tags = x.Tags |> Set.ofSeq
+            Metrics = x.Metrics |> Seq.map(fun x -> x.Key, x.Value) |> Map.ofSeq
             Next = if x.NextCase = ProtoClasses.Test.Domain.Crossroad.NextOneofCase.NextValue then ValueSome (x.NextValue |> ConvertTestDomain.FromProtobuf) else ValueNone
             Img = x.Img |> fun v -> v.ToByteArray()
             Version = x.Version
@@ -46,11 +47,12 @@ type ConvertTestDomain() =
         y.ServiceInterval <- x.ServiceInterval |> Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan
         y.Intervals.AddRange(x.Intervals)
         y.Notes.AddRange(x.Notes)
-        for pair in x.Tags do
+        y.Tags.AddRange(x.Tags)
+        for pair in x.Metrics do
             let protoPair = ProtoClasses.Test.Domain.StringInt32Pair ()
             protoPair.Key <- pair.Key
             protoPair.Value <- pair.Value
-            y.Tags.Add(protoPair)
+            y.Metrics.Add(protoPair)
         match x.Next with
         | ValueSome v -> y.NextValue <- v |> ConvertTestDomain.ToProtobuf
         | ValueNone -> ()

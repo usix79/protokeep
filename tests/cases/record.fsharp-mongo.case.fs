@@ -54,7 +54,12 @@ type ConvertTestDomain() =
         writer.WriteEndArray()
         writer.WriteName("Tags")
         writer.WriteStartArray()
-        for pair in x.Tags do
+        for v in x.Tags do
+            writer.WriteString(v)
+        writer.WriteEndArray()
+        writer.WriteName("Metrics")
+        writer.WriteStartArray()
+        for pair in x.Metrics do
             writer.WriteStartDocument()
             writer.WriteName("Key")
             writer.WriteString(pair.Key)
@@ -91,6 +96,7 @@ type ConvertTestDomain() =
         let mutable vIntervals = ResizeArray()
         let mutable vNotes = ResizeArray()
         let mutable vTags = ResizeArray()
+        let mutable vMetrics = ResizeArray()
         let mutable vNext = ValueNone
         let mutable vImg = Array.empty
         let mutable vVersion = 0
@@ -173,6 +179,13 @@ type ConvertTestDomain() =
                 | "Tags" ->
                     reader.ReadStartArray()
                     while reader.ReadBsonType() <> BsonType.EndOfDocument do
+                        match FsharpMongoHelpers.readString reader with
+                        | ValueSome v -> vTags.Add(v)
+                        | ValueNone -> ()
+                    reader.ReadEndArray()
+                | "Metrics" ->
+                    reader.ReadStartArray()
+                    while reader.ReadBsonType() <> BsonType.EndOfDocument do
                         reader.ReadStartDocument()
                         let mutable key = ""
                         let mutable value = 0
@@ -188,7 +201,7 @@ type ConvertTestDomain() =
                                 | ValueNone -> ()
                             | _ -> reader.SkipValue()
                         reader.ReadEndDocument()
-                        vTags.Add(key, value)
+                        vMetrics.Add(key, value)
                     reader.ReadEndArray()
                 | "NextValue" ->
                     match ConvertTestDomain.CrossroadFromBson(reader) |> ValueSome |> ValueOption.map ValueSome with
@@ -222,7 +235,8 @@ type ConvertTestDomain() =
             ServiceInterval = vServiceInterval
             Intervals = vIntervals |> List.ofSeq
             Notes = vNotes |> Array.ofSeq
-            Tags = vTags |> Map.ofSeq
+            Tags = vTags |> Set.ofSeq
+            Metrics = vMetrics |> Map.ofSeq
             Next = vNext
             Img = vImg
             Version = vVersion

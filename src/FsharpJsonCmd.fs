@@ -213,7 +213,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
         match fieldInfo.Type with
         | Array t
-        | List t ->
+        | List t
+        | Set t ->
             linei txt ident $"if reader.Read() && reader.TokenType = JsonTokenType.StartArray then"
             linei txt (ident + 1) $"while reader.TokenType <> JsonTokenType.EndArray do"
             readValueBlock txt (ident + 2) typesCache t $"{vName}.Add(v)"
@@ -258,7 +259,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         function
         | Optional _ -> failwith "cannot unpack optional field"
         | Array t
-        | List t ->
+        | List t
+        | Set t ->
             linei txt ident $"writer.WriteStartArray()"
             linei txt ident $"for v in {vName} do"
             linei txt (ident + 1) $"""{writeValue typesCache "v" t}"""
@@ -310,6 +312,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Complex t -> $"Convert{lastNames t |> solidName}.{firstName t}FromJson(&reader)"
     | Array _
     | List _
+    | Set _
     | Map _ -> failwith $"Collection in {nameof (readValue)}"
 
 let rec readValueBlock txt ident (typesCache: Types.TypesCache) (typ: Type) expr =
@@ -336,6 +339,7 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         | Optional _ -> failwith "cannot unpack optional field"
         | Array _
         | List _
+        | Set _
         | Map _ -> failwith "cannot unpack collection field"
         | Complex typeName ->
             match typesCache.TryFind typeName with

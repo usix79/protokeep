@@ -21,6 +21,7 @@ type Type =
     | Optional of value: Type
     | Array of value: Type
     | List of value: Type
+    | Set of value: Type
     | Map of key: Type * value: Type
     | Complex of name: ComplexName
 
@@ -287,6 +288,7 @@ module Types =
                    | Optional(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Optional)
                    | Array(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Array)
                    | List(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> List)
+                   | Set(Complex typeName) -> getFullName ns typeName |> Option.map (Complex >> Set)
                    | Map(tkey, tvalue) ->
                        let tkey =
                            match tkey with

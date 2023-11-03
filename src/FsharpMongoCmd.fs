@@ -63,6 +63,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 | Types.IsUnion typesCache _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
                 | Array _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Array.ofSeq"
                 | List _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> List.ofSeq"
+                | Set _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Set.ofSeq"
                 | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
                 | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
 
@@ -157,8 +158,9 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                     case.Fields
                     |> Seq.map (fun fieldInfo ->
                         match fieldInfo.Type with
-                        | Array _
+                        | Array _ -> $"{fieldInfo.Name} |> Array.ofSeq"
                         | List _ -> $"{fieldInfo.Name} |> List.ofSeq"
+                        | Set _ -> $"{fieldInfo.Name} |> Set.ofSeq"
                         | Map _ -> $"{fieldInfo.Name} |> Map.ofSeq"
                         | _ -> fieldInfo.Name)
                     |> String.concat ","
@@ -206,7 +208,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
 
         match fieldInfo.Type with
         | Array t
-        | List t ->
+        | List t
+        | Set t ->
             linei txt 5 $"reader.ReadStartArray()"
             linei txt 5 $"while reader.ReadBsonType() <> BsonType.EndOfDocument do"
             linei txt 6 $"match {readValue typesCache t} with"
@@ -266,7 +269,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         function
         | Optional t -> failwith "cannot unpack optional field"
         | Array t
-        | List t ->
+        | List t
+        | Set t ->
             linei txt ident $"writer.WriteStartArray()"
             linei txt ident $"for v in {vName} do"
             linei txt (ident + 1) $"""{writeValue typesCache "v" t}"""
@@ -355,6 +359,7 @@ let rec readValue (typesCache: Types.TypesCache) =
     | Complex typeName -> $"Convert{lastNames typeName |> solidName}.{firstName typeName}FromBson(reader) |> ValueSome"
     | Array _
     | List _
+    | Set _
     | Map _ -> failwith $"Collection in {nameof (readValue)}"
 
 let rec writeValue (typesCache: Types.TypesCache) vName type' =
@@ -376,6 +381,7 @@ let rec writeValue (typesCache: Types.TypesCache) vName type' =
         | Optional _ -> failwith "cannot unpack optional field"
         | Array _
         | List _
+        | Set _
         | Map _ -> failwith "cannot unpack collection"
         | Complex typeName ->
             match typesCache.TryFind typeName with

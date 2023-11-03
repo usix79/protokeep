@@ -19,7 +19,8 @@ type Crossroad = {
     ServiceInterval : System.TimeSpan
     Intervals : int list
     Notes : string array
-    Tags : Map<string,int>
+    Tags : Set<string>
+    Metrics : Map<string,int>
     Next : Crossroad voption
     Img : byte array
     mutable Version : int
@@ -43,7 +44,8 @@ with
             ServiceInterval = System.TimeSpan.Zero
             Intervals = List.empty
             Notes = Array.empty
-            Tags = Map.empty
+            Tags = Set.empty
+            Metrics = Map.empty
             Next = ValueNone
             Img = Array.empty
             Version = 0

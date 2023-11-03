@@ -124,6 +124,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                     | Optional _
                     | Array _
                     | List _
+                    | Set _
                     | Map _ -> genCase union case
                     | _ -> ()
                 | Types.MultiFieldsRecord -> genCase union case
@@ -176,7 +177,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             line txt $"        | ValueSome v -> {yName}Value <- v{convertionTo t}"
             line txt $"        | ValueNone -> ()"
         | Array t
-        | List t ->
+        | List t
+        | Set t ->
             match fieldToProtobuf t with
             | Some cnv -> line txt $"        {yName}.AddRange({xName} |> Seq.map({cnv}))"
             | None -> line txt $"        {yName}.AddRange({xName})"
@@ -232,6 +234,11 @@ let rec fieldFromProtobuf ns type' =
         | Some convertion -> $"Seq.map({convertion}) |> List.ofSeq"
         | None -> "List.ofSeq"
         |> Some
+    | Set t ->
+        match fieldFromProtobuf ns t with
+        | Some convertion -> $"Seq.map({convertion}) |> Set.ofSeq"
+        | None -> "Set.ofSeq"
+        |> Some
     | Map(k, v) ->
         $"Seq.map(fun x -> x.Key{convertionFrom ns k}, x.Value{convertionFrom ns v}) |> Map.ofSeq"
         |> Some
@@ -257,6 +264,7 @@ let rec fieldToProtobuf type' =
     | Guid -> Some "fun v -> Google.Protobuf.ByteString.CopyFrom(v.ToByteArray())"
     | Optional _ -> failwith "direct convertion is not possible"
     | Array _
-    | List _ -> failwith "direct convertion is not supported, use AddRange"
+    | List _
+    | Set _ -> failwith "direct convertion is not supported, use AddRange"
     | Map _ -> failwith "direct convertion is not supported, use AddRanre"
     | Complex typeName -> Some $"Convert{lastNames typeName |> solidName}.ToProtobuf"

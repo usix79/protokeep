@@ -87,6 +87,7 @@ module private Impl =
             [ generic1 "option" Optional
               generic1 "array" Array
               generic1 "list" List
+              generic1 "set" Set
               generic2 "map" Map
               type' ]
 

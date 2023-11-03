@@ -22,6 +22,7 @@ type ConvertTestDomain () =
         let mutable vIntervals = ResizeArray()
         let mutable vNotes = ResizeArray()
         let mutable vTags = ResizeArray()
+        let mutable vMetrics = ResizeArray()
         let mutable vNext = ValueNone
         let mutable vImg = Array.empty
         let mutable vVersion = 0
@@ -44,7 +45,8 @@ type ConvertTestDomain () =
             | "ServiceInterval" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vServiceInterval <- v |> FsharpFableHelpers.toTimeSpan)
             | "Intervals" -> pair.Value |> FsharpFableHelpers.ifArray (Seq.iter (FsharpFableHelpers.ifNumber (fun v -> v |> unbox |> vIntervals.Add)))
             | "Notes" -> pair.Value |> FsharpFableHelpers.ifArray (Seq.iter (FsharpFableHelpers.ifString (fun v -> v |> vNotes.Add)))
-            | "Tags" -> pair.Value |> FsharpFableHelpers.ifMap (fun (key, value) -> key |> FsharpFableHelpers.ifString (fun v -> v |> fun k -> value |> FsharpFableHelpers.ifNumber (fun v -> v |> unbox |> fun v -> vTags.Add(k, v))))
+            | "Tags" -> pair.Value |> FsharpFableHelpers.ifArray (Seq.iter (FsharpFableHelpers.ifString (fun v -> v |> vTags.Add)))
+            | "Metrics" -> pair.Value |> FsharpFableHelpers.ifMap (fun (key, value) -> key |> FsharpFableHelpers.ifString (fun v -> v |> fun k -> value |> FsharpFableHelpers.ifNumber (fun v -> v |> unbox |> fun v -> vMetrics.Add(k, v))))
             | "NextValue" -> pair.Value |> (fun v -> vNext <- v |> ConvertTestDomain.CrossroadFromJson |> ValueSome)
             | "Img" -> pair.Value |> FsharpFableHelpers.ifString (fun v -> vImg <- v |> System.Convert.FromBase64String)
             | "Version" -> pair.Value |> FsharpFableHelpers.ifNumber (fun v -> vVersion <- v |> unbox)
@@ -66,7 +68,8 @@ type ConvertTestDomain () =
             ServiceInterval = vServiceInterval
             Intervals = vIntervals |> List.ofSeq
             Notes = unbox vNotes
-            Tags = vTags |> Map.ofSeq
+            Tags = vTags |> Set.ofSeq
+            Metrics = vMetrics |> Map.ofSeq
             Next = vNext
             Img = vImg
             Version = vVersion
@@ -91,7 +94,8 @@ type ConvertTestDomain () =
             "ServiceInterval", JString (x.ServiceInterval |> FsharpFableHelpers.fromTimeSpan)
             "Intervals", JArray (x.Intervals |> Seq.map (fun v -> JNumber (unbox v)) |> List.ofSeq)
             "Notes", JArray (x.Notes |> Seq.map (fun v -> JString (v)) |> List.ofSeq)
-            "Tags", x.Tags |> FsharpFableHelpers.mapToArray (fun k -> JString (k)) (fun v -> JNumber (unbox v))
+            "Tags", JArray (x.Tags |> Seq.map (fun v -> JString (v)) |> List.ofSeq)
+            "Metrics", x.Metrics |> FsharpFableHelpers.mapToArray (fun k -> JString (k)) (fun v -> JNumber (unbox v))
             match x.Next with
             | ValueSome v -> "{firstCharToUpper fieldInfo.Name}Value", (v |> ConvertTestDomain.CrossroadToJson)
             | ValueNone -> ()

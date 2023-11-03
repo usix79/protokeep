@@ -64,6 +64,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 | Types.IsUnion typesCache _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
                 | Array _ -> line txt $"            {fieldInfo.Name} = unbox v{fieldInfo.Name}"
                 | List _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> List.ofSeq"
+                | Set _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Set.ofSeq"
                 | Map _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name} |> Map.ofSeq"
                 | _ -> line txt $"            {fieldInfo.Name} = v{fieldInfo.Name}"
 
@@ -142,6 +143,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                             match fieldInfo.Type with
                             | Array _ -> $"unbox {fieldInfo.Name}"
                             | List _ -> $"{fieldInfo.Name} |> List.ofSeq"
+                            | Set _ -> $"{fieldInfo.Name} |> Set.ofSeq"
                             | Map _ -> $"{fieldInfo.Name} |> Map.ofSeq"
                             | _ -> fieldInfo.Name)
                         |> String.concat ","
@@ -232,7 +234,8 @@ let unpackField' rightOp (typesCache: Types.TypesCache) vName =
         | Guid -> $"{helpers}.ifString (fun v -> {leftOp}v |> System.Convert.FromBase64String |> System.Guid{rightOp})"
         | Optional t -> f $"{vName} <- " " |> ValueSome" t
         | Array t
-        | List t ->
+        | List t
+        | Set t ->
             let inner = f "" $" |> {vName}.Add" t
             $"{helpers}.ifArray (Seq.iter ({inner}))"
         | Map(k, v) ->
@@ -269,6 +272,7 @@ let packField (typesCache: Types.TypesCache) (vName: string) type' =
         | Guid -> $"JString ({vName}.ToByteArray() |> System.Convert.ToBase64String)"
         | Optional _ -> failwith "cannot upack optional field"
         | Array t
+        | Set t
         | List t ->
             let inner = f "v" t
             $"JArray ({vName} |> Seq.map (fun v -> {inner}) |> List.ofSeq)"
