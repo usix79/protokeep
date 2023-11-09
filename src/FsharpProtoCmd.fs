@@ -170,6 +170,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             $"if x.{firstCharToUpper fieldInfo.Name}Case = {caseValue} then ValueSome (x.{firstCharToUpper fieldInfo.Name}Value{convertionFrom ns t}) else ValueNone"
         | t -> $"x.{firstCharToUpper fieldInfo.Name}{convertionFrom ns t}"
 
+    // TODO: support inner generic collections (e.g. Map<int32, Set<string>>)
     and genFieldToProtobuf xName yName fieldInfo =
         match fieldInfo.Type with
         | Optional t ->

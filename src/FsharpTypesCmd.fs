@@ -57,9 +57,9 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             for fieldInfo in info.Fields do
                 match fieldInfo.Type with
                 | Types.IsEnum typesCache enumInfo ->
-                    line txt $"            {fieldInfo.Name} = {dottedDiff ns enumInfo.Name}.Unknown"
+                    line txt $"            {fieldInfo.Name} = {dottedNameWithNamespace ns enumInfo.Name}.Unknown"
                 | Types.IsUnion typesCache unionInfo ->
-                    line txt $"            {fieldInfo.Name} = {dottedDiff ns unionInfo.Name}.Unknown"
+                    line txt $"            {fieldInfo.Name} = {dottedNameWithNamespace ns unionInfo.Name}.Unknown"
                 | _ -> line txt $"            {fieldInfo.Name} = {defValue ns false fieldInfo.Type}"
 
             line txt $"        }}"

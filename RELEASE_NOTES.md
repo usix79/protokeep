@@ -4,6 +4,7 @@
 
 * Added supprot of `set`
 * Fix bug when read enum from Mongo.Bson
+* Fix bug when enum default value was not resolvable
 
 ## 0.3.14 - 2023-10-15
 

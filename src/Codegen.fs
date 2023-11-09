@@ -35,6 +35,11 @@ let firstName (ComplexName ns) = ns.Head
 
 let lastNames (ComplexName ns) = ComplexName ns.Tail
 
+let dottedNameWithNamespace (ComplexName currentNamespace) (ComplexName typeName) =
+    match List.tail typeName = currentNamespace with
+    | true -> typeName.Head
+    | false -> dottedName (ComplexName typeName)
+
 let firstCharToUpper (name: string) =
     if name.Length > 0 && Char.IsLower(name.[0]) then
         Char.ToUpper(name.[0]).ToString() + name.Substring(1)
