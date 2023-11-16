@@ -1,10 +1,11 @@
 # Release Notes
 
-## 0.3.15 - 2023-11-03
+## 0.3.15 - 2023-11-16
 
 * Added supprot of `set`
 * Fix bug when read enum from Mongo.Bson
 * Fix bug when enum default value was not resolvable
+* Fix bug when read unknown union case from Mongo.Bson
 
 ## 0.3.14 - 2023-10-15
 

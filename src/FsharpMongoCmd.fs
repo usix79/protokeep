@@ -141,7 +141,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
                 let methodName = $"{firstName union.Name}Case{firstName case.Name}FromBson"
                 linei txt 5 $"y <- Convert{solidName ns}.{methodName}(reader)"
 
-        linei txt 4 $"| _ -> ()"
+        linei txt 4 $"| _ -> reader.SkipValue()"
         line txt $"        reader.ReadEndDocument()"
         line txt $"        y"
 
