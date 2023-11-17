@@ -3,9 +3,10 @@
 ## 0.3.15 - 2023-11-16
 
 * Added supprot of `set`
-* Fix bug when read enum from Mongo.Bson
 * Fix bug when enum default value was not resolvable
-* Fix bug when read unknown union case from Mongo.Bson
+* Fix bug in Mongo.Bson when read enum
+* Fix bug in Mongo.Bson when read unknown union case
+* Fix bug in Mongo.Bson when try to serialize Guid
 
 ## 0.3.14 - 2023-10-15
 

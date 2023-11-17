@@ -331,7 +331,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
     line txt $"type {className} with"
     line txt $"    static member RegisterSerializers() ="
     line txt $"        BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3"
-
+    line txt $"        BsonSerializer.RegisterSerializer(GuidSerializer(GuidRepresentation.Standard))"
     for typeName in serializableTypeNames do
         line txt $"        BsonSerializer.RegisterSerializer({typeName |> firstName}Serializer())"
 
