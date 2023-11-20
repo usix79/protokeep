@@ -94,7 +94,7 @@ type ConvertTestDomain() =
                         _p1.Add(key, value)
                     reader.ReadEndArray()
                     y <- _p1 |> Map.ofSeq |> Test.Domain.Incident.Noise
-                | _ -> ()
+                | _ -> reader.SkipValue()
         reader.ReadEndDocument()
         y
     static member IncidentCaseDelayesFromBson (reader: IBsonReader) =
@@ -122,3 +122,4 @@ type ConvertTestDomain() =
 type ConvertTestDomain with
     static member RegisterSerializers() =
         BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3
+        BsonSerializer.RegisterSerializer(GuidSerializer(GuidRepresentation.Standard))

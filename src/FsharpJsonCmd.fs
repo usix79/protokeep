@@ -41,7 +41,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             line txt $"        function"
 
             for symbol in info.Symbols do
-                line txt $"        | \"{firstName info.Name}{symbol}\" -> {fullNameTxt}.{symbol}"
+                line txt $"        | \"{symbol}\" -> {fullNameTxt}.{symbol}"
 
             line txt $"        | _ -> {fullNameTxt}.Unknown"
             line txt $""
@@ -50,7 +50,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             line txt $"        function"
 
             for symbol in info.Symbols do
-                line txt $"        | {fullNameTxt}.{symbol} -> \"{firstName info.Name}{symbol}\""
+                line txt $"        | {fullNameTxt}.{symbol} -> \"{symbol}\""
 
             line txt $"        | _ -> \"Unknown\""
             line txt $""
@@ -199,14 +199,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"                else reader.Skip()"
 
     and declareFieldValue ident prefix fieldInfo =
-        match fieldInfo.Type with
-        | Types.IsEnum typesCache enumInfo ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
-        | Types.IsUnion typesCache unionInfo ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-        | _ ->
-            let value = FsharpTypesCmd.defValue genNs true fieldInfo.Type
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {value}"
+        let value = FsharpTypesCmd.defValue typesCache genNs true fieldInfo.Type
+        linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {value}"
 
     and readFieldValue ident prefix fieldInfo =
         let vName = $"{prefix}{fieldInfo.Name}"
@@ -223,8 +217,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             linei txt ident $"if reader.Read() && reader.TokenType = JsonTokenType.StartArray then"
             linei txt (ident + 1) $"while reader.Read() && reader.TokenType <> JsonTokenType.EndArray do"
             linei txt (ident + 2) $"if reader.TokenType = JsonTokenType.StartObject then"
-            linei txt (ident + 3) $"let mutable key = {FsharpTypesCmd.defValue genNs true k}"
-            linei txt (ident + 3) $"let mutable value = {FsharpTypesCmd.defValue genNs true v}"
+            linei txt (ident + 3) $"let mutable key = {FsharpTypesCmd.defValue typesCache genNs true k}"
+            linei txt (ident + 3) $"let mutable value = {FsharpTypesCmd.defValue typesCache genNs true v}"
             linei txt (ident + 3) $"while reader.Read() && reader.TokenType <> JsonTokenType.EndObject do"
             linei txt (ident + 4) $"""if (reader.ValueTextEquals("Key")) then"""
             readValueBlock txt (ident + 5) typesCache k $"key <- v"

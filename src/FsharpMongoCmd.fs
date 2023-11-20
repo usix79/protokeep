@@ -194,14 +194,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"        reader.ReadEndDocument()"
 
     and declareFieldValue ident prefix fieldInfo =
-        match fieldInfo.Type with
-        | Types.IsEnum typesCache enumInfo ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
-        | Types.IsUnion typesCache unionInfo ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-        | _ ->
-            let value = FsharpTypesCmd.defValue genNs true fieldInfo.Type
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {value}"
+        let value = FsharpTypesCmd.defValue typesCache genNs true fieldInfo.Type
+        linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {value}"
 
     and readFieldValue ident prefix (fieldInfo: FieldInfo) =
         let vName = prefix + fieldInfo.Name
@@ -220,8 +214,8 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
             linei txt 5 $"reader.ReadStartArray()"
             linei txt 5 $"while reader.ReadBsonType() <> BsonType.EndOfDocument do"
             linei txt 6 $"reader.ReadStartDocument()"
-            linei txt 6 $"let mutable key = {FsharpTypesCmd.defValue genNs true k}"
-            linei txt 6 $"let mutable value = {FsharpTypesCmd.defValue genNs true v}"
+            linei txt 6 $"let mutable key = {FsharpTypesCmd.defValue typesCache genNs true k}"
+            linei txt 6 $"let mutable value = {FsharpTypesCmd.defValue typesCache genNs true v}"
             linei txt 6 $"while reader.ReadBsonType() <> BsonType.EndOfDocument do"
             linei txt 7 $"match reader.ReadName() with"
             linei txt 7 $"""| "Key" ->"""
@@ -332,6 +326,7 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
     line txt $"    static member RegisterSerializers() ="
     line txt $"        BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3"
     line txt $"        BsonSerializer.RegisterSerializer(GuidSerializer(GuidRepresentation.Standard))"
+
     for typeName in serializableTypeNames do
         line txt $"        BsonSerializer.RegisterSerializer({typeName |> firstName}Serializer())"
 

@@ -11,3 +11,4 @@ type ConvertTestDomain() =
 type ConvertTestDomain with
     static member RegisterSerializers() =
         BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3
+        BsonSerializer.RegisterSerializer(GuidSerializer(GuidRepresentation.Standard))

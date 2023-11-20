@@ -179,13 +179,10 @@ let gen genNamespace (module': Module) (locks: LocksCollection) (typesCache: Typ
         line txt $"            | _ -> () )"
 
     and declareFieldValue ident prefix fieldInfo =
-        match fieldInfo.Type with
-        | Types.IsEnum typesCache enumInfo ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName enumInfo.Name}.Unknown"
-        | Types.IsUnion typesCache unionInfo ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {dottedName unionInfo.Name}.Unknown"
-        | _ ->
-            linei txt ident $"let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue ns true fieldInfo.Type}"
+        linei
+            txt
+            ident
+            $"let mutable {prefix}{fieldInfo.Name} = {FsharpTypesCmd.defValue typesCache ns true fieldInfo.Type}"
 
     and writeObject prefix recordInfo =
         line txt $"        ["

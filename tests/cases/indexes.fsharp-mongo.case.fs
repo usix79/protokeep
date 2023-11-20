@@ -160,7 +160,7 @@ type ConvertTestDomain() =
                     | ValueSome v -> _p1 <- v
                     | ValueNone -> ()
                     y <- _p1 |> Test.Domain.Market.HandicapMarket
-                | _ -> ()
+                | _ -> reader.SkipValue()
         reader.ReadEndDocument()
         y
     static member ScoreToBson(writer: IBsonWriter, x: Test.Domain.Score, ?asEntity: bool) =
@@ -274,4 +274,5 @@ type ScoreSerializer() =
 type ConvertTestDomain with
     static member RegisterSerializers() =
         BsonDefaults.GuidRepresentationMode <- GuidRepresentationMode.V3
+        BsonSerializer.RegisterSerializer(GuidSerializer(GuidRepresentation.Standard))
         BsonSerializer.RegisterSerializer(ScoreSerializer())

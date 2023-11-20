@@ -55,12 +55,7 @@ let gen (module': Module) (locks: LocksCollection) (typesCache: Types.TypesCache
             line txt $"        lazy {{"
 
             for fieldInfo in info.Fields do
-                match fieldInfo.Type with
-                | Types.IsEnum typesCache enumInfo ->
-                    line txt $"            {fieldInfo.Name} = {dottedNameWithNamespace ns enumInfo.Name}.Unknown"
-                | Types.IsUnion typesCache unionInfo ->
-                    line txt $"            {fieldInfo.Name} = {dottedNameWithNamespace ns unionInfo.Name}.Unknown"
-                | _ -> line txt $"            {fieldInfo.Name} = {defValue ns false fieldInfo.Type}"
+                line txt $"            {fieldInfo.Name} = {defValue typesCache ns false fieldInfo.Type}"
 
             line txt $"        }}"
             line txt $""
@@ -445,7 +440,7 @@ let literalSuffix =
     | Money _ -> "m"
     | _ -> ""
 
-let defValue (ns: ComplexName) isMutable t =
+let defValue (typesCache: Types.TypesCache) (ns: ComplexName) (isMutable: bool) t =
     match t with
     | Bool -> "false"
     | String -> "\"\""
@@ -465,6 +460,11 @@ let defValue (ns: ComplexName) isMutable t =
     | List _ -> if isMutable then "ResizeArray()" else "List.empty"
     | Set _ -> if isMutable then "ResizeArray()" else "Set.empty"
     | Map _ -> if isMutable then "ResizeArray()" else "Map.empty"
+    | Types.IsEnum typesCache enumInfo when ns = (lastNames enumInfo.Name) -> $"{enumInfo.Name |> firstName}.Unknown"
+    | Types.IsEnum typesCache enumInfo -> $"{dottedName enumInfo.Name}.Unknown"
+    | Types.IsUnion typesCache unionInfo when ns = (lastNames unionInfo.Name) ->
+        $"{unionInfo.Name |> firstName}.Unknown"
+    | Types.IsUnion typesCache unionInfo -> $"{dottedName unionInfo.Name}.Unknown"
     | Complex typeName when ns = (lastNames typeName) -> $"{typeName |> firstName}.Default.Value"
     | Complex typeName -> $"{typeName |> dottedName}.Default.Value"
 
